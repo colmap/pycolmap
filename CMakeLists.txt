@@ -10,5 +10,5 @@ link_directories(${COLMAP_LINK_DIRS})
 find_package(pybind11 REQUIRED)
 include_directories(${pybind11_INCLUDE_DIRS})
 
-pybind11_add_module(pycolmap absolute_pose.cc)
-target_link_libraries(pycolmap PRIVATE ${COLMAP_LIBRARIES} gomp)
+pybind11_add_module(pycolmap main.cc)
+target_link_libraries(pycolmap PRIVATE ${COLMAP_LIBRARIES})

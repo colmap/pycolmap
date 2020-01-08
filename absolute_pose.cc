@@ -47,10 +47,7 @@ namespace py = pybind11;
 py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
-        const std::string camera_type,
-        const size_t width,
-        const size_t height,
-        const std::vector<double> camera_params,
+        const py::dict camera_dict,
         const double max_error = 12.00
 ) {
     SetPRNGSeed(0);
@@ -64,10 +61,10 @@ py::dict absolute_pose_estimation(
 
     // Create camera.
     Camera camera;
-    camera.SetModelIdFromName(camera_type);
-    camera.SetWidth(width);
-    camera.SetHeight(height);
-    camera.SetParams(camera_params);
+    camera.SetModelIdFromName(camera_dict["type"].cast<std::string>());
+    camera.SetWidth(camera_dict["width"].cast<size_t>());
+    camera.SetHeight(camera_dict["height"].cast<size_t>());
+    camera.SetParams(camera_dict["camera_params"].cast<std::vector<double>>());
 
     // Absolute pose estimation parameters.
     AbsolutePoseEstimationOptions abs_pose_options;
@@ -106,9 +103,4 @@ py::dict absolute_pose_estimation(
     success_dict["num_inliers"] = num_inliers;
     
     return success_dict;
-}
-
-PYBIND11_MODULE(pycolmap, m) {
-    m.doc() = "COLMAP plugin";
-    m.def("absolute_pose_estimation", &absolute_pose_estimation, "Doc");
 }
