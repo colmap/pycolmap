@@ -48,10 +48,10 @@ py::dict image_to_world(
 ) {
     // Create camera.
     Camera camera;
-    camera.SetModelIdFromName(camera_dict["type"].cast<std::string>());
+    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
     camera.SetWidth(camera_dict["width"].cast<size_t>());
     camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["camera_params"].cast<std::vector<double>>());
+    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
 
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D;

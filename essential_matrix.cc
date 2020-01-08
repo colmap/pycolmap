@@ -65,16 +65,16 @@ py::dict essential_matrix_estimation(
 
     // Create cameras.
     Camera camera1;
-    camera1.SetModelIdFromName(camera_dict1["type"].cast<std::string>());
+    camera1.SetModelIdFromName(camera_dict1["model"].cast<std::string>());
     camera1.SetWidth(camera_dict1["width"].cast<size_t>());
     camera1.SetHeight(camera_dict1["height"].cast<size_t>());
-    camera1.SetParams(camera_dict1["camera_params"].cast<std::vector<double>>());
+    camera1.SetParams(camera_dict1["params"].cast<std::vector<double>>());
 
     Camera camera2;
-    camera2.SetModelIdFromName(camera_dict2["type"].cast<std::string>());
+    camera2.SetModelIdFromName(camera_dict2["model"].cast<std::string>());
     camera2.SetWidth(camera_dict2["width"].cast<size_t>());
     camera2.SetHeight(camera_dict2["height"].cast<size_t>());
-    camera2.SetParams(camera_dict2["camera_params"].cast<std::vector<double>>());
+    camera2.SetParams(camera_dict2["params"].cast<std::vector<double>>());
 
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D1;
