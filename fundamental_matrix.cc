@@ -81,13 +81,23 @@ py::dict fundamental_matrix_estimation(
     const Eigen::Matrix3d F = report.model;
     const size_t num_inliers = report.support.num_inliers;
     const auto inlier_mask = report.inlier_mask;
+    
+    // Convert vector<char> to vector<int>.
+    std::vector<bool> inliers;
+    for (auto it : inlier_mask) {
+        if (it) {
+            inliers.push_back(true);
+        } else {
+            inliers.push_back(false);
+        }
+    }
 
     // Success output dictionary.
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["F"] = F;
     success_dict["num_inliers"] = num_inliers;
-    success_dict["inliers"] = inlier_mask;
+    success_dict["inliers"] = inliers;
     
     return success_dict;
 }
