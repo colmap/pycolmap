@@ -133,6 +133,16 @@ py::dict essential_matrix_estimation(
     PoseFromEssentialMatrix(E, inlier_world_points2D1, inlier_world_points2D2, &R, &tvec, &points3D);
 
     Eigen::Vector4d qvec = RotationMatrixToQuaternion(R);
+    
+    // Convert vector<char> to vector<int>.
+    std::vector<bool> inliers;
+    for (auto it : inlier_mask) {
+        if (it) {
+            inliers.push_back(true);
+        } else {
+            inliers.push_back(false);
+        }
+    }
 
     // Success output dictionary.
     py::dict success_dict;
@@ -141,7 +151,7 @@ py::dict essential_matrix_estimation(
     success_dict["qvec"] = qvec;
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
-    success_dict["inliers"] = inlier_mask;
+    success_dict["inliers"] = inliers;
     
     return success_dict;
 }

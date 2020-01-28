@@ -95,12 +95,23 @@ py::dict absolute_pose_estimation(
         return failure_dict;
     }
 
+    // Convert vector<char> to vector<int>.
+    std::vector<bool> inliers;
+    for (auto it : inlier_mask) {
+        if (it) {
+            inliers.push_back(true);
+        } else {
+            inliers.push_back(false);
+        }
+    }
+
     // Success output dictionary.
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["qvec"] = qvec;
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
+    success_dict["inliers"] = inliers;
     
     return success_dict;
 }
