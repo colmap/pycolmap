@@ -87,6 +87,7 @@ py::dict fundamental_matrix_estimation(
     success_dict["success"] = true;
     success_dict["F"] = F;
     success_dict["num_inliers"] = num_inliers;
+    success_dict["inliers"] = inlier_mask;
     
     return success_dict;
 }
