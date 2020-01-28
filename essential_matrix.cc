@@ -141,6 +141,7 @@ py::dict essential_matrix_estimation(
     success_dict["qvec"] = qvec;
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
+    success_dict["inliers"] = inlier_mask;
     
     return success_dict;
 }
