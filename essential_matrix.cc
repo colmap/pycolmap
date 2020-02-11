@@ -97,6 +97,7 @@ py::dict essential_matrix_estimation(
     ransac_options.max_error = max_error;
     ransac_options.min_inlier_ratio = 0.01;
     ransac_options.min_num_trials = 1000;
+    ransac_options.max_num_trials = 100000;
     ransac_options.confidence = 0.9999;
     
     LORANSAC<
