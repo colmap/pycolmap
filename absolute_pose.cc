@@ -72,6 +72,7 @@ py::dict absolute_pose_estimation(
     abs_pose_options.ransac_options.max_error = max_error;
     abs_pose_options.ransac_options.min_inlier_ratio = 0.01;
     abs_pose_options.ransac_options.min_num_trials = 1000;
+    abs_pose_options.ransac_options.max_num_trials = 100000;
     abs_pose_options.ransac_options.confidence = 0.9999;
 
     // Absolute pose estimation.
