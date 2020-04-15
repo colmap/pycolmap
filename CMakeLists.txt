@@ -7,8 +7,7 @@ find_package(COLMAP REQUIRED)
 include_directories(${COLMAP_INCLUDE_DIRS})
 link_directories(${COLMAP_LINK_DIRS})
 
-find_package(pybind11 REQUIRED)
-include_directories(${pybind11_INCLUDE_DIRS})
+add_subdirectory(pybind11)
 
 pybind11_add_module(pycolmap main.cc)
 target_link_libraries(pycolmap PRIVATE ${COLMAP_LIBRARIES})
