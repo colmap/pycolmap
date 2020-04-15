@@ -4,7 +4,12 @@ At the moment, we provide bindings for essential and fundamental matrix estimati
 
 # Getting started
 
-COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can by installed using `pip`: 
+Clone the repository and its submodules by running:
+```
+git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
+```
+
+COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can be installed using `pip`: 
 ```
 pip install ./
 ```
