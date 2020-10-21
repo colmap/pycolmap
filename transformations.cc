@@ -69,3 +69,27 @@ py::dict image_to_world(
     
     return success_dict;
 }
+
+py::dict world_to_image(
+        const std::vector<Eigen::Vector2d> world_points2D,
+        const py::dict camera_dict
+) {
+    // Create camera.
+    Camera camera;
+    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
+    camera.SetWidth(camera_dict["width"].cast<size_t>());
+    camera.SetHeight(camera_dict["height"].cast<size_t>());
+    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
+
+    // World to image.
+    std::vector<Eigen::Vector2d> image_points2D;
+    for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
+        image_points2D.push_back(camera.WorldToImage(world_points2D[idx]));
+    }
+    
+    // Success output dictionary.
+    py::dict success_dict;
+    success_dict["image_points"] = image_points2D;
+    
+    return success_dict;
+}
