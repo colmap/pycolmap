@@ -16,6 +16,8 @@ pip install ./
 
 # Usage
 
+## Camera parameters
+
 The current bindings are compatible with numpy arrays for both 2D and 3D points. The camera parameters should be sent as a Python dictionary with the following template:
 ```python
 {
@@ -25,8 +27,9 @@ The current bindings are compatible with numpy arrays for both 2D and 3D points.
     'params': EXTRA_CAMERA_PARAMETERS_LIST
 }
 ```
+Please refer to [colmap - src/base/camera_models.h](https://github.com/colmap/colmap/blob/master/src/base/camera_models.h) for more details regarding camera models and parameters.
 
-## Absolute Pose Estimation
+## Absolute pose estimation
 
 For instance, the following snippet runs absolute pose estimation for a pinhole camera given 2D-3D correspondences:
 ```python
@@ -51,7 +54,7 @@ answer = pycolmap.absolute_pose_estimation(
 # - dictionary containing the RANSAC output
 ```
 
-# SIFT Feature Extraction
+## SIFT feature extraction
 
 ```python
 import numpy as np
