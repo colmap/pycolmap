@@ -52,7 +52,7 @@ py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D2,
         const py::dict camera_dict1,
         const py::dict camera_dict2,
-        const double max_error_px = 1.00
+        const double max_error_px
 ) {
     SetPRNGSeed(0);
 
