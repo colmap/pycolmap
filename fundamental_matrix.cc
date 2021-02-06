@@ -47,7 +47,7 @@ namespace py = pybind11;
 py::dict fundamental_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
-        const double max_error = 4.00
+        const double max_error_px
 ) {
     SetPRNGSeed(0);
 
@@ -60,7 +60,7 @@ py::dict fundamental_matrix_estimation(
 
     // Fundamental matrix estimation parameters.
     RANSACOptions ransac_options;
-    ransac_options.max_error = max_error;
+    ransac_options.max_error = max_error_px;
     ransac_options.min_inlier_ratio = 0.01;
     ransac_options.min_num_trials = 1000;
     ransac_options.max_num_trials = 100000;
