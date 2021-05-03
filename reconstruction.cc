@@ -1,0 +1,495 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/eigen.h>
+
+namespace py = pybind11;
+
+#include <colmap/base/reconstruction.h>
+#include <colmap/util/ply.h>
+#include <colmap/base/projection.h>
+
+using namespace colmap;
+template<typename... Args>
+      using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
+
+//Reconstruction Bindings
+void init_reconstruction(py::module &m) {
+    py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
+        .def(py::init<>())
+        .def(py::init<image_t, point2D_t>())
+        .def_readwrite("image_id", &TrackElement::image_id)
+        .def_readwrite("point2D_idx", &TrackElement::point2D_idx)
+        .def("__copy__",  [](const TrackElement &self) {
+            return TrackElement(self);
+        })
+        .def("__deepcopy__",  [](const TrackElement &self, py::dict) {
+            return TrackElement(self);
+        })
+        .def("__repr__", [](const TrackElement &self) {
+            return "<TrackElement 'image_id=" 
+                + std::to_string(self.image_id) 
+                + ",point2D_idx=" 
+                + std::to_string(self.point2D_idx)
+                +"'>";
+        });
+
+    py::class_<Track, std::shared_ptr<Track>>(m, "Track")
+        .def(py::init<>())
+        .def("length", &Track::Length, "Track Length.")
+        .def("add_element", overload_cast_<image_t, point2D_t>()(&Track::AddElement), 
+                "Add observation (image_id, point2D_idx) to track.")
+        .def("delete_element", overload_cast_<image_t, point2D_t>()(&Track::DeleteElement), 
+                "Delete observation (image_id, point2D_idx) from track.")
+        //.def("append", overload_cast_<TrackElement>()(&Track::AddElement))
+        .def("add_elements", &Track::AddElements, "Add TrackElement list.")
+        .def("remove", overload_cast_<size_t>()(&Track::DeleteElement), "Remove TrackElement at index.")
+        .def_property("elements", &Track::Elements, &Track::SetElements)
+        .def("__copy__",  [](const Track &self) {
+            return Track(self);
+        })
+        .def("__deepcopy__",  [](const Track &self, py::dict) {
+            return Track(self);
+        })
+        .def("__repr__", [](const Track &self) {
+            return "<Track 'length=" + std::to_string(self.Length()) + "'>";
+        });
+
+    py::class_<colmap::Point2D, std::shared_ptr<colmap::Point2D>>(m, "Point2D")
+        .def_property("xy", overload_cast_<>()(&Point2D::XY), &Point2D::SetXY)
+        .def_property("x", &Point2D::X, [](Point2D &self, double x){
+            self.SetXY(Eigen::Vector2d(x, self.Y()));
+        })
+        .def_property("y", &Point2D::Y, [](Point2D &self, double y){
+            self.SetXY(Eigen::Vector2d(self.X(), y));
+        })
+        .def_property("point3D_id", &Point2D::Point3DId, &Point2D::SetPoint3DId)
+        .def("has_point3D", &Point2D::HasPoint3D)
+        .def("__copy__",  [](const Point2D &self) {
+            return Point2D(self);
+        })
+        .def("__deepcopy__",  [](const Point2D &self, py::dict) {
+            return Point2D(self);
+        })
+        .def("__repr__", [](const Point2D &self) {
+            std::stringstream ss;
+            ss<<"<Point2D 'xy=["
+                <<self.XY().transpose()
+                <<"], point3D_id=" 
+                <<(self.HasPoint3D() ? std::to_string(self.Point3DId()) : "Invalid")
+                <<"'>";
+            return ss.str();
+        });
+    
+    py::class_<colmap::Point3D, std::shared_ptr<colmap::Point3D>>(m, "Point3D")
+        .def(py::init<>())
+        .def_property("xyz", overload_cast_<>()(&Point3D::XYZ), &Point3D::SetXYZ)
+        .def_property("x", &Point3D::X, [](Point3D &self, double x){
+            self.SetXYZ(Eigen::Vector3d(x, self.Y(), self.Z()));
+        })
+        .def_property("y", &Point3D::Y, [](Point3D &self, double y){
+            self.SetXYZ(Eigen::Vector3d(self.X(), y, self.Z()));
+        })
+        .def_property("z", &Point3D::Z, [](Point3D &self, double z){
+            self.SetXYZ(Eigen::Vector3d(self.X(), self.Y(), z));
+        })
+        .def_property("color", overload_cast_<>()(&Point3D::Color), &Point3D::SetColor)
+        .def_property("error", &Point3D::Error, &Point3D::SetError)
+        .def_property("track", overload_cast_<>()(&Point3D::Track), &Point3D::SetTrack)
+        .def("__copy__",  [](const Point3D &self) {
+            return Point3D(self);
+        })
+        .def("__deepcopy__",  [](const Point3D &self, py::dict) {
+            return Point3D(self);
+        })
+        .def("__repr__", [](const Point3D &self) {
+            std::stringstream ss;
+            ss<<"<Point3D 'xyz=["
+                <<self.XYZ().transpose()
+                <<"], track_length=" 
+                <<(self.Track().Length())
+                <<", error="
+                <<self.Error()<<"'>";
+            return ss.str();
+        })
+        .def("summary", [](const Point3D &self) {
+            std::stringstream ss;
+            ss<<"<Point3D:\n\txyz = ["
+                <<self.XYZ().transpose()
+                <<"]\n\ttrack_length = " 
+                <<(self.Track().Length())
+                <<"\n\terror = "
+                <<self.Error()
+                <<"\n\tcolor = ["
+                <<self.Color().cast<int>().transpose()
+                <<"]";
+            return ss.str();
+        });
+
+    py::class_<colmap::Image, std::shared_ptr<colmap::Image>>(m, "Image")
+        .def(py::init<>())
+        .def_property("image_id", &Image::ImageId, &Image::SetImageId, "Unique identifier of image.")
+        .def_property("camera_id", &Image::CameraId, &Image::SetCameraId, "Unique identifier of the camera.")
+        .def_property("name", overload_cast_<>()(&Image::Name), &Image::SetName, "Name of the image.")
+        .def_property("qvec", overload_cast_<>()(&Image::Qvec), &Image::SetQvec, 
+                "Quaternion vector (qw,qx,qy,qz) which describes rotation from world to image space.")
+        .def_property("tvec", overload_cast_<>()(&Image::Tvec), &Image::SetTvec,
+                "Translation vector (tx,ty,tz) which describes translation from world to image space.")
+        .def_property("qvec_prior", overload_cast_<>()(&Image::QvecPrior), &Image::SetQvecPrior,
+                "Quaternion prior, e.g. given by EXIF gyroscope tag.")
+        .def_property("tvec_prior", overload_cast_<>()(&Image::TvecPrior), &Image::SetTvecPrior,
+                "Translation prior, e.g. given by EXIF GPS tag.")
+        .def_property("points2D", &Image::Points2D, 
+            overload_cast_<const std::vector<class Point2D>&>()(&Image::SetPoints2D),
+                "Array of Points2D (=keypoints).")
+        .def("set_point3D_for_point2D", &Image::SetPoint3DForPoint2D, 
+                "Set the point as triangulated, i.e. it is part of a 3D point track.")
+        .def("reset_point3D_for_point2D", &Image::ResetPoint3DForPoint2D,
+                "Set the point as not triangulated, i.e. it is not part of a 3D point track")
+        .def("is_point3D_visible", &Image::IsPoint3DVisible,
+                "Check whether an image point has a correspondence to an image point in\n"
+                "another image that has a 3D point.")
+        .def("has_point3D", &Image::HasPoint3D,
+                "Check whether one of the image points is part of the 3D point track.")
+        .def("increment_correspondence_has_point3D", &Image::IncrementCorrespondenceHasPoint3D,
+                "Indicate that another image has a point that is triangulated and has\n"
+                "a correspondence to this image point. Note that this must only be called\n"
+                "after calling `SetUp`.")
+        .def("decrement_correspondence_has_point3D", &Image::DecrementCorrespondenceHasPoint3D,
+                "Indicate that another image has a point that is not triangulated any more\n"
+                "and has a correspondence to this image point. This assumes that\n"
+                "`IncrementCorrespondenceHasPoint3D` was called for the same image point\n"
+                "and correspondence before. Note that this must only be called\n"
+                "after calling `SetUp`.")
+        .def("normalize_qvec",&Image::NormalizeQvec,
+                "Normalize the quaternion vector.")
+        .def("projection_matrix", &Image::ProjectionMatrix,
+                "Compose the projection matrix from world to image space.")
+        .def("inverse_projection_matrix", &Image::InverseProjectionMatrix,
+                "Compose the inverse projection matrix from image to world space.")
+        .def("projection_center", &Image::ProjectionCenter,
+                "Extract the projection center in world space.")
+        .def("viewing_direction", &Image::ViewingDirection,
+                "Extract the viewing direction of the image.")
+        .def("rotation_matrix", &Image::RotationMatrix,
+                "Compose rotation matrix from quaternion vector.")
+        .def("set_up", &Image::SetUp,
+                "Setup the image and necessary internal data structures before being used in reconstruction.")
+        .def("has_camera", &Image::HasCamera,
+                "Check whether identifier of camera has been set.")
+        .def_property("registered", &Image::IsRegistered, &Image::SetRegistered,
+                "Whether image is registered in the reconstruction.")
+        .def("num_points2D", &Image::NumPoints2D,
+                "Get the number of image points (keypoints).")
+        .def("num_points3D", &Image::NumPoints3D,
+                "Get the number of triangulations, i.e. the number of points that\n"
+                "are part of a 3D point track.")
+        .def_property("num_observations", &Image::NumObservations, &Image::SetNumObservations,
+                "Number of observations, i.e. the number of image points that\n"
+                "have at least one correspondence to another image.")
+        .def_property("num_correspondences", &Image::NumCorrespondences, &Image::SetNumCorrespondences,
+                "Number of correspondences for all image points.")
+        .def("num_visible_points3D", &Image::NumVisiblePoints3D,
+                "Get the number of observations that see a triangulated point, i.e. the\n"
+                "number of image points that have at least one correspondence to a\n"
+                "triangulated point in another image.")
+        .def("Point3DVisibilityScore", &Image::Point3DVisibilityScore,
+                "Get the score of triangulated observations. In contrast to\n"
+                "`NumVisiblePoints3D`, this score also captures the distribution\n"
+                "of triangulated observations in the image. This is useful to select\n"
+                "the next best image in incremental reconstruction, because a more\n"
+                "uniform distribution of observations results in more robust registration.")
+        .def("__copy__",  [](const Image &self) {
+            return Image(self);
+        })
+        .def("__deepcopy__",  [](const Image &self, py::dict) {
+            return Image(self);
+        })
+        .def("__repr__", [](const Image &self) {
+            std::stringstream ss;
+            ss<<"<Image 'image_id="
+                <<self.ImageId()
+                <<", camera_id=" 
+                <<(self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
+                <<", name="
+                <<self.Name()
+                <<", triangulated="
+                <<self.NumPoints3D()<<"/"<<self.NumPoints2D()
+                <<"'>";
+            return ss.str();
+        })
+        .def("summary", [](const Image &self) {
+            std::stringstream ss;
+            ss<<"Image:\n\timage_id = "
+                <<self.ImageId()
+                <<"\n\tcamera_id = " 
+                <<(self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
+                <<"\n\tname = "
+                <<self.Name()
+                <<"\n\ttriangulated = "
+                <<self.NumPoints3D()<<"/"<<self.NumPoints2D()
+                <<"\n\ttvec = ["
+                <<self.Tvec().transpose()
+                <<"]\n\tqvec = ["
+                <<self.Qvec().transpose()
+                <<"]";
+            return ss.str();
+        });
+
+    py::class_<colmap::Camera, std::shared_ptr<colmap::Camera>>(m, "Camera")
+        .def(py::init<>())
+        .def_property("camera_id", &Camera::CameraId, &Camera::SetCameraId,
+                "Unique identifier of the camera.")
+        .def_property("model_id", &Camera::ModelId, &Camera::SetModelId,
+                "Camera model ID.")
+        .def_property("model_name", &Camera::ModelName, &Camera::SetModelIdFromName,
+                "Camera model name (connected to model_id).")
+        .def_property("width", &Camera::Width, &Camera::SetWidth,
+                "Width of camera sensor.")
+        .def_property("height", &Camera::Height, &Camera::SetHeight,
+                "Height of camera sensor.")
+        .def("mean_focal_length", &Camera::MeanFocalLength)
+        .def_property("focal_length", &Camera::FocalLength, &Camera::SetFocalLength)
+        .def_property("focal_length_x", &Camera::FocalLengthX, &Camera::SetFocalLengthX)
+        .def_property("focal_length_y", &Camera::FocalLengthY, &Camera::SetFocalLengthY)
+        .def_property("principal_point_x",&Camera::PrincipalPointX, &Camera::SetPrincipalPointX)
+        .def_property("principal_point_y",&Camera::PrincipalPointY, &Camera::SetPrincipalPointY)
+        .def("focal_length_idxs", &Camera::FocalLengthIdxs,
+                "Indices of focal length parameters in params property.")
+        .def("principal_point_idxs", &Camera::PrincipalPointIdxs,
+                "Indices of principal point parameters in params property.")
+        .def("extra_params_idxs", &Camera::ExtraParamsIdxs,
+                "Indices of extra parameters in params property.")
+        .def("calibration_matrix", &Camera::CalibrationMatrix,
+                "Compute calibration matrix from params.")
+        .def("params_info", &Camera::ParamsInfo,
+                "Get human-readable information about the parameter vector ordering.")
+        .def("num_params", &Camera::NumParams,
+                "Number of raw camera parameters.")
+        .def_property("params",overload_cast_<>()(&Camera::Params), &Camera::SetParams,
+                "Camera parameters.")
+        .def("params_to_string",&Camera::ParamsToString,
+                "Concatenate parameters as comma-separated list.")
+        .def("set_params_from_string",&Camera::SetParamsFromString,
+                "Set camera parameters from comma-separated list.")
+        .def("verify_params",&Camera::VerifyParams,
+                "Check whether parameters are valid, i.e. the parameter vector has\n"
+                "the correct dimensions that match the specified camera model.")
+        .def("has_bogus_params", &Camera::HasBogusParams,
+                "Check whether camera has bogus parameters.")
+        .def("initialize_with_id", &Camera::InitializeWithId,
+                "Initialize parameters for given camera model ID and focal length, and set\n"
+                "the principal point to be the image center.")
+        .def("initialize_with_name", &Camera::InitializeWithName,
+                "Initialize parameters for given camera model name and focal length, and set\n"
+                "the principal point to be the image center.")
+        .def("image_to_world", &Camera::ImageToWorld,
+                "Project point in image plane to world / infinity.")
+        .def("image_to_world_threshold", &Camera::ImageToWorldThreshold,
+                "Convert pixel threshold in image plane to world space.")
+        .def("world_to_image", &Camera::WorldToImage,
+                "Project point from world / infinity to image plane.")
+        .def("reset_scale", overload_cast_<size_t,size_t>()(&Camera::Rescale),
+                "Rescale camera dimensions to (width_height) and accordingly the focal length and\n"
+                "and the principal point.")
+        .def("rescale", overload_cast_<double>()(&Camera::Rescale),
+                "Rescale camera dimensions by given factor and accordingly the focal length and\n"
+                "and the principal point.")
+        .def("__copy__",  [](const Camera &self) {
+            return Camera(self);
+        })
+        .def("__deepcopy__",  [](const Camera &self, py::dict) {
+            return Camera(self);
+        })
+        .def("__repr__", [](const Camera &self) {
+            std::stringstream ss;
+            ss<<"<Camera 'camera_id=" 
+                <<(self.CameraId()!=kInvalidCameraId ? 
+                    std::to_string(self.CameraId()) : "Invalid")
+                <<", model="<<self.ModelName()
+                <<", width="<<self.Width()
+                <<", height="<<self.Height()
+                <<", num_params="<<self.NumParams()
+                <<"'>";
+            return ss.str();
+        })
+        .def("summary", [](const Camera &self) {
+            std::stringstream ss;
+            ss<<"Camera:\n\t'camera_id=" 
+                <<(self.CameraId()!=kInvalidCameraId ? 
+                    std::to_string(self.CameraId()) : "Invalid")
+                <<"\n\tmodel = "<<self.ModelName()
+                <<"\n\twidth = "<<self.Width()
+                <<"\n\theight = "<<self.Height()
+                <<"\n\tnum_params = "<<self.NumParams()
+                <<"\n\tparams_info = "<<self.ParamsInfo()
+                <<"\n\tparams = "<<self.ParamsToString();
+            return ss.str();
+        });
+
+    py::class_<Reconstruction>(m, "Reconstruction")
+        .def(py::init<>())
+        .def("read", &Reconstruction::Read, "Read reconstruction in COLMAP format. Prefer binary.")
+        .def("write", &Reconstruction::Write, "Write reconstruction in COLMAP format. Prefer binary.")
+        .def("num_images", &Reconstruction::NumImages)
+        .def("num_cameras", &Reconstruction::NumImages)
+        .def("num_reg_images", &Reconstruction::NumImages)
+        .def("num_points3D", &Reconstruction::NumImages)
+        .def("num_image_pairs", &Reconstruction::NumImagePairs)
+        .def_property_readonly("images", &Reconstruction::Images, py::return_value_policy::reference)
+        .def_property_readonly("image_pairs", &Reconstruction::ImagePairs)
+        .def_property_readonly("cameras", &Reconstruction::Cameras, py::return_value_policy::reference)
+        .def_property_readonly("points3D", &Reconstruction::Points3D, py::return_value_policy::reference)
+        .def("point3D_ids", &Reconstruction::Point3DIds)
+        .def("reg_image_ids", &Reconstruction::RegImageIds)
+        .def("exists_camera", &Reconstruction::ExistsCamera)
+        .def("exists_image", &Reconstruction::ExistsImage)
+        .def("exists_point3D", &Reconstruction::ExistsPoint3D)
+        .def("exists_image_pair", &Reconstruction::ExistsImagePair)
+        // .def("image", overload_cast_<image_t>()(&Reconstruction::Image, py::const_))
+        // .def("camera", overload_cast_<camera_t>()(&Reconstruction::Camera, py::const_)) 
+        // .def("point3D", overload_cast_<point3D_t>()(&Reconstruction::Point3D, py::const_))
+        .def("add_camera", &Reconstruction::AddCamera,
+                "Add new camera. There is only one camera per image, while multiple images\n"
+                "might be taken by the same camera.")
+        .def("add_image", &Reconstruction::AddImage,
+                "Add new image.")
+        .def("add_point3D", &Reconstruction::AddPoint3D,
+                "Add new 3D object, and return its unique ID.")
+        .def("add_observation", &Reconstruction::AddObservation,
+                "Add observation to existing 3D point.")
+        .def("merge_points3D", &Reconstruction::MergePoints3D,
+                "Merge two 3D points and return new identifier of new 3D point.\n"
+                "The location of the merged 3D point is a weighted average of the two\n"
+                "original 3D point's locations according to their track lengths.")
+        .def("delete_point3D", &Reconstruction::DeletePoint3D,
+                "Delete a 3D point, and all its references in the observed images.")
+        .def("delete_observation", &Reconstruction::DeleteObservation,
+                "Delete one observation from an image and the corresponding 3D point.\n"
+                "Note that this deletes the entire 3D point, if the track has two elements\n"
+                "prior to calling this method.")
+        .def("register_image", &Reconstruction::RegisterImage,
+                "Register an existing image.")
+        .def("deregister_image", &Reconstruction::DeRegisterImage,
+                "De-register an existing image, and all its references.")
+        .def("is_image_registered", &Reconstruction::IsImageRegistered,
+                "Check if image is registered.")
+        .def("normalize", &Reconstruction::Normalize,
+                "Normalize scene by scaling and translation to avoid degenerate\n"
+                "visualization after bundle adjustment and to improve numerical\n"
+                "stability of algorithms.\n\n"
+                "Translates scene such that the mean of the camera centers or point\n"
+                "locations are at the origin of the coordinate system.\n\n"
+                "Scales scene such that the minimum and maximum camera centers are at the\n"
+                "given `extent`, whereas `p0` and `p1` determine the minimum and\n"
+                "maximum percentiles of the camera centers considered.")
+        // .def("transform", &Reconstruction::Transform)
+        .def("merge", &Reconstruction::Merge,
+                "Merge the given reconstruction into this reconstruction by registering the\n"
+                "images registered in the given but not in this reconstruction and by\n"
+                "merging the two clouds and their tracks. The coordinate frames of the two\n"
+                "reconstructions are aligned using the projection centers of common\n"
+                "registered images. Return true if the two reconstructions could be merged.")
+        .def("align", &Reconstruction::Align,
+                "Align the given reconstruction with a set of pre-defined camera positions.\n"
+                "Assuming that locations[i] gives the 3D coordinates of the center\n"
+                "of projection of the image with name image_names[i].")
+        .def("align_robust", &Reconstruction::AlignRobust,
+                "Robust alignment using RANSAC.")
+        .def("find_image_with_name", &Reconstruction::FindImageWithName)
+        .def("find_common_reg_image_ids", &Reconstruction::FindCommonRegImageIds,
+                "Find images that are both present in this and the given reconstruction.")
+        .def("filter_points3D", &Reconstruction::FilterPoints3D,
+                "Filter 3D points with large reprojection error, negative depth, or\n"
+                "insufficient triangulation angle.\n\n"
+                "@param max_reproj_error    The maximum reprojection error.\n"
+                "@param min_tri_angle       The minimum triangulation angle.\n"
+                "@param point3D_ids         The points to be filtered.\n\n"
+                "@return                    The number of filtered observations.")
+        .def("filter_points3D_in_images", &Reconstruction::FilterPoints3DInImages,
+                "Filter 3D points with large reprojection error, negative depth, or\n"
+                "insufficient triangulation angle.\n\n"
+                "@param max_reproj_error    The maximum reprojection error.\n"
+                "@param min_tri_angle       The minimum triangulation angle.\n"
+                "@param image_ids           The the image ids in which the points3D are filtered.\n\n"
+                "@return                    The number of filtered observations.")
+        .def("filter_all_points3D", &Reconstruction::FilterAllPoints3D,
+                "Filter 3D points with large reprojection error, negative depth, or\n"
+                "insufficient triangulation angle.\n\n"
+                "@param max_reproj_error    The maximum reprojection error.\n"
+                "@param min_tri_angle       The minimum triangulation angle.\n\n"
+                "@return                    The number of filtered observations.")
+        .def("filter_observations_with_negative_depth", &Reconstruction::FilterObservationsWithNegativeDepth,
+                "Filter observations that have negative depth.\n\n"
+                "@return    The number of filtered observations.")
+        .def("filter_images", &Reconstruction::FilterImages,
+                "Filter images without observations or bogus camera parameters.\n\n"
+                "@return    The identifiers of the filtered images.")
+        .def("compute_num_observations", &Reconstruction::ComputeNumObservations)
+        .def("compute_mean_track_length", &Reconstruction::ComputeMeanTrackLength)
+        .def("compute_mean_observations_per_reg_image", &Reconstruction::ComputeMeanObservationsPerRegImage)
+        .def("compute_mean_reprojection_error", &Reconstruction::ComputeMeanReprojectionError)
+        .def("read_text", &Reconstruction::ReadText)
+        .def("read_binary", &Reconstruction::ReadBinary)
+        .def("write_text", &Reconstruction::WriteText)
+        .def("write_binary", &Reconstruction::WriteBinary)
+        .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
+        .def("import_PLY", &Reconstruction::ImportPLY,
+                "Import from PLY format. Note that these import functions are\n"
+                "only intended for visualization of data and usable for reconstruction.")
+        .def("export_NVM", &Reconstruction::ExportNVM,
+                "Export reconstruction in NVM format.")
+        .def("export_bundler", &Reconstruction::ExportBundler,
+                "Export reconstruction in Bundler format.")
+        .def("export_PLY", &Reconstruction::ExportPLY,
+                "Export reconstruction in PLY format.")
+        .def("export_VRML", &Reconstruction::ExportVRML,
+                "Export reconstruction in VRML format.")
+        .def("extract_colors_for_image", &Reconstruction::ExtractColorsForImage,
+                "Extract colors for 3D points of given image. Colors will be extracted\n"
+                "only for 3D points which are completely black.\n\n"
+                "@param image_id      Identifier of the image for which to extract colors.\n"
+                "@param path          Absolute or relative path to root folder of image.\n"
+                "                     The image path is determined by concatenating the\n"
+                "                     root path and the name of the image.\n\n"
+                "@return              True if image could be read at given path.")
+        .def("extract_colors_for_all_images", &Reconstruction::ExtractColorsForAllImages,
+                "Extract colors for all 3D points by computing the mean color of all images.\n\n"
+                "@param path          Absolute or relative path to root folder of image.\n"
+                "                     The image path is determined by concatenating the\n"
+                "                     root path and the name of the image.")
+        .def("create_image_dirs", &Reconstruction::CreateImageDirs,
+                "Create all image sub-directories in the given path.")
+        .def("__copy__",  [](const Reconstruction &self) {
+            return Reconstruction(self);
+        })
+        .def("__deepcopy__",  [](const Reconstruction &self, py::dict) {
+            return Reconstruction(self);
+        })
+        .def("__repr__", [](const Reconstruction &self) {
+            std::stringstream ss;
+            ss<<"<Reconstruction 'num_reg_images="<<self.NumRegImages()
+                <<", num_cameras="<<self.NumCameras()
+                <<", num_points3D="<<self.NumPoints3D()
+                <<", num_observations="<<self.ComputeNumObservations()<<"'>";
+            return ss.str();
+        })
+        .def("summary", [](const Reconstruction &self) {
+            std::stringstream ss;
+            ss<<"Reconstruction:"
+                <<"\n\tnum_reg_images = "
+                <<self.NumRegImages()
+                <<"\n\tnum_cameras = "
+                <<self.NumCameras()
+                <<"\n\tnum_points3D = "
+                <<self.NumPoints3D()
+                <<"\n\tnum_observations = "
+                <<self.ComputeNumObservations()
+                <<"\n\tmean_track_length = "
+                <<self.ComputeMeanTrackLength()
+                <<"\n\tmean_observations_per_image = "
+                <<self.ComputeMeanObservationsPerRegImage()
+                <<"\n\tmean_reprojection_error = "
+                <<self.ComputeMeanReprojectionError();
+            return ss.str();
+        });
+}

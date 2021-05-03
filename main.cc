@@ -1,4 +1,6 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/eigen.h>
 
 namespace py = pybind11;
 
@@ -7,6 +9,10 @@ namespace py = pybind11;
 #include "fundamental_matrix.cc"
 #include "transformations.cc"
 #include "sift.cc"
+
+#include "reconstruction.cc"
+
+void init_reconstruction(py::module &);
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
@@ -41,4 +47,7 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
           py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
           "Extract SIFT features.");
+
+    //Reconstruction bindings
+    init_reconstruction(m);
 }
