@@ -1,10 +1,10 @@
 import pycolmap
-
+import numpy as np
 # Create reconstruction instance
 reconstruction = pycolmap.Reconstruction()
 
 input_path = "input_reconstruction/"
-output_path = "output_reconstruction"
+output_path = "output_reconstruction/"
 
 # Read a model
 reconstruction.read(input_path)
@@ -51,3 +51,29 @@ assert(my_image_copy.image_id != my_image.image_id)
 # Write
 #reconstruction.write(output_path)
 #reconstruction.write_text(output_path)
+#rec.export_PLY(output_path + "test.ply")
+
+# Constructors
+track = pycolmap.Track([pycolmap.TrackElement(2,1), pycolmap.TrackElement(3,5)])
+point3D = pycolmap.Point3D([1.0,2.2,-1.0], track)
+print(point3D.summary())
+
+img = pycolmap.Image("def")
+img = pycolmap.Image("abc", keypoints = [[1.5,2.5], [3.0,4.0]], tvec = [0.5,0.5,0.0], qvec = [1.0,0.0,0.1,0.0])
+print(img.summary())
+
+rec = pycolmap.Reconstruction(input_path)
+print(rec.summary())
+
+
+cam = pycolmap.Camera("SIMPLE_PINHOLE", 1600, 1200, [3.0,800,600])
+print(cam.summary())
+
+# Transformations
+print(cam.image_to_world([1.0,0.5])) #1-point
+print(cam.image_to_world([[1.0,0.5], [2.0,1.0]]))
+print(cam.image_to_world(img.points2D))
+print(cam.world_to_image([[110.0,120.0], [0.0,1.0]]))
+
+
+

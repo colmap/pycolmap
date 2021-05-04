@@ -1,14 +1,15 @@
+#include <colmap/base/reconstruction.h>
+#include <colmap/util/ply.h>
+#include <colmap/base/projection.h>
+
+using namespace colmap;
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
 
-#include <colmap/base/reconstruction.h>
-#include <colmap/util/ply.h>
-#include <colmap/base/projection.h>
-
-using namespace colmap;
 template<typename... Args>
       using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
@@ -35,6 +36,11 @@ void init_reconstruction(py::module &m) {
 
     py::class_<Track, std::shared_ptr<Track>>(m, "Track")
         .def(py::init<>())
+        .def(py::init([](const std::vector<TrackElement>& elements){
+            std::unique_ptr<Track> track = std::unique_ptr<Track>(new Track());
+            track->AddElements(elements);
+            return track;
+        }))
         .def("length", &Track::Length, "Track Length.")
         .def("add_element", overload_cast_<image_t, point2D_t>()(&Track::AddElement), 
                 "Add observation (image_id, point2D_idx) to track.")
@@ -55,6 +61,13 @@ void init_reconstruction(py::module &m) {
         });
 
     py::class_<colmap::Point2D, std::shared_ptr<colmap::Point2D>>(m, "Point2D")
+        .def(py::init<>())
+        .def(py::init([](const Eigen::Vector2d& xy, size_t point3D_id){
+            std::unique_ptr<Point2D> point2D = std::unique_ptr<Point2D>(new Point2D());
+            point2D->SetXY(xy);
+            point2D->SetPoint3DId(point3D_id);
+            return point2D;
+        }), py::arg("xy"), py::arg("point3D_id") = kInvalidPoint3DId)
         .def_property("xy", overload_cast_<>()(&Point2D::XY), &Point2D::SetXY)
         .def_property("x", &Point2D::X, [](Point2D &self, double x){
             self.SetXY(Eigen::Vector2d(x, self.Y()));
@@ -82,6 +95,12 @@ void init_reconstruction(py::module &m) {
     
     py::class_<colmap::Point3D, std::shared_ptr<colmap::Point3D>>(m, "Point3D")
         .def(py::init<>())
+        .def(py::init([](const Eigen::Vector3d& xyz, const Track& track){
+            std::unique_ptr<Point3D> point3D = std::unique_ptr<Point3D>(new Point3D());
+            point3D->SetXYZ(xyz);
+            point3D->SetTrack(track);
+            return point3D;
+        }), py::arg("xyz"), py::arg("track") = Track())
         .def_property("xyz", overload_cast_<>()(&Point3D::XYZ), &Point3D::SetXYZ)
         .def_property("x", &Point3D::X, [](Point3D &self, double x){
             self.SetXYZ(Eigen::Vector3d(x, self.Y(), self.Z()));
@@ -127,6 +146,42 @@ void init_reconstruction(py::module &m) {
 
     py::class_<colmap::Image, std::shared_ptr<colmap::Image>>(m, "Image")
         .def(py::init<>())
+        .def(py::init([](const std::string& name,
+                         const std::vector<Eigen::Vector2d>& keypoints,
+                         const Eigen::Vector3d& tvec,
+                         const Eigen::Vector4d& qvec,
+                         size_t camera_id){
+            std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
+            image->SetName(name);
+            image->SetPoints2D(keypoints);
+            image->SetTvec(tvec);
+            image->SetQvec(qvec);
+            if (camera_id != kInvalidCameraId) {
+                image->SetCameraId(camera_id);
+            }
+            return image;
+        }), py::arg("name"), py::arg("keypoints") = std::vector<Eigen::Vector2d>(), 
+            py::arg("tvec") = Eigen::Vector3d(0.0,0.0,0.0),
+            py::arg("qvec") = Eigen::Vector4d(1.0,0.0,0.0,0.0), 
+            py::arg("camera_id_id") = kInvalidCameraId)
+        .def(py::init([](const std::string& name,
+                         const std::vector<Point2D>& points2D,
+                         const Eigen::Vector3d& tvec,
+                         const Eigen::Vector4d& qvec,
+                         size_t camera_id){
+            std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
+            image->SetName(name);
+            image->SetPoints2D(points2D);
+            image->SetTvec(tvec);
+            image->SetQvec(qvec);
+            if (camera_id != kInvalidCameraId) {
+                image->SetCameraId(camera_id);
+            }
+            return image;
+        }), py::arg("name"), py::arg("points2D") = std::vector<Point2D>(), 
+            py::arg("tvec") = Eigen::Vector3d(0.0,0.0,0.0), 
+            py::arg("qvec") = Eigen::Vector4d(1.0,0.0,0.0,0.0), 
+            py::arg("camera_id_id") = kInvalidCameraId)
         .def_property("image_id", &Image::ImageId, &Image::SetImageId, "Unique identifier of image.")
         .def_property("camera_id", &Image::CameraId, &Image::SetCameraId, "Unique identifier of the camera.")
         .def_property("name", overload_cast_<>()(&Image::Name), &Image::SetName, "Name of the image.")
@@ -207,7 +262,7 @@ void init_reconstruction(py::module &m) {
         .def("__repr__", [](const Image &self) {
             std::stringstream ss;
             ss<<"<Image 'image_id="
-                <<self.ImageId()
+                <<(self.ImageId() != kInvalidImageId ? std::to_string(self.ImageId()) : "Invalid")
                 <<", camera_id=" 
                 <<(self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
                 <<", name="
@@ -220,7 +275,7 @@ void init_reconstruction(py::module &m) {
         .def("summary", [](const Image &self) {
             std::stringstream ss;
             ss<<"Image:\n\timage_id = "
-                <<self.ImageId()
+                <<(self.ImageId() != kInvalidImageId ? std::to_string(self.ImageId()) : "Invalid")
                 <<"\n\tcamera_id = " 
                 <<(self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
                 <<"\n\tname = "
@@ -235,8 +290,19 @@ void init_reconstruction(py::module &m) {
             return ss.str();
         });
 
-    py::class_<colmap::Camera, std::shared_ptr<colmap::Camera>>(m, "Camera")
+    py::class_<Camera, std::shared_ptr<Camera>>(m, "Camera")
         .def(py::init<>())
+        .def(py::init([](const std::string& name, 
+                         size_t width, 
+                         size_t height, 
+                         const std::vector<double>& params){
+                std::unique_ptr<Camera> camera = std::unique_ptr<Camera>(new Camera());
+                camera->SetModelIdFromName(name);
+                camera->SetWidth(width);
+                camera->SetHeight(height);
+                camera->SetParams(params);
+                return camera;
+        }))
         .def_property("camera_id", &Camera::CameraId, &Camera::SetCameraId,
                 "Unique identifier of the camera.")
         .def_property("model_id", &Camera::ModelId, &Camera::SetModelId,
@@ -284,11 +350,43 @@ void init_reconstruction(py::module &m) {
                 "the principal point to be the image center.")
         .def("image_to_world", &Camera::ImageToWorld,
                 "Project point in image plane to world / infinity.")
+        .def("image_to_world", [](const Camera& self, 
+                                  const std::vector<Eigen::Vector2d>& points2D) {
+                std::vector<Eigen::Vector2d> world_points2D;
+                for (size_t idx = 0; idx < points2D.size(); ++idx) {
+                    world_points2D.push_back(self.ImageToWorld(points2D[idx]));
+                }
+                return world_points2D;
+            }, "Project list of points in image plane to world / infinity.")
+        .def("image_to_world", [](const Camera& self, 
+                                  const std::vector<Point2D>& points2D) {
+                std::vector<Eigen::Vector2d> world_points2D;
+                for (size_t idx = 0; idx < points2D.size(); ++idx) {
+                    world_points2D.push_back(self.ImageToWorld(points2D[idx].XY()));
+                }
+                return world_points2D;
+            }, "Project list of points in image plane to world / infinity.")
         .def("image_to_world_threshold", &Camera::ImageToWorldThreshold,
                 "Convert pixel threshold in image plane to world space.")
         .def("world_to_image", &Camera::WorldToImage,
                 "Project point from world / infinity to image plane.")
-        .def("reset_scale", overload_cast_<size_t,size_t>()(&Camera::Rescale),
+        .def("world_to_image", [](const Camera& self, 
+                                  const std::vector<Eigen::Vector2d>& world_points2D) {
+            std::vector<Eigen::Vector2d> image_points2D;
+            for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
+                image_points2D.push_back(self.WorldToImage(world_points2D[idx]));
+            }
+            return image_points2D;
+        }, "Project list of points from world / infinity to image plane.")
+        .def("world_to_image", [](const Camera& self, 
+                                  const std::vector<Point2D>& world_points2D) {
+            std::vector<Eigen::Vector2d> image_points2D;
+            for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
+                image_points2D.push_back(self.WorldToImage(world_points2D[idx].XY()));
+            }
+            return image_points2D;
+        }, "Project list of points from world / infinity to image plane.")
+        .def("rescale", overload_cast_<size_t,size_t>()(&Camera::Rescale),
                 "Rescale camera dimensions to (width_height) and accordingly the focal length and\n"
                 "and the principal point.")
         .def("rescale", overload_cast_<double>()(&Camera::Rescale),
@@ -314,7 +412,7 @@ void init_reconstruction(py::module &m) {
         })
         .def("summary", [](const Camera &self) {
             std::stringstream ss;
-            ss<<"Camera:\n\t'camera_id=" 
+            ss<<"Camera:\n\tcamera_id=" 
                 <<(self.CameraId()!=kInvalidCameraId ? 
                     std::to_string(self.CameraId()) : "Invalid")
                 <<"\n\tmodel = "<<self.ModelName()
@@ -328,6 +426,11 @@ void init_reconstruction(py::module &m) {
 
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
+        .def(py::init([](const std::string& input_path){
+            auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
+            reconstruction->Read(input_path);
+            return reconstruction;
+        }))
         .def("read", &Reconstruction::Read, "Read reconstruction in COLMAP format. Prefer binary.")
         .def("write", &Reconstruction::Write, "Write reconstruction in COLMAP format. Prefer binary.")
         .def("num_images", &Reconstruction::NumImages)
