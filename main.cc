@@ -18,21 +18,40 @@ PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
 
     // Absolute pose.
-    m.def("absolute_pose_estimation", &absolute_pose_estimation,
-          py::arg("points2D"), py::arg("points3D"),
-          py::arg("camera_dict"),
-          py::arg("max_error_px") = 12.0,
-          "Absolute pose estimation with non-linear refinement.");
+    m.def("absolute_pose_estimation", 
+            &absolute_pose_estimation,
+            py::arg("points2D"), py::arg("points3D"),
+            py::arg("camera"),
+            py::arg("max_error_px") = 12.0,
+            "Absolute pose estimation with non-linear refinement.");
+    
+    // Absolute pose with camera dict.
+    m.def("absolute_pose_estimation", 
+            &absolute_pose_estimation_camera_dict,
+            py::arg("points2D"), py::arg("points3D"),
+            py::arg("camera_dict"),
+            py::arg("max_error_px") = 12.0,
+            "Absolute pose estimation with non-linear refinement.");
 
     // Essential matrix.
-    m.def("essential_matrix_estimation", &essential_matrix_estimation,
+    m.def("essential_matrix_estimation", 
+          &essential_matrix_estimation,
+          py::arg("points2D1"), py::arg("points2D2"),
+          py::arg("camera1"), py::arg("camera2"),
+          py::arg("max_error_px") = 4.0,
+          "LORANSAC + 5-point algorithm.");
+
+    // Essential matrix with camera dict.
+    m.def("essential_matrix_estimation", 
+          &essential_matrix_estimation_camera_dict,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("camera_dict1"), py::arg("camera_dict2"),
           py::arg("max_error_px") = 4.0,
           "LORANSAC + 5-point algorithm.");
 
     // Fundamental matrix.
-    m.def("fundamental_matrix_estimation", &fundamental_matrix_estimation,
+    m.def("fundamental_matrix_estimation", 
+          &fundamental_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("max_error_px") = 4.0,
           "LORANSAC + 7-point algorithm.");

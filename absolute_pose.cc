@@ -47,7 +47,7 @@ namespace py = pybind11;
 py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
-        const py::dict camera_dict,
+        Camera& camera,
         const double max_error_px
 ) {
     SetPRNGSeed(0);
@@ -58,13 +58,6 @@ py::dict absolute_pose_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
 
     // Absolute pose estimation parameters.
     AbsolutePoseEstimationOptions abs_pose_options;
@@ -115,4 +108,20 @@ py::dict absolute_pose_estimation(
     success_dict["inliers"] = inliers;
     
     return success_dict;
+}
+
+py::dict absolute_pose_estimation_camera_dict(
+        const std::vector<Eigen::Vector2d> points2D,
+        const std::vector<Eigen::Vector3d> points3D,
+        const py::dict camera_dict,
+        const double max_error_px
+) {
+    // Create camera.
+    Camera camera;
+    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
+    camera.SetWidth(camera_dict["width"].cast<size_t>());
+    camera.SetHeight(camera_dict["height"].cast<size_t>());
+    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
+
+    return absolute_pose_estimation(points2D, points3D, camera, max_error_px);
 }
