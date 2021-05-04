@@ -10,9 +10,7 @@ output_path = "output_reconstruction/"
 reconstruction.read(input_path)
 
 # Print reconstruction statistics
-print("Reconstruction __repr__:") 
 print(reconstruction)
-print("Reconstruction summary():") 
 print(reconstruction.summary())
 
 # Accessing objects
@@ -21,7 +19,7 @@ my_image = reconstruction.images[image_id]
 print(my_image)
 print(my_image.summary())
 
-# Non-primite objects are all mutable, i.e. no copy
+# Non-primitive objects are all mutable, i.e. no copy
 my_image.name = "my_image.png"
 assert(my_image.name == reconstruction.images[image_id].name)
 point3D_id = 10
@@ -38,7 +36,7 @@ assert(reconstruction.points3D[point3D_id].xyz[0] == world[0])
 assert(reconstruction.points3D[point3D_id].xyz[0] == my_point.x)
 print(my_point.track.elements)
 
-#primitve objects are NOT mutable!!!!
+#primitve objects are NOT mutable.
 my_x = my_point.x
 my_x = 2.0
 assert(my_point.x != my_x)
@@ -59,7 +57,8 @@ point3D = pycolmap.Point3D([1.0,2.2,-1.0], track)
 print(point3D.summary())
 
 img = pycolmap.Image("def")
-img = pycolmap.Image("abc", keypoints = [[1.5,2.5], [3.0,4.0]], tvec = [0.5,0.5,0.0], qvec = [1.0,0.0,0.1,0.0])
+img = pycolmap.Image("abc", keypoints = [[1.5,2.5], [3.0,4.0]], \
+        tvec = [0.5,0.5,0.0], qvec = [1.0,0.0,0.1,0.0])
 print(img.summary())
 
 rec = pycolmap.Reconstruction(input_path)
@@ -75,5 +74,5 @@ print(cam.image_to_world([[1.0,0.5], [2.0,1.0]]))
 print(cam.image_to_world(img.points2D))
 print(cam.world_to_image([[110.0,120.0], [0.0,1.0]]))
 
-
-
+# From World Coordinates to [u,v]
+print(cam.world_to_image(img.project([[1,2,3], [3,2,3]])))

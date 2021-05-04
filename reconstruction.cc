@@ -227,6 +227,8 @@ void init_reconstruction(py::module &m) {
                 "Extract the viewing direction of the image.")
         .def("rotation_matrix", &Image::RotationMatrix,
                 "Compose rotation matrix from quaternion vector.")
+        .def("rotmat", &Image::RotationMatrix,
+                "Compose rotation matrix from quaternion vector.")
         .def("set_up", &Image::SetUp,
                 "Setup the image and necessary internal data structures before being used in reconstruction.")
         .def("has_camera", &Image::HasCamera,
@@ -247,12 +249,32 @@ void init_reconstruction(py::module &m) {
                 "Get the number of observations that see a triangulated point, i.e. the\n"
                 "number of image points that have at least one correspondence to a\n"
                 "triangulated point in another image.")
-        .def("Point3DVisibilityScore", &Image::Point3DVisibilityScore,
+        .def("point3D_visibility_score", &Image::Point3DVisibilityScore,
                 "Get the score of triangulated observations. In contrast to\n"
                 "`NumVisiblePoints3D`, this score also captures the distribution\n"
                 "of triangulated observations in the image. This is useful to select\n"
                 "the next best image in incremental reconstruction, because a more\n"
                 "uniform distribution of observations results in more robust registration.")
+        .def("project", [](const Image& self, const Eigen::Vector3d& world){
+            const Eigen::Vector3d world_point = self.ProjectionMatrix() * world.homogeneous();
+            return world_point.hnormalized();
+        }, "Project world point to image coordinate frame.")
+        .def("project", [](const Image& self, const std::vector<Eigen::Vector3d>& world_coords){
+            const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
+            std::vector<Eigen::Vector2d> world_points(world_coords.size());
+            for (int idx = 0; idx < world_coords.size(); ++idx) {
+                world_points[idx] = (projection_matrix * world_coords[idx].homogeneous()).hnormalized();
+            }
+            return world_points;
+        }, "Project list of world points to image coordinate frame.")
+        .def("project", [](const Image& self, const std::vector<Point3D>& point3Ds){
+            const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
+            std::vector<Eigen::Vector2d> world_points(point3Ds.size());
+            for (int idx = 0; idx < point3Ds.size(); ++idx) {
+                world_points[idx] = (projection_matrix * point3Ds[idx].XYZ().homogeneous()).hnormalized();
+            }
+            return world_points;
+        }, "Project list world points to image coordinate frame.")
         .def("__copy__",  [](const Image &self) {
             return Image(self);
         })
