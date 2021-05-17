@@ -2,10 +2,9 @@
 #include <colmap/util/ply.h>
 #include <colmap/base/projection.h>
 
-using namespace colmap;
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
@@ -13,8 +12,21 @@ namespace py = pybind11;
 template<typename... Args>
       using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
+PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D));
+PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::image_t, colmap::Image));
+PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera));
+PYBIND11_MAKE_OPAQUE(std::vector<class Point2D>);
+
+using namespace colmap;
+
 //Reconstruction Bindings
 void init_reconstruction(py::module &m) {
+    // STL Containers
+    py::bind_map<EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D)>(m, "MapPoint3DIdPoint3D");
+    py::bind_map<EIGEN_STL_UMAP(colmap::image_t, colmap::Image)>(m, "MapImageIdImage");
+    py::bind_map<EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera)>(m, "MapCameraIdCamera");
+    py::bind_vector<std::vector<class Point2D>>(m,"ListPoint2D");
+
     py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
         .def(py::init<>())
         .def(py::init<image_t, point2D_t>())
