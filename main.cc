@@ -12,10 +12,16 @@ namespace py = pybind11;
 
 #include "reconstruction.cc"
 
+#include "glog.cc"
+
 void init_reconstruction(py::module &);
+void init_glog(py::module &);
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
+
+    // Init Glog Bindings and setup
+    init_glog(m);
 
     // Absolute pose.
     m.def("absolute_pose_estimation", 
