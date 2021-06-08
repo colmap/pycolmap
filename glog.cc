@@ -60,10 +60,10 @@ void init_glog(py::module & m) {
         .def_property_static("log_dir",
              [](py::object) { return FLAGS_log_dir; }, 
              [](py::object, std::string a) { FLAGS_log_dir = a; })
-        .def_property_static("logtostderrr",
+        .def_property_static("logtostderr",
              [](py::object) { return FLAGS_logtostderr; }, 
              [](py::object, bool a) { FLAGS_logtostderr = a; })
-        .def_property_static("alsologtostderrr",
+        .def_property_static("alsologtostderr",
              [](py::object) { return FLAGS_alsologtostderr; }, 
              [](py::object, bool a) { FLAGS_alsologtostderr = a; })
         .def("init", [](std::string path) {
