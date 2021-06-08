@@ -1,6 +1,9 @@
 #include <colmap/base/reconstruction.h>
 #include <colmap/util/ply.h>
 #include <colmap/base/projection.h>
+#include <colmap/util/misc.h>
+#include "base/camera_models.h"
+#include "log_exceptions.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -18,6 +21,22 @@ PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera));
 PYBIND11_MAKE_OPAQUE(std::vector<class Point2D>);
 
 using namespace colmap;
+
+bool ExistsReconstructionText(const std::string& path) {
+    return (ExistsFile(JoinPaths(path, "cameras.txt")) &&
+    ExistsFile(JoinPaths(path, "images.txt")) &&
+    ExistsFile(JoinPaths(path, "points3D.txt")));
+}
+
+bool ExistsReconstructionBinary(const std::string& path) {
+    return (ExistsFile(JoinPaths(path, "cameras.bin")) &&
+    ExistsFile(JoinPaths(path, "images.bin")) &&
+    ExistsFile(JoinPaths(path, "points3D.bin")));
+}
+
+bool ExistsReconstruction(const std::string& path) {
+    return (ExistsReconstructionText(path) || ExistsReconstructionBinary(path));
+}
 
 //Reconstruction Bindings
 void init_reconstruction(py::module &m) {
@@ -60,7 +79,9 @@ void init_reconstruction(py::module &m) {
                 "Delete observation (image_id, point2D_idx) from track.")
         //.def("append", overload_cast_<TrackElement>()(&Track::AddElement))
         .def("add_elements", &Track::AddElements, "Add TrackElement list.")
-        .def("remove", overload_cast_<size_t>()(&Track::DeleteElement), "Remove TrackElement at index.")
+        .def("remove", [](Track &self, const size_t idx){
+                THROW_CHECK_LT(idx, self.Elements().size());
+        }, "Remove TrackElement at index.")
         .def_property("elements", &Track::Elements, &Track::SetElements)
         .def("__copy__",  [](const Track &self) {
             return Track(self);
@@ -125,7 +146,8 @@ void init_reconstruction(py::module &m) {
         })
         .def_property("color", overload_cast_<>()(&Point3D::Color), &Point3D::SetColor)
         .def_property("error", &Point3D::Error, &Point3D::SetError)
-        .def_property("track", overload_cast_<>()(&Point3D::Track), &Point3D::SetTrack)
+        .def_property("track", overload_cast_<>()(&Point3D::Track), &Point3D::SetTrack, 
+                                py::return_value_policy::reference_internal)
         .def("__copy__",  [](const Point3D &self) {
             return Point3D(self);
         })
@@ -195,7 +217,10 @@ void init_reconstruction(py::module &m) {
             py::arg("qvec") = Eigen::Vector4d(1.0,0.0,0.0,0.0), 
             py::arg("camera_id_id") = kInvalidCameraId)
         .def_property("image_id", &Image::ImageId, &Image::SetImageId, "Unique identifier of image.")
-        .def_property("camera_id", &Image::CameraId, &Image::SetCameraId, "Unique identifier of the camera.")
+        .def_property("camera_id", &Image::CameraId, [](Image& self, const camera_t camera_id) {
+                THROW_CHECK_NE(camera_id, kInvalidCameraId);
+                self.SetCameraId(kInvalidCameraId);
+        }, "Unique identifier of the camera.")
         .def_property("name", overload_cast_<>()(&Image::Name), &Image::SetName, "Name of the image.")
         .def_property("qvec", overload_cast_<>()(&Image::Qvec), &Image::SetQvec, 
                 "Quaternion vector (qw,qx,qy,qz) which describes rotation from world to image space.")
@@ -206,10 +231,17 @@ void init_reconstruction(py::module &m) {
         .def_property("tvec_prior", overload_cast_<>()(&Image::TvecPrior), &Image::SetTvecPrior,
                 "Translation prior, e.g. given by EXIF GPS tag.")
         .def_property("points2D", &Image::Points2D, 
-            overload_cast_<const std::vector<class Point2D>&>()(&Image::SetPoints2D),
-                "Array of Points2D (=keypoints).")
-        .def("set_point3D_for_point2D", &Image::SetPoint3DForPoint2D, 
-                "Set the point as triangulated, i.e. it is part of a 3D point track.")
+            [](Image& self, const std::vector<class Point2D>& points2D) {
+                 THROW_CUSTOM_CHECK(!points2D.empty(), std::invalid_argument);
+                 self.SetPoints2D(points2D);   
+            },"Array of Points2D (=keypoints).")
+        .def("set_point3D_for_point2D", [](
+                Image& self, 
+                const point2D_t point2D_idx,
+                const point3D_t point3D_id) {
+                THROW_CHECK_NE(point3D_id, kInvalidPoint3DId);
+                self.SetPoint3DForPoint2D(point2D_idx, point3D_id);
+        },     "Set the point as triangulated, i.e. it is part of a 3D point track.")
         .def("reset_point3D_for_point2D", &Image::ResetPoint3DForPoint2D,
                 "Set the point as not triangulated, i.e. it is not part of a 3D point track")
         .def("is_point3D_visible", &Image::IsPoint3DVisible,
@@ -241,7 +273,10 @@ void init_reconstruction(py::module &m) {
                 "Compose rotation matrix from quaternion vector.")
         .def("rotmat", &Image::RotationMatrix,
                 "Compose rotation matrix from quaternion vector.")
-        .def("set_up", &Image::SetUp,
+        .def("set_up", [](Image& self, const class Camera& camera) {
+                   THROW_CHECK_EQ(self.CameraId(), camera.CameraId());
+                   self.SetUp(camera);
+                },
                 "Setup the image and necessary internal data structures before being used in reconstruction.")
         .def("has_camera", &Image::HasCamera,
                 "Check whether identifier of camera has been set.")
@@ -267,6 +302,30 @@ void init_reconstruction(py::module &m) {
                 "of triangulated observations in the image. This is useful to select\n"
                 "the next best image in incremental reconstruction, because a more\n"
                 "uniform distribution of observations results in more robust registration.")
+        .def("get_valid_point2D_ids", [](const Image& self) {
+            std::vector<colmap::point2D_t> valid_point2D_ids;
+
+            for (colmap::point2D_t point2D_idx = 0; point2D_idx < self.NumPoints2D();
+                ++point2D_idx) {
+                if (self.Point2D(point2D_idx).HasPoint3D()) {
+                    valid_point2D_ids.push_back(point2D_idx);
+                }
+            }
+
+            return valid_point2D_ids;
+        })
+        .def("get_valid_points2D", [](const Image& self) {
+            std::vector<colmap::Point2D> valid_points2D;
+
+            for (colmap::point2D_t point2D_idx = 0; point2D_idx < self.NumPoints2D();
+                ++point2D_idx) {
+                if (self.Point2D(point2D_idx).HasPoint3D()) {
+                    valid_points2D.push_back(self.Point2D(point2D_idx));
+                }
+            }
+
+            return valid_points2D;
+        })
         .def("project", [](const Image& self, const Eigen::Vector3d& world){
             const Eigen::Vector3d world_point = self.ProjectionMatrix() * world.homogeneous();
             return world_point.hnormalized();
@@ -331,6 +390,7 @@ void init_reconstruction(py::module &m) {
                          size_t height, 
                          const std::vector<double>& params){
                 std::unique_ptr<Camera> camera = std::unique_ptr<Camera>(new Camera());
+                THROW_CHECK(ExistsCameraModelWithName(name));
                 camera->SetModelIdFromName(name);
                 camera->SetWidth(width);
                 camera->SetHeight(height);
@@ -339,10 +399,17 @@ void init_reconstruction(py::module &m) {
         }))
         .def_property("camera_id", &Camera::CameraId, &Camera::SetCameraId,
                 "Unique identifier of the camera.")
-        .def_property("model_id", &Camera::ModelId, &Camera::SetModelId,
+        .def_property("model_id", &Camera::ModelId, [](Camera& self,int model_id){
+                        THROW_CHECK(ExistsCameraModelWithId(model_id));
+                        self.SetModelId(model_id);
+                },
                 "Camera model ID.")
-        .def_property("model_name", &Camera::ModelName, &Camera::SetModelIdFromName,
-                "Camera model name (connected to model_id).")
+        .def_property("model_name", &Camera::ModelName, [](
+                                Camera& self,
+                                std::string model_name){
+                        THROW_CHECK(ExistsCameraModelWithName(model_name));
+                        self.SetModelIdFromName(model_name);
+                },"Camera model name (connected to model_id).")
         .def_property("width", &Camera::Width, &Camera::SetWidth,
                 "Width of camera sensor.")
         .def_property("height", &Camera::Height, &Camera::SetHeight,
@@ -376,10 +443,17 @@ void init_reconstruction(py::module &m) {
                 "the correct dimensions that match the specified camera model.")
         .def("has_bogus_params", &Camera::HasBogusParams,
                 "Check whether camera has bogus parameters.")
-        .def("initialize_with_id", &Camera::InitializeWithId,
-                "Initialize parameters for given camera model ID and focal length, and set\n"
+        .def("initialize_with_id", [](Camera& self, const int model_id, 
+        const double focal_length, const size_t width, const size_t height){
+                THROW_CHECK(ExistsCameraModelWithId(model_id));
+                self.InitializeWithId(model_id, focal_length, width, height);
+            },"Initialize parameters for given camera model ID and focal length, and set\n"
                 "the principal point to be the image center.")
-        .def("initialize_with_name", &Camera::InitializeWithName,
+        .def("initialize_with_name", [](Camera& self, std::string model_name, 
+            const double focal_length, const size_t width, const size_t height){
+                THROW_CHECK(ExistsCameraModelWithName(model_name));
+                self.InitializeWithName(model_name, focal_length, width, height);
+            },
                 "Initialize parameters for given camera model name and focal length, and set\n"
                 "the principal point to be the image center.")
         .def("image_to_world", &Camera::ImageToWorld,
@@ -461,12 +535,33 @@ void init_reconstruction(py::module &m) {
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
         .def(py::init([](const std::string& input_path){
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsReconstruction(input_path),
+                std::invalid_argument,
+                (std::string("cameras, images, points3D not found at ")
+                    +input_path).c_str()
+            );
             auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
             reconstruction->Read(input_path);
             return reconstruction;
         }))
-        .def("read", &Reconstruction::Read, "Read reconstruction in COLMAP format. Prefer binary.")
-        .def("write", &Reconstruction::Write, "Write reconstruction in COLMAP format. Prefer binary.")
+        .def("read", [](Reconstruction& self, const std::string& input_path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsReconstruction(input_path),
+                std::invalid_argument,
+                (std::string("cameras, images, points3D not found at ")
+                    +input_path).c_str()
+            );
+            self.Read(input_path);
+        }, "Read reconstruction in COLMAP format. Prefer binary.")
+        .def("write", [](const Reconstruction& self,const std::string& path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsDir(path),
+                std::invalid_argument,
+                (std::string("Directory ")+ path + " does not exist.").c_str()
+            );
+            self.Write(path);
+        }, "Write reconstruction in COLMAP binary format.")
         .def("num_images", &Reconstruction::NumImages)
         .def("num_cameras", &Reconstruction::NumImages)
         .def("num_reg_images", &Reconstruction::NumImages)
@@ -526,13 +621,17 @@ void init_reconstruction(py::module &m) {
                 "merging the two clouds and their tracks. The coordinate frames of the two\n"
                 "reconstructions are aligned using the projection centers of common\n"
                 "registered images. Return true if the two reconstructions could be merged.")
+        // We do not add custom checks atm for align since function headers are different between
+        // COLMAP versions. Thus, this could potentially lead to fatal errors (but checks are obvious).
         .def("align", &Reconstruction::Align,
                 "Align the given reconstruction with a set of pre-defined camera positions.\n"
                 "Assuming that locations[i] gives the 3D coordinates of the center\n"
                 "of projection of the image with name image_names[i].")
         .def("align_robust", &Reconstruction::AlignRobust,
                 "Robust alignment using RANSAC.")
-        .def("find_image_with_name", &Reconstruction::FindImageWithName)
+        .def("find_image_with_name", &Reconstruction::FindImageWithName, 
+                                py::return_value_policy::reference_internal,
+            "Find image with matching name. Returns None if no match is found.")
         .def("find_common_reg_image_ids", &Reconstruction::FindCommonRegImageIds,
                 "Find images that are both present in this and the given reconstruction.")
         .def("filter_points3D", &Reconstruction::FilterPoints3D,
@@ -565,22 +664,79 @@ void init_reconstruction(py::module &m) {
         .def("compute_mean_track_length", &Reconstruction::ComputeMeanTrackLength)
         .def("compute_mean_observations_per_reg_image", &Reconstruction::ComputeMeanObservationsPerRegImage)
         .def("compute_mean_reprojection_error", &Reconstruction::ComputeMeanReprojectionError)
-        .def("read_text", &Reconstruction::ReadText)
-        .def("read_binary", &Reconstruction::ReadBinary)
-        .def("write_text", &Reconstruction::WriteText)
-        .def("write_binary", &Reconstruction::WriteBinary)
+        .def("read_text", [](Reconstruction& self, const std::string& input_path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsReconstructionText(input_path),
+                std::invalid_argument,
+                (std::string("cameras.txt, images.txt, points3D.txt not found at ")
+                    +input_path).c_str()
+            );
+            self.ReadText(input_path);
+        })
+        .def("read_binary", [](Reconstruction& self, const std::string& input_path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsReconstructionBinary(input_path),
+                std::invalid_argument,
+                (std::string("cameras.bin, images.bin, points3D.bin not found at ")
+                    +input_path).c_str()
+            );
+            self.ReadBinary(input_path);
+        })
+        .def("write_text", [](const Reconstruction& self,const std::string& path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsDir(path),
+                std::invalid_argument,
+                (std::string("Directory ")+ path + " does not exist.").c_str()
+            );
+            self.WriteText(path);
+        })
+        .def("write_binary", [](const Reconstruction& self,const std::string& path) {
+            THROW_CUSTOM_CHECK_MSG(
+                ExistsDir(path),
+                std::invalid_argument,
+                (std::string("Directory ")+ path + " does not exist.").c_str()
+            );
+            self.WriteBinary(path);
+        })
         .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
         .def("import_PLY", &Reconstruction::ImportPLY,
                 "Import from PLY format. Note that these import functions are\n"
                 "only intended for visualization of data and usable for reconstruction.")
         .def("export_NVM", &Reconstruction::ExportNVM,
-                "Export reconstruction in NVM format.")
+                "Export reconstruction in NVM format.\n"
+                "WARNING: Can raise fatal error if the file path cannot be opened.")
         .def("export_bundler", &Reconstruction::ExportBundler,
-                "Export reconstruction in Bundler format.")
-        .def("export_PLY", &Reconstruction::ExportPLY,
-                "Export reconstruction in PLY format.")
-        .def("export_VRML", &Reconstruction::ExportVRML,
-                "Export reconstruction in VRML format.")
+                "Export reconstruction in Bundler format.\n"
+                "WARNING: Can raise fatal error if the file paths cannot be opened.")
+        .def("export_PLY", [](const Reconstruction& self, 
+            const std::string& path) {
+               std::ofstream file(path, std::ios::trunc);
+                THROW_CUSTOM_CHECK_MSG(file.is_open(),
+                std::invalid_argument,
+                (std::string(": Could not open ") + path).c_str());
+                file.close();
+                self.ExportPLY(path);
+            }, "Export reconstruction in PLY format.")
+        .def("export_VRML", [](const Reconstruction& self, 
+                const std::string& images_path,
+                const std::string& points3D_path,
+                const double image_scale,
+                const Eigen::Vector3d& image_rgb) {
+                    std::ofstream image_file(images_path, std::ios::trunc);
+                    THROW_CUSTOM_CHECK_MSG(image_file.is_open(),
+                    std::invalid_argument,
+                    (std::string(": Could not open ") + images_path).c_str());
+                    image_file.close();
+
+                    std::ofstream p3D_file(points3D_path, std::ios::trunc);
+                    THROW_CUSTOM_CHECK_MSG(p3D_file.is_open(),
+                    std::invalid_argument,
+                    (std::string(": Could not open ") + points3D_path).c_str());
+                    p3D_file.close();
+
+                    self.ExportVRML(images_path, points3D_path,
+                        image_scale, image_rgb);
+                }, "Export reconstruction in VRML format.")
         .def("extract_colors_for_image", &Reconstruction::ExtractColorsForImage,
                 "Extract colors for 3D points of given image. Colors will be extracted\n"
                 "only for 3D points which are completely black.\n\n"

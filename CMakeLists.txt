@@ -4,7 +4,7 @@ project(PyCOLMAP)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(COLMAP REQUIRED)
-include_directories(${COLMAP_INCLUDE_DIRS})
+include_directories(${COLMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 link_directories(${COLMAP_LINK_DIRS})
 
 add_subdirectory(pybind11)
