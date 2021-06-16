@@ -5,7 +5,6 @@
 #include "colmap/base/pose.h"
 #include "colmap/base/projection.h"
 #include "colmap/base/similarity_transform.h"
-#include "colmap/estimators/generalized_absolute_pose.h"
 #include "colmap/optim/ransac.h"
 #include "colmap/util/random.h"
 #include "colmap/util/misc.h"
@@ -13,6 +12,8 @@
 #include "colmap/base/camera_models.h"
 #include "colmap/optim/bundle_adjustment.h"
 #include "colmap/base/cost_functions.h"
+
+#include "estimators/generalized_absolute_pose.cc"
 
 using namespace colmap;
 
