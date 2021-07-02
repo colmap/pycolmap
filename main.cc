@@ -7,6 +7,8 @@ namespace py = pybind11;
 #include "fundamental_matrix.cc"
 #include "transformations.cc"
 #include "sift.cc"
+#include "rig_absolute_pose.cc"
+#include "pose_refinement.cc"
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
@@ -41,4 +43,21 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
           py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
           "Extract SIFT features.");
+      
+    // Standalone Pose Refinement
+    m.def("pose_refinement", &pose_refinement, 
+          py::arg("tvec"), py::arg("qvec"),
+          py::arg("points2D"), py::arg("points3D"),
+          py::arg("inlier_mask"),
+          py::arg("camera_dict"),
+          "Non-linear refinement.");
+      
+    // Rig Absolute Pose
+    m.def("rig_absolute_pose_estimation", &rig_absolute_pose_estimation,
+          py::arg("tvec"), py::arg("qvec"),
+          py::arg("points2D"), py::arg("points3D"),
+          py::arg("camera_dict"),
+          py::arg("max_error") = 1e-5,
+          "Absolute rig pose estimation with non-linear refinement.");
+
 }

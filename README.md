@@ -54,6 +54,31 @@ answer = pycolmap.absolute_pose_estimation(
 # - dictionary containing the RANSAC output
 ```
 
+## Standalone Pose Refinement
+
+```python
+import pycolmap
+
+# Parameters:
+# - tvec: List of 3 floats, translation component of the pose (world to camera)
+# - qvec: List of 4 floats, quaternion component of the pose (world to camera)
+# - points2D: Nx2 array; pixel coordinates
+# - points3D: Nx3 array; world coordinates
+# - inlier_mask: array of N bool; true -> corresponding value in points2D/points3D is an inlier
+# - camera_dict: dictionary
+answer = pycolmap.pose_refinement(
+    tvec, qvec, points2D, points3D, inlier_mask,
+    {
+        'model': 'SIMPLE_PINHOLE',
+        'width': width,
+        'height': height,
+        'params': [focal_length, cx, cy]
+    }
+)
+# Returns:
+# - dictionary containing the RANSAC output
+```
+
 ## SIFT feature extraction
 
 ```python
@@ -84,6 +109,38 @@ keypoints, scores, descriptors = pycolmap.extract_sift(img)
 # - keypoints: Nx4 array; format: x (j), y (i), sigma, angle
 # - scores: N array; DoG scores
 # - descriptors: Nx128 array; L2-normalized descriptors
+```
+
+## Rig Pose Estimation
+
+```python
+import pycolmap
+
+# Parameters:
+# - tvec: Sx3 array; rig relative translations (rig to camera)
+# - qvec: Sx4 array; rig relative quaternions (rig to camera)
+# - points2D: SxNx2 array; pixel coordinates
+# - points3D: SxNx3 array; world coordinates
+# - camera_dict: array of dict of length S
+# Named parameters
+# - max_error: float; RANSACOptions max_error, cosine distance, squared (default 1e-5)
+answer = pycolmap.rig_absolute_pose_estimation(
+    tvec, qvec, points2D, points3D,
+    [{
+        'model': 'SIMPLE_PINHOLE',
+        'width': width_cam1,
+        'height': height_cam1,
+        'params': [focal_length_cam1, cx_cam1, cy_cam1]
+    },
+    {
+        'model': 'SIMPLE_PINHOLE',
+        'width': width_cam2,
+        'height': height_cam2,
+        'params': [focal_length_cam2, cx_cam2, cy_cam2]
+    }]
+)
+# Returns:
+# - dictionary containing the RANSAC output (pose of the rig: world to rig)
 ```
 
 # TODO
