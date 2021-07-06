@@ -228,7 +228,7 @@ py::dict rig_absolute_pose_estimation(
         return failure_dict;
     }
 
-    // Convert vector<char> to vector<int>.
+    // Convert vector<char> to vector<bool>.
     std::vector<bool> inliers;
     for (auto it : inlier_mask) {
         if (it) {
