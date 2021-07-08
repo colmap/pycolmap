@@ -31,18 +31,19 @@
 
 #include <iostream>
 #include <fstream>
-#include "optim/bundle_adjustment.h"
+
+#include "colmap/optim/bundle_adjustment.h"
 #include "colmap/base/camera.h"
-#include "base/projection.h"
-#include "base/cost_functions.h"
-#include "base/similarity_transform.h"
-#include "estimators/generalized_absolute_pose.h"
+#include "colmap/base/projection.h"
+#include "colmap/base/cost_functions.h"
+#include "colmap/base/similarity_transform.h"
+#include "colmap/estimators/generalized_absolute_pose.h"
 #include "colmap/estimators/pose.h"
-#include "optim/ransac.h"
+#include "colmap/optim/ransac.h"
 #include "colmap/util/random.h"
-#include "util/matrix.h"
-#include "util/misc.h"
-#include "base/camera_models.h"
+#include "colmap/util/matrix.h"
+#include "colmap/util/misc.h"
+#include "colmap/base/camera_models.h"
 
 #ifdef OPENMP_ENABLED
 #include <omp.h>
