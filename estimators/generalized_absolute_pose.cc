@@ -72,6 +72,9 @@ class GP3PEstimator {
   // The minimum number of samples needed to estimate a model.
   static const int kMinNumSamples = 3;
 
+  // Whether to compute the cosine similarity or the reprojection error.
+  bool do_cosine_similarity = true;
+
   // Estimate the most probable solution of the GP3P problem from a set of
   // three 2D-3D point correspondences.
   static std::vector<M_t> Estimate(const std::vector<X_t>& points2D,
@@ -80,9 +83,9 @@ class GP3PEstimator {
   // Calculate the squared cosine distance error between the rays given a set of
   // 2D-3D point correspondences and a projection matrix of the generalized
   // camera.
-  static void Residuals(const std::vector<X_t>& points2D,
-                        const std::vector<Y_t>& points3D,
-                        const M_t& proj_matrix, std::vector<double>* residuals);
+  void Residuals(const std::vector<X_t>& points2D,
+                 const std::vector<Y_t>& points3D,
+                 const M_t& proj_matrix, std::vector<double>* residuals);
 };
 //}  // namespace colmap
 
@@ -364,16 +367,19 @@ void GP3PEstimator::Residuals(const std::vector<X_t>& points2D,
 
       const double x_0 = points2D[i].xy(0);
       const double x_1 = points2D[i].xy(1);
-      //const double inv_x_norm = 1 / std::sqrt(x_0 * x_0 + x_1 * x_1 + 1);
-      const double inv_pcx_2 = 1.0 / pcx_2;
-      const double dx_0 = x_0 - pcx_0 * inv_pcx_2;
-      const double dx_1 = x_1 - pcx_1 * inv_pcx_2;
 
-      const double reproj_error = dx_0 * dx_0 + dx_1 * dx_1;
-      (*residuals)[i] = reproj_error;
-      //const double cosine_dist =
-          //1 - inv_pcx_norm * inv_x_norm * (pcx_0 * x_0 + pcx_1 * x_1 + pcx_2);
-      //(*residuals)[i] = cosine_dist * cosine_dist;
+      if (do_cosine_similarity) {
+        const double inv_x_norm = 1 / std::sqrt(x_0 * x_0 + x_1 * x_1 + 1);
+        const double cosine_dist =
+            1 - inv_pcx_norm * inv_x_norm * (pcx_0 * x_0 + pcx_1 * x_1 + pcx_2);
+        (*residuals)[i] = cosine_dist * cosine_dist;
+      } else {
+        const double inv_pcx_2 = 1.0 / pcx_2;
+        const double dx_0 = x_0 - pcx_0 * inv_pcx_2;
+        const double dx_1 = x_1 - pcx_1 * inv_pcx_2;
+        const double reproj_error = dx_0 * dx_0 + dx_1 * dx_1;
+        (*residuals)[i] = reproj_error;
+    }
 
     } else {
       (*residuals)[i] = std::numeric_limits<double>::max();
