@@ -260,6 +260,7 @@ py::dict rig_absolute_pose_estimation(
     options.max_num_trials = 100000;
     options.confidence = 0.9999;
     RANSAC<GP3PEstimator> ransac(options);
+    ransac.estimator.do_cosine_similarity = false;
     const auto report = ransac.Estimate(points2D_rig, points3D_all);
     size_t num_inliers = report.support.num_inliers;
     if (num_inliers == 0) {
