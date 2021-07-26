@@ -9,9 +9,29 @@ Clone the repository and its submodules by running:
 git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 ```
 
+## Unix
 COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can be installed using `pip`: 
 ```
 pip install ./
+```
+
+## Windows
+To install pycolmap on Windows, we recommend to install colmap with [vcpkg](https://github.com/microsoft/vcpkg).
+From your vcpkg directory, run
+```
+.\vcpkg.exe install colmap --triplet=x64-windows
+```
+
+Then set the `CMAKE_TOOLCHAIN_FILE` environment variable to your `vcpkg\scripts\buildsystems\vcpkg.cmake` path.
+
+example (powershell)
+```
+$env:CMAKE_TOOLCHAIN_FILE='C:\Workspace\vcpkg\scripts\buildsystems\vcpkg.cmake'
+```
+
+Finally go to the pycolmap folder and run
+```
+py -m pip install ./
 ```
 
 # Usage
