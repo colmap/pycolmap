@@ -40,8 +40,14 @@ class CMakeBuild(build_ext):
         build_args = ['--config', cfg]
 
         if platform.system() == "Windows":
+            if os.environ.get('CMAKE_TOOLCHAIN_FILE') is not None:
+                cmake_toolchain_file = os.environ.get('CMAKE_TOOLCHAIN_FILE')
+                # print(f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}')
+                cmake_args += [f'-DCMAKE_TOOLCHAIN_FILE={cmake_toolchain_file}']
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             if sys.maxsize > 2**32:
+                if os.environ.get('CMAKE_TOOLCHAIN_FILE') is not None:
+                    cmake_args += ['-DVCPKG_TARGET_TRIPLET=x64-windows']
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         else:
