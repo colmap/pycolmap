@@ -8,12 +8,12 @@
 #include "colmap/optim/ransac.h"
 #include "colmap/util/random.h"
 #include "colmap/util/misc.h"
+#include "colmap/estimators/generalized_absolute_pose.h"
 
 #include "colmap/base/camera_models.h"
 #include "colmap/optim/bundle_adjustment.h"
 #include "colmap/base/cost_functions.h"
 
-#include "estimators/generalized_absolute_pose.cc"
 
 using namespace colmap;
 
@@ -260,7 +260,7 @@ py::dict rig_absolute_pose_estimation(
     options.max_num_trials = 100000;
     options.confidence = 0.9999;
     RANSAC<GP3PEstimator> ransac(options);
-    ransac.estimator.do_cosine_similarity = false;
+    ransac.estimator.residual_type = GP3PEstimator::ResidualType::ReprojectionError;
     const auto report = ransac.Estimate(points2D_rig, points3D_all);
     size_t num_inliers = report.support.num_inliers;
     if (num_inliers == 0) {
