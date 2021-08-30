@@ -173,7 +173,7 @@ void init_reconstruction(py::module &m) {
         })
         .def("summary", [](const Point3D &self) {
             std::stringstream ss;
-            ss<<"<Point3D:\n\txyz = ["
+            ss<<"Point3D:\n\txyz = ["
                 <<self.XYZ().transpose()
                 <<"]\n\ttrack_length = " 
                 <<(self.Track().Length())
