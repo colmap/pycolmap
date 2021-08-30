@@ -47,7 +47,7 @@ inline std::string __GetCheckString(const char* cond_str) {
 
 
 inline std::string __MergeTwoConstChar(const char* expr1, const char* expr2) {
-    return (std::string(expr1) + std::string(" ") + expr2);
+    return (std::string(expr1) + std::string("\n") + expr2);
 }
 
 
