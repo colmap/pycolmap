@@ -47,6 +47,18 @@ The current bindings are compatible with numpy arrays for both 2D and 3D points.
     'params': EXTRA_CAMERA_PARAMETERS_LIST
 }
 ```
+
+Alternatively, you can create a Camera object using these parameters:
+
+```python
+camera = pycolmap.Camera(
+        COLMAP_CAMERA_MODEL_NAME, IMAGE_WIDTH, 
+        IMAGE_HEIGHT, EXTRA_CAMERA_PARAMETERS_LIST
+)
+```
+
+All functions can be invoked with either a python dictionary or a Camera object.
+
 Please refer to [colmap - src/base/camera_models.h](https://github.com/colmap/colmap/blob/master/src/base/camera_models.h) for more details regarding camera models and parameters.
 
 ## Absolute pose estimation
@@ -130,8 +142,42 @@ keypoints, scores, descriptors = pycolmap.extract_sift(img)
 # - descriptors: Nx128 array; L2-normalized descriptors
 ```
 
+
+## COLMAP Reconstruction
+We provide bindings to interface with the standard reconstruction objects of COLMAP.
+
+```python
+import numpy as np
+
+import pycolmap
+
+reconstruction = pycolmap.Reconstruction("path/to/my/reconstruction/")
+print(reconstruction.summary())
+
+for image_id, image in reconstruction.images.items():
+    print(image_id, image)
+
+for point3D_id, point3D in reconstruction.points3D.items():
+    print(point3D_id, point3D)
+
+for camera_id, camera in reconstruction.cameras.items():
+    print(camera_id, camera)
+
+reconstruction.write("path/to/new/reconstruction/")
+reconstruction.export_PLY("path/to/new/reconstruction/reconstruction.ply")
+```
+
+World-to-Image transformations is inherently supported:
+
+```python
+uv = camera.world_to_image(image.project(point3D.xyz))
+```
+
+For more details and Image-to-World transformation check out the tests.
+
 # TODO
 
 - [ ] Add documentation
 - [ ] Add more detailed examples
 - [ ] Expose more RANSAC parameters to Python
+- [ ] Add visualization for pycolmap.Reconstruction

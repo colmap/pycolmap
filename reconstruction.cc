@@ -333,18 +333,18 @@ void init_reconstruction(py::module &m) {
 
             return valid_points2D;
         })
-        .def("project", [](const Image& self, const Eigen::Vector3d& world){
-            const Eigen::Vector3d world_point = self.ProjectionMatrix() * world.homogeneous();
-            return world_point.hnormalized();
-        }, "Project world point to image coordinate frame.")
+        .def("project", [](const Image& self, const Eigen::Vector3d& world_xyz){
+            const Eigen::Vector3d image_point = self.ProjectionMatrix() * world_xyz.homogeneous();
+            return image_point.hnormalized();
+        }, "Project world point to image (xy).")
         .def("project", [](const Image& self, const std::vector<Eigen::Vector3d>& world_coords){
             const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
-            std::vector<Eigen::Vector2d> world_points(world_coords.size());
+            std::vector<Eigen::Vector2d> image_points(world_coords.size());
             for (int idx = 0; idx < world_coords.size(); ++idx) {
-                world_points[idx] = (projection_matrix * world_coords[idx].homogeneous()).hnormalized();
+                image_points[idx] = (projection_matrix * world_coords[idx].homogeneous()).hnormalized();
             }
-            return world_points;
-        }, "Project list of world points to image coordinate frame.")
+            return image_points;
+        }, "Project list of world points to image (xy).")
         .def("project", [](const Image& self, const std::vector<Point3D>& point3Ds){
             const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
             std::vector<Eigen::Vector2d> world_points(point3Ds.size());
@@ -352,7 +352,31 @@ void init_reconstruction(py::module &m) {
                 world_points[idx] = (projection_matrix * point3Ds[idx].XYZ().homogeneous()).hnormalized();
             }
             return world_points;
-        }, "Project list world points to image coordinate frame.")
+        }, "Project list of point3Ds to image (xy).")
+        .def("transform_to_image", [](const Image& self, const Eigen::Vector3d& world_xyz){
+            const Eigen::Vector3d image_point = self.ProjectionMatrix() * world_xyz.homogeneous();
+            return image_point;
+        }, "Project point in world to image coordinate frame (xyz).")
+        .def("transform_to_image", [](const Image& self, const std::vector<Eigen::Vector3d>& world_coords){
+            const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
+            std::vector<Eigen::Vector3d> image_points(world_coords.size());
+            for (int idx = 0; idx < world_coords.size(); ++idx) {
+                image_points[idx] = (projection_matrix * world_coords[idx].homogeneous());
+            }
+            return image_points;
+        }, "Project list of points in world coordinate frame to image coordinates (xyz).")
+        .def("transform_to_world", [](const Image& self, const Eigen::Vector3d& image_xyz){
+            const Eigen::Vector3d world_point = self.InverseProjectionMatrix() * image_xyz.homogeneous();
+            return world_point;
+        }, "Project point in image (with depth) to world coordinate frame.")
+        .def("transform_to_world", [](const Image& self, const std::vector<Eigen::Vector3d>& image_coords){
+            const Eigen::Matrix3x4d inv_projection_matrix = self.InverseProjectionMatrix();
+            std::vector<Eigen::Vector3d> world_points(image_coords.size());
+            for (int idx = 0; idx < image_coords.size(); ++idx) {
+                world_points[idx] = (inv_projection_matrix * image_coords[idx].homogeneous());
+            }
+            return world_points;
+        }, "Project list of image points (with depth) to world coordinate frame.")
         .def("__copy__",  [](const Image &self) {
             return Image(self);
         })
