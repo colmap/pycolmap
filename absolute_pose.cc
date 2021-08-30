@@ -44,6 +44,8 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
@@ -53,7 +55,7 @@ py::dict absolute_pose_estimation(
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D.size() == points3D.size());
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
 
     // Failure output dictionary.
     py::dict failure_dict;

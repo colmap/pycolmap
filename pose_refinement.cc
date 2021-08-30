@@ -33,8 +33,8 @@
 #include <fstream>
 
 #include "colmap/base/camera.h"
-#include "colmap/estimators/fundamental_matrix.h"
-#include "colmap/optim/loransac.h"
+#include "colmap/estimators/pose.h"
+#include "colmap/util/random.h"
 
 using namespace colmap;
 
@@ -46,61 +46,75 @@ namespace py = pybind11;
 
 #include "log_exceptions.h"
 
-py::dict fundamental_matrix_estimation(
-        const std::vector<Eigen::Vector2d> points2D1,
-        const std::vector<Eigen::Vector2d> points2D2,
-        const double max_error_px
+py::dict pose_refinement(
+        const Eigen::Vector3d tvec,
+        const Eigen::Vector4d qvec,
+        const std::vector<Eigen::Vector2d> points2D,
+        const std::vector<Eigen::Vector3d> points3D,
+        const std::vector<bool> inlier_mask,
+        const Camera camera
 ) {
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    THROW_CHECK_EQ(points2D1.size(), points2D2.size());
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
+    THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
 
-    // Fundamental matrix estimation parameters.
-    RANSACOptions ransac_options;
-    ransac_options.max_error = max_error_px;
-    ransac_options.min_inlier_ratio = 0.01;
-    ransac_options.min_num_trials = 1000;
-    ransac_options.max_num_trials = 100000;
-    ransac_options.confidence = 0.9999;
-    
-    LORANSAC<
-        FundamentalMatrixSevenPointEstimator,
-        FundamentalMatrixEightPointEstimator
-    > ransac(ransac_options);
-
-    // Fundamental matrix estimation.
-    const auto report = ransac.Estimate(points2D1, points2D2);
-
-    if (!report.success) {
-        return failure_dict;
+    // Absolute pose estimation.
+    Eigen::Vector4d qvec_refined = qvec;
+    Eigen::Vector3d tvec_refined = tvec;
+    std::vector<char> inlier_mask_char;
+    for (size_t i = 0; i < inlier_mask.size(); ++i) {
+        if(inlier_mask[i])
+        {
+            inlier_mask_char.emplace_back(1);
+        }
+        else
+        {
+            inlier_mask_char.emplace_back(0);
+        }
     }
 
-    // Recover data from report.
-    const Eigen::Matrix3d F = report.model;
-    const size_t num_inliers = report.support.num_inliers;
-    const auto inlier_mask = report.inlier_mask;
-    
-    // Convert vector<char> to vector<int>.
-    std::vector<bool> inliers;
-    for (auto it : inlier_mask) {
-        if (it) {
-            inliers.push_back(true);
-        } else {
-            inliers.push_back(false);
-        }
+    // Refine absolute pose parameters.
+    AbsolutePoseRefinementOptions abs_pose_refinement_options;
+    abs_pose_refinement_options.refine_focal_length = false;
+    abs_pose_refinement_options.refine_extra_params = false;
+    abs_pose_refinement_options.print_summary = false;
+
+    // Absolute pose refinement.
+    if (!RefineAbsolutePose(abs_pose_refinement_options, inlier_mask_char, 
+                    points2D, points3D, &qvec_refined, &tvec_refined, 
+                    const_cast<Camera*>(&camera))) {
+        return failure_dict;
     }
 
     // Success output dictionary.
     py::dict success_dict;
     success_dict["success"] = true;
-    success_dict["F"] = F;
-    success_dict["num_inliers"] = num_inliers;
-    success_dict["inliers"] = inliers;
+    success_dict["qvec"] = qvec_refined;
+    success_dict["tvec"] = tvec_refined;
     
     return success_dict;
+}
+
+py::dict pose_refinement_camera_dict(
+        const Eigen::Vector3d tvec,
+        const Eigen::Vector4d qvec,
+        const std::vector<Eigen::Vector2d> points2D,
+        const std::vector<Eigen::Vector3d> points3D,
+        const std::vector<bool> inlier_mask,
+        const py::dict camera_dict
+) {
+    // Create camera.
+    Camera camera;
+    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
+    camera.SetWidth(camera_dict["width"].cast<size_t>());
+    camera.SetHeight(camera_dict["height"].cast<size_t>());
+    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
+
+    return pose_refinement(tvec,qvec,points2D,points3D,inlier_mask,camera);
 }

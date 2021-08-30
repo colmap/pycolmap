@@ -1,10 +1,11 @@
-#include <colmap/base/reconstruction.h>
-#include <colmap/util/ply.h>
-#include <colmap/base/projection.h>
-#include <colmap/util/misc.h>
-#include <colmap/util/types.h>
-#include "base/camera_models.h"
-#include "log_exceptions.h"
+#include "colmap/base/reconstruction.h"
+#include "colmap/util/ply.h"
+#include "colmap/base/projection.h"
+#include "colmap/util/misc.h"
+#include "colmap/util/types.h"
+#include "colmap/base/camera_models.h"
+
+using namespace colmap;
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -13,6 +14,8 @@
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 template<typename... Args>
       using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
@@ -20,8 +23,6 @@ PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D));
 PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::image_t, colmap::Image));
 PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera));
 PYBIND11_MAKE_OPAQUE(std::vector<class Point2D>);
-
-using namespace colmap;
 
 bool ExistsReconstructionText(const std::string& path) {
     return (ExistsFile(JoinPaths(path, "cameras.txt")) &&

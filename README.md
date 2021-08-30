@@ -9,9 +9,29 @@ Clone the repository and its submodules by running:
 git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 ```
 
+## Unix
 COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can be installed using `pip`: 
 ```
 pip install ./
+```
+
+## Windows
+To install pycolmap on Windows, we recommend to install colmap with [vcpkg](https://github.com/microsoft/vcpkg).
+From your vcpkg directory, run
+```
+.\vcpkg.exe install colmap --triplet=x64-windows
+```
+
+Then set the `CMAKE_TOOLCHAIN_FILE` environment variable to your `vcpkg\scripts\buildsystems\vcpkg.cmake` path.
+
+example (powershell)
+```
+$env:CMAKE_TOOLCHAIN_FILE='C:\Workspace\vcpkg\scripts\buildsystems\vcpkg.cmake'
+```
+
+Finally go to the pycolmap folder and run
+```
+py -m pip install ./
 ```
 
 # Usage
@@ -43,6 +63,30 @@ import pycolmap
 # - max_error_px: float; RANSAC inlier threshold in pixels
 answer = pycolmap.absolute_pose_estimation(
     points2D, points3D,
+    {
+        'model': 'SIMPLE_PINHOLE',
+        'width': width,
+        'height': height,
+        'params': [focal_length, cx, cy]
+    }
+)
+# Returns:
+# - dictionary containing the RANSAC output
+```
+
+## Standalone Pose Refinement
+
+```python
+import pycolmap
+# Parameters:
+# - tvec: List of 3 floats, translation component of the pose (world to camera)
+# - qvec: List of 4 floats, quaternion component of the pose (world to camera)
+# - points2D: Nx2 array; pixel coordinates
+# - points3D: Nx3 array; world coordinates
+# - inlier_mask: array of N bool; true -> corresponding value in points2D/points3D is an inlier
+# - camera_dict: dictionary
+answer = pycolmap.pose_refinement(
+    tvec, qvec, points2D, points3D, inlier_mask,
     {
         'model': 'SIMPLE_PINHOLE',
         'width': width,
