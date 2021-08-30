@@ -16,13 +16,13 @@ namespace py = pybind11;
 class glog_dummy {};  // dummy class
 
 void PyBindLogStack(const char* data, int size) {
-    std::chrono::milliseconds timespan(1000); // or whatever
+    std::chrono::milliseconds timespan(5000); // or whatever
     py::scoped_estream_redirect stream(
         std::cerr,                               // std::ostream&
         py::module_::import("sys").attr("stderr") // Python output
     );
     std::this_thread::sleep_for(timespan);
-    std::this_thread::sleep_for(timespan);
+    
     std::cerr<<data<<std::endl;
     std::cerr<<std::endl;
     std::cerr<<"ERROR: C++ code terminated. Kernel Died. See log files for details.";
@@ -30,12 +30,13 @@ void PyBindLogStack(const char* data, int size) {
 }
 
 void PyBindLogTermination() {
-    std::chrono::milliseconds timespan(1000); // or whatever
+    std::chrono::milliseconds timespan(5000); // or whatever
     py::scoped_estream_redirect stream(
         std::cerr,                               // std::ostream&
         py::module_::import("sys").attr("stderr") // Python output
     );
     std::this_thread::sleep_for(timespan);
+
     std::cerr<<std::endl;
     std::cerr<<"ERROR: C++ code terminated. Kernel Died. See log files for details.";
     std::cerr<<std::endl<<std::endl<<std::endl;
