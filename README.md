@@ -10,7 +10,13 @@ git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 ```
 
 ## Unix
-COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can be installed using `pip`: 
+**Preferred:** `pycolmap` is now available for Python 3.7 and Python 3.8 via [pypi](https://pypi.org/project/pycolmap/0.0.1/):
+```bash
+pip install pycolmap
+```
+These wheels were built using John Lambert's wheel-builder [here](https://github.com/johnwlambert/pycolmap-wheels).
+
+If you instead prefer to build the wheels from source, COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can then be installed using `pip`: 
 ```
 pip install ./
 ```
