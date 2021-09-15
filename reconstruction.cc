@@ -75,9 +75,9 @@ void init_reconstruction(py::module &m) {
             return track;
         }))
         .def("length", &Track::Length, "Track Length.")
-        .def("add_element", overload_cast_<image_t, point2D_t>()(&Track::AddElement), 
+        .def("add_element", overload_cast_<image_t, point2D_t>()(&Track::AddElement),
                 "Add observation (image_id, point2D_idx) to track.")
-        .def("delete_element", overload_cast_<image_t, point2D_t>()(&Track::DeleteElement), 
+        .def("delete_element", overload_cast_<image_t, point2D_t>()(&Track::DeleteElement),
                 "Delete observation (image_id, point2D_idx) from track.")
         .def("append", overload_cast_<const TrackElement&>()(&Track::AddElement))
         .def("add_element", overload_cast_<const image_t, const point2D_t>()(&Track::AddElement))
@@ -86,10 +86,9 @@ void init_reconstruction(py::module &m) {
                 THROW_CHECK_LT(idx, self.Elements().size());
                 self.DeleteElement(idx);
         }, "Remove TrackElement at index.")
+        .def_property("elements", overload_cast_<>()(&Track::Elements), &Track::SetElements)
         .def("remove", overload_cast_<const image_t, const point2D_t>()(&Track::DeleteElement), 
             "Remove TrackElement with (image_id,point2D_idx).")
-        .def_property("elements", overload_cast_<>()(&Track::Elements),
-             &Track::SetElements)
         .def("__copy__",  [](const Track &self) {
             return Track(self);
         })
