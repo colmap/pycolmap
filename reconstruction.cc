@@ -1,9 +1,11 @@
-#include <colmap/base/reconstruction.h>
-#include <colmap/util/ply.h>
-#include <colmap/base/projection.h>
-#include <colmap/util/misc.h>
-#include "base/camera_models.h"
-#include "log_exceptions.h"
+#include "colmap/base/reconstruction.h"
+#include "colmap/util/ply.h"
+#include "colmap/base/projection.h"
+#include "colmap/util/misc.h"
+#include "colmap/util/types.h"
+#include "colmap/base/camera_models.h"
+
+using namespace colmap;
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -12,6 +14,8 @@
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 template<typename... Args>
       using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
@@ -19,8 +23,6 @@ PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D));
 PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::image_t, colmap::Image));
 PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera));
 PYBIND11_MAKE_OPAQUE(std::vector<class Point2D>);
-
-using namespace colmap;
 
 bool ExistsReconstructionText(const std::string& path) {
     return (ExistsFile(JoinPaths(path, "cameras.txt")) &&
@@ -40,7 +42,7 @@ bool ExistsReconstruction(const std::string& path) {
 
 //Reconstruction Bindings
 void init_reconstruction(py::module &m) {
-    // STL Containers
+    // STL Containers, required for fast looping over members (avoids copying)
     py::bind_map<EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D)>(m, "MapPoint3DIdPoint3D");
     py::bind_map<EIGEN_STL_UMAP(colmap::image_t, colmap::Image)>(m, "MapImageIdImage");
     py::bind_map<EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera)>(m, "MapCameraIdCamera");
@@ -77,12 +79,16 @@ void init_reconstruction(py::module &m) {
                 "Add observation (image_id, point2D_idx) to track.")
         .def("delete_element", overload_cast_<image_t, point2D_t>()(&Track::DeleteElement),
                 "Delete observation (image_id, point2D_idx) from track.")
-        //.def("append", overload_cast_<TrackElement>()(&Track::AddElement))
+        .def("append", overload_cast_<const TrackElement&>()(&Track::AddElement))
+        .def("add_element", overload_cast_<const image_t, const point2D_t>()(&Track::AddElement))
         .def("add_elements", &Track::AddElements, "Add TrackElement list.")
         .def("remove", [](Track &self, const size_t idx){
                 THROW_CHECK_LT(idx, self.Elements().size());
+                self.DeleteElement(idx);
         }, "Remove TrackElement at index.")
         .def_property("elements", overload_cast_<>()(&Track::Elements), &Track::SetElements)
+        .def("remove", overload_cast_<const image_t, const point2D_t>()(&Track::DeleteElement), 
+            "Remove TrackElement with (image_id,point2D_idx).")
         .def("__copy__",  [](const Track &self) {
             return Track(self);
         })
@@ -166,7 +172,7 @@ void init_reconstruction(py::module &m) {
         })
         .def("summary", [](const Point3D &self) {
             std::stringstream ss;
-            ss<<"<Point3D:\n\txyz = ["
+            ss<<"Point3D:\n\txyz = ["
                 <<self.XYZ().transpose()
                 <<"]\n\ttrack_length = " 
                 <<(self.Track().Length())
@@ -326,18 +332,18 @@ void init_reconstruction(py::module &m) {
 
             return valid_points2D;
         })
-        .def("project", [](const Image& self, const Eigen::Vector3d& world){
-            const Eigen::Vector3d world_point = self.ProjectionMatrix() * world.homogeneous();
-            return world_point.hnormalized();
-        }, "Project world point to image coordinate frame.")
+        .def("project", [](const Image& self, const Eigen::Vector3d& world_xyz){
+            const Eigen::Vector3d image_point = self.ProjectionMatrix() * world_xyz.homogeneous();
+            return image_point.hnormalized();
+        }, "Project world point to image (xy).")
         .def("project", [](const Image& self, const std::vector<Eigen::Vector3d>& world_coords){
             const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
-            std::vector<Eigen::Vector2d> world_points(world_coords.size());
+            std::vector<Eigen::Vector2d> image_points(world_coords.size());
             for (int idx = 0; idx < world_coords.size(); ++idx) {
-                world_points[idx] = (projection_matrix * world_coords[idx].homogeneous()).hnormalized();
+                image_points[idx] = (projection_matrix * world_coords[idx].homogeneous()).hnormalized();
             }
-            return world_points;
-        }, "Project list of world points to image coordinate frame.")
+            return image_points;
+        }, "Project list of world points to image (xy).")
         .def("project", [](const Image& self, const std::vector<Point3D>& point3Ds){
             const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
             std::vector<Eigen::Vector2d> world_points(point3Ds.size());
@@ -345,7 +351,31 @@ void init_reconstruction(py::module &m) {
                 world_points[idx] = (projection_matrix * point3Ds[idx].XYZ().homogeneous()).hnormalized();
             }
             return world_points;
-        }, "Project list world points to image coordinate frame.")
+        }, "Project list of point3Ds to image (xy).")
+        .def("transform_to_image", [](const Image& self, const Eigen::Vector3d& world_xyz){
+            const Eigen::Vector3d image_point = self.ProjectionMatrix() * world_xyz.homogeneous();
+            return image_point;
+        }, "Project point in world to image coordinate frame (xyz).")
+        .def("transform_to_image", [](const Image& self, const std::vector<Eigen::Vector3d>& world_coords){
+            const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
+            std::vector<Eigen::Vector3d> image_points(world_coords.size());
+            for (int idx = 0; idx < world_coords.size(); ++idx) {
+                image_points[idx] = (projection_matrix * world_coords[idx].homogeneous());
+            }
+            return image_points;
+        }, "Project list of points in world coordinate frame to image coordinates (xyz).")
+        .def("transform_to_world", [](const Image& self, const Eigen::Vector3d& image_xyz){
+            const Eigen::Vector3d world_point = self.InverseProjectionMatrix() * image_xyz.homogeneous();
+            return world_point;
+        }, "Project point in image (with depth) to world coordinate frame.")
+        .def("transform_to_world", [](const Image& self, const std::vector<Eigen::Vector3d>& image_coords){
+            const Eigen::Matrix3x4d inv_projection_matrix = self.InverseProjectionMatrix();
+            std::vector<Eigen::Vector3d> world_points(image_coords.size());
+            for (int idx = 0; idx < image_coords.size(); ++idx) {
+                world_points[idx] = (inv_projection_matrix * image_coords[idx].homogeneous());
+            }
+            return world_points;
+        }, "Project list of image points (with depth) to world coordinate frame.")
         .def("__copy__",  [](const Image &self) {
             return Image(self);
         })
@@ -563,9 +593,9 @@ void init_reconstruction(py::module &m) {
             self.Write(path);
         }, "Write reconstruction in COLMAP binary format.")
         .def("num_images", &Reconstruction::NumImages)
-        .def("num_cameras", &Reconstruction::NumImages)
-        .def("num_reg_images", &Reconstruction::NumImages)
-        .def("num_points3D", &Reconstruction::NumImages)
+        .def("num_cameras", &Reconstruction::NumCameras)
+        .def("num_reg_images", &Reconstruction::NumRegImages)
+        .def("num_points3D", &Reconstruction::NumPoints3D)
         .def("num_image_pairs", &Reconstruction::NumImagePairs)
         .def_property_readonly("images", &Reconstruction::Images, py::return_value_policy::reference)
         .def_property_readonly("image_pairs", &Reconstruction::ImagePairs)
@@ -614,21 +644,29 @@ void init_reconstruction(py::module &m) {
                 "Scales scene such that the minimum and maximum camera centers are at the\n"
                 "given `extent`, whereas `p0` and `p1` determine the minimum and\n"
                 "maximum percentiles of the camera centers considered.")
-        // .def("transform", &Reconstruction::Transform)
+        .def("transform", [](Reconstruction& self, const Eigen::Matrix3x4d& tform_mat) {
+            SimilarityTransform3 tform(tform_mat);
+            self.Transform(tform);
+        }, "Apply the 3D similarity transformation to all images and points.")
         .def("merge", &Reconstruction::Merge,
                 "Merge the given reconstruction into this reconstruction by registering the\n"
                 "images registered in the given but not in this reconstruction and by\n"
                 "merging the two clouds and their tracks. The coordinate frames of the two\n"
                 "reconstructions are aligned using the projection centers of common\n"
                 "registered images. Return true if the two reconstructions could be merged.")
-        // We do not add custom checks atm for align since function headers are different between
-        // COLMAP versions. Thus, this could potentially lead to fatal errors (but checks are obvious).
-        .def("align", &Reconstruction::Align,
-                "Align the given reconstruction with a set of pre-defined camera positions.\n"
+        .def("align", [](Reconstruction& self, const std::vector<std::string>& image_names,
+             const std::vector<Eigen::Vector3d>& locations,
+             const int min_common_images,
+             const Eigen::Matrix3x4d& tform_mat){
+                SimilarityTransform3 tform(tform_mat);
+                THROW_CHECK_GE(min_common_images, 3);
+                THROW_CHECK_EQ(image_names.size(),locations.size());
+                return self.Align(image_names, locations, min_common_images, &tform);
+             }, "Align the given reconstruction with a set of pre-defined camera positions.\n"
                 "Assuming that locations[i] gives the 3D coordinates of the center\n"
                 "of projection of the image with name image_names[i].")
-        .def("align_robust", &Reconstruction::AlignRobust,
-                "Robust alignment using RANSAC.")
+        // .def("align_robust", &Reconstruction::AlignRobust,
+        //         "Robust alignment using RANSAC.")
         .def("find_image_with_name", &Reconstruction::FindImageWithName, 
                                 py::return_value_policy::reference_internal,
             "Find image with matching name. Returns None if no match is found.")
@@ -699,7 +737,7 @@ void init_reconstruction(py::module &m) {
             self.WriteBinary(path);
         })
         .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
-        .def("import_PLY", &Reconstruction::ImportPLY,
+        .def("import_PLY",overload_cast_<const std::string&>()(&Reconstruction::ImportPLY),
                 "Import from PLY format. Note that these import functions are\n"
                 "only intended for visualization of data and usable for reconstruction.")
         .def("export_NVM", &Reconstruction::ExportNVM,

@@ -47,6 +47,8 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
@@ -57,7 +59,7 @@ py::dict essential_matrix_estimation(
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D1.size() == points2D2.size());
+    THROW_CHECK_EQ(points2D1.size(), points2D2.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
