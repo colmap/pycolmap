@@ -3,6 +3,7 @@
 namespace py = pybind11;
 
 #include "absolute_pose.cc"
+#include "absolute_pose_lines.cc"
 #include "essential_matrix.cc"
 #include "fundamental_matrix.cc"
 #include "transformations.cc"
@@ -17,6 +18,11 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("camera_dict"),
           py::arg("max_error_px") = 12.0,
           "Absolute pose estimation with non-linear refinement.");
+    m.def("absolute_pose_estimation_lines", &absolute_pose_estimation_lines,
+          py::arg("lines2D"), py::arg("points3D"),
+          py::arg("camera_dict"),
+          py::arg("max_error_px") = 12.0,
+          "Absolute pose estimation from line-to-point correspondences with non-linear refinement.");
 
     // Essential matrix.
     m.def("essential_matrix_estimation", &essential_matrix_estimation,
