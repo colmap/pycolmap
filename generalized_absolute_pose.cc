@@ -219,9 +219,6 @@ py::dict rig_absolute_pose_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-    if (points2D.size() == 0) {
-        return failure_dict;
-    }
 
     std::vector<GP3PEstimator::X_t> points2D_rig;
     std::vector<Eigen::Vector3d> points3D_all;
@@ -252,6 +249,9 @@ py::dict rig_absolute_pose_estimation(
     }
     // average of the errors over the cameras, weighted by the number of correspondences
     error_threshold /= points3D_all.size();
+    if (points3D_all.size() == 0) {
+        return failure_dict;
+    }
 
     RANSACOptions options;
     options.max_error = error_threshold;
