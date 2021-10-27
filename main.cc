@@ -32,8 +32,11 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("camera_dict1"), py::arg("camera_dict2"),
           py::arg("max_error_px") = 4.0,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
           "LORANSAC + 5-point algorithm.");
-
+    
     // Fundamental matrix.
     m.def("fundamental_matrix_estimation", &fundamental_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
