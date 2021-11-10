@@ -653,15 +653,38 @@ void init_reconstruction(py::module &m) {
 
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
-        .def(py::init([](const std::string& input_path){
+        .def_property_readonly_static("from_folder", [](py::object){
+            return py::cpp_function([](py::object input_path){
+                py::str py_path = py::str(input_path);
+                if (!py_path.check()) {
+                    THROW_EXCEPTION(std::invalid_argument, "Failed to cast path to string.");
+                }
+                std::string path = py_path.cast<std::string>();
+                THROW_CUSTOM_CHECK_MSG(
+                    ExistsReconstruction(path),
+                    std::invalid_argument,
+                    (std::string("cameras, images, points3D not found at ")
+                        +path).c_str()
+                );
+                auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
+                reconstruction->Read(path);
+                return reconstruction;
+            });
+        })
+        .def(py::init([](const py::object input_path){
+            py::str py_path = py::str(input_path);
+            if (!py_path.check()) {
+                THROW_EXCEPTION(std::invalid_argument, "Failed to cast path to string.");
+            }
+            std::string path = py_path.cast<std::string>();
             THROW_CUSTOM_CHECK_MSG(
-                ExistsReconstruction(input_path),
+                ExistsReconstruction(path),
                 std::invalid_argument,
                 (std::string("cameras, images, points3D not found at ")
-                    +input_path).c_str()
+                    +path).c_str()
             );
             auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
-            reconstruction->Read(input_path);
+            reconstruction->Read(path);
             return reconstruction;
         }))
         .def("read", [](Reconstruction& self, const std::string& input_path) {
