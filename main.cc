@@ -4,6 +4,8 @@
 
 namespace py = pybind11;
 
+#include <colmap/base/pose.h>
+
 #include "absolute_pose.cc"
 #include "generalized_absolute_pose.cc"
 #include "essential_matrix.cc"
@@ -101,4 +103,21 @@ PYBIND11_MODULE(pycolmap, m) {
 
     //Reconstruction bindings
     init_reconstruction(m);
+
+    m.def("qvec_to_rotmat", &colmap::QuaternionToRotationMatrix,
+          py::arg("qvec"),
+          "Convert COLMAP quaternion to rotation matrix");
+    m.def("rotmat_to_qvec", &colmap::RotationMatrixToQuaternion,
+          py::arg("rotmat"),
+          "Convert rotation matrix to colmap quaternion");
+    m.def("qvec_rotate_point", &colmap::QuaternionRotatePoint,
+          py::arg("qvec"),
+          py::arg("xyz"),
+          "Rotate world point");
+    m.def("invert_qvec", &colmap::InvertQuaternion,
+          py::arg("qvec"),
+          "Returns inverted qvec");
+    m.def("normalize_qvec", &colmap::InvertQuaternion,
+          py::arg("qvec"),
+          "Returns normalized qvec");
 }

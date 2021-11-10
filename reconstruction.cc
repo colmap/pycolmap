@@ -40,13 +40,119 @@ bool ExistsReconstruction(const std::string& path) {
     return (ExistsReconstructionText(path) || ExistsReconstructionBinary(path));
 }
 
+std::string PrintPoint3D(const colmap::Point3D& point3D) {
+    std::stringstream ss;
+    ss<<"<Point3D 'xyz=["
+        <<point3D.XYZ().transpose()
+        <<"], track_length=" 
+        <<(point3D.Track().Length())
+        <<", error="
+        <<point3D.Error()<<"'>";
+    return ss.str();
+}
+
+std::string PrintImage(const colmap::Image& image) {
+    std::stringstream ss;
+    ss<<"<Image 'image_id="
+        <<(image.ImageId() != kInvalidImageId ? 
+            std::to_string(image.ImageId()) : "Invalid")
+        <<", camera_id=" 
+        <<(image.HasCamera() ? 
+            std::to_string(image.CameraId()) : "Invalid")
+        <<", name=\""
+        <<image.Name()<<"\""
+        <<", triangulated="
+        <<image.NumPoints3D()<<"/"<<image.NumPoints2D()
+        <<"'>";
+    return ss.str();
+}
+
+std::string PrintCamera(const colmap::Camera& camera) {
+    std::stringstream ss;
+    ss<<"<Camera 'camera_id=" 
+        <<(camera.CameraId()!=kInvalidCameraId ? 
+            std::to_string(camera.CameraId()) : "Invalid")
+        <<", model="<<camera.ModelName()
+        <<", width="<<camera.Width()
+        <<", height="<<camera.Height()
+        <<", num_params="<<camera.NumParams()
+        <<"'>";
+    return ss.str();
+}
+
+std::string PrintPoint2D(const colmap::Point2D& p2D) {
+    std::stringstream ss;
+    ss<<"<Point2D 'xy=["
+        <<p2D.XY().transpose()
+        <<"], point3D_id=" 
+        <<(p2D.HasPoint3D() ? std::to_string(p2D.Point3DId()) : "Invalid")
+        <<"'>";
+    return ss.str();
+}
+
 //Reconstruction Bindings
 void init_reconstruction(py::module &m) {
     // STL Containers, required for fast looping over members (avoids copying)
-    py::bind_map<EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D)>(m, "MapPoint3DIdPoint3D");
-    py::bind_map<EIGEN_STL_UMAP(colmap::image_t, colmap::Image)>(m, "MapImageIdImage");
-    py::bind_map<EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera)>(m, "MapCameraIdCamera");
-    py::bind_vector<std::vector<class Point2D>>(m,"ListPoint2D");
+    using ImageMap = EIGEN_STL_UMAP(colmap::image_t, colmap::Image);
+    using Point3DMap = EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D);
+    using CameraMap = EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera);
+
+    py::bind_map<Point3DMap>(m, "MapPoint3DIdPoint3D")
+        .def("__repr__",[](const Point3DMap& self){
+            std::string repr = "{";
+            bool is_first = true;
+            for (auto& pair : self) {
+                if (!is_first) {
+                    repr += ", ";
+                }
+                is_first = false;
+                repr+= std::to_string(pair.first) + ": " + PrintPoint3D(pair.second);
+            }
+            repr+="}";
+            return repr;
+        });
+    py::bind_map<ImageMap>(m, "MapImageIdImage")
+        .def("__repr__",[](const ImageMap& self){
+            std::string repr = "{";
+            bool is_first = true;
+            for (auto& pair : self) {
+                if (!is_first) {
+                    repr += ", ";
+                }
+                is_first = false;
+                repr+= std::to_string(pair.first) + ": " + PrintImage(pair.second);
+            }
+            repr+="}";
+            return repr;
+        });
+    py::bind_map<CameraMap>(m, "MapCameraIdCamera")
+        .def("__repr__",[](const CameraMap& self){
+            std::string repr = "{";
+            bool is_first = true;
+            for (auto& pair : self) {
+                if (!is_first) {
+                    repr += ", ";
+                }
+                is_first = false;
+                repr+= std::to_string(pair.first) + ": " + PrintCamera(pair.second);
+            }
+            repr+="}";
+            return repr;
+        });
+    py::bind_vector<std::vector<class Point2D>>(m,"ListPoint2D")
+        .def("__repr__",[](const std::vector<class Point2D>& self){
+            std::string repr = "[";
+            bool is_first = true;
+            for (auto& p2D : self) {
+                if (!is_first) {
+                    repr += ", ";
+                }
+                is_first = false;
+                repr+= PrintPoint2D(p2D);
+            }
+            repr+="]";
+            return repr;
+        });
 
     py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
         .def(py::init<>())
@@ -124,13 +230,7 @@ void init_reconstruction(py::module &m) {
             return Point2D(self);
         })
         .def("__repr__", [](const Point2D &self) {
-            std::stringstream ss;
-            ss<<"<Point2D 'xy=["
-                <<self.XY().transpose()
-                <<"], point3D_id=" 
-                <<(self.HasPoint3D() ? std::to_string(self.Point3DId()) : "Invalid")
-                <<"'>";
-            return ss.str();
+            return PrintPoint2D(self);
         });
     
     py::class_<colmap::Point3D, std::shared_ptr<colmap::Point3D>>(m, "Point3D")
@@ -162,14 +262,7 @@ void init_reconstruction(py::module &m) {
             return Point3D(self);
         })
         .def("__repr__", [](const Point3D &self) {
-            std::stringstream ss;
-            ss<<"<Point3D 'xyz=["
-                <<self.XYZ().transpose()
-                <<"], track_length=" 
-                <<(self.Track().Length())
-                <<", error="
-                <<self.Error()<<"'>";
-            return ss.str();
+            return PrintPoint3D(self);
         })
         .def("summary", [](const Point3D &self) {
             std::stringstream ss;
@@ -191,7 +284,8 @@ void init_reconstruction(py::module &m) {
                          const std::vector<Eigen::Vector2d>& keypoints,
                          const Eigen::Vector3d& tvec,
                          const Eigen::Vector4d& qvec,
-                         size_t camera_id){
+                         size_t camera_id,
+                         colmap::image_t image_id){
             std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
             image->SetName(name);
             image->SetPoints2D(keypoints);
@@ -200,16 +294,20 @@ void init_reconstruction(py::module &m) {
             if (camera_id != kInvalidCameraId) {
                 image->SetCameraId(camera_id);
             }
+            image->SetImageId(image_id);
             return image;
-        }), py::arg("name"), py::arg("keypoints") = std::vector<Eigen::Vector2d>(), 
+        }), py::arg("name") = "", 
+            py::arg("keypoints") = std::vector<Eigen::Vector2d>(), 
             py::arg("tvec") = Eigen::Vector3d(0.0,0.0,0.0),
             py::arg("qvec") = Eigen::Vector4d(1.0,0.0,0.0,0.0), 
-            py::arg("camera_id_id") = kInvalidCameraId)
+            py::arg("camera_id") = kInvalidCameraId,
+            py::arg("id") = kInvalidImageId)
         .def(py::init([](const std::string& name,
                          const std::vector<Point2D>& points2D,
                          const Eigen::Vector3d& tvec,
                          const Eigen::Vector4d& qvec,
-                         size_t camera_id){
+                         size_t camera_id,
+                         colmap::image_t image_id){
             std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
             image->SetName(name);
             image->SetPoints2D(points2D);
@@ -218,11 +316,14 @@ void init_reconstruction(py::module &m) {
             if (camera_id != kInvalidCameraId) {
                 image->SetCameraId(camera_id);
             }
+            image->SetImageId(image_id);
             return image;
-        }), py::arg("name"), py::arg("points2D") = std::vector<Point2D>(), 
+        }), py::arg("name") = "", 
+            py::arg("points2D") = std::vector<Point2D>(), 
             py::arg("tvec") = Eigen::Vector3d(0.0,0.0,0.0), 
             py::arg("qvec") = Eigen::Vector4d(1.0,0.0,0.0,0.0), 
-            py::arg("camera_id_id") = kInvalidCameraId)
+            py::arg("camera_id_id") = kInvalidCameraId,
+            py::arg("id") = kInvalidImageId)
         .def_property("image_id", &Image::ImageId, &Image::SetImageId, "Unique identifier of image.")
         .def_property("camera_id", &Image::CameraId, [](Image& self, const camera_t camera_id) {
                 THROW_CHECK_NE(camera_id, kInvalidCameraId);
@@ -384,17 +485,7 @@ void init_reconstruction(py::module &m) {
             return Image(self);
         })
         .def("__repr__", [](const Image &self) {
-            std::stringstream ss;
-            ss<<"<Image 'image_id="
-                <<(self.ImageId() != kInvalidImageId ? std::to_string(self.ImageId()) : "Invalid")
-                <<", camera_id=" 
-                <<(self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
-                <<", name="
-                <<self.Name()
-                <<", triangulated="
-                <<self.NumPoints3D()<<"/"<<self.NumPoints2D()
-                <<"'>";
-            return ss.str();
+            return PrintImage(self);
         })
         .def("summary", [](const Image &self) {
             std::stringstream ss;
@@ -413,21 +504,27 @@ void init_reconstruction(py::module &m) {
                 <<"]";
             return ss.str();
         });
-
+        
     py::class_<Camera, std::shared_ptr<Camera>>(m, "Camera")
         .def(py::init<>())
         .def(py::init([](const std::string& name, 
                          size_t width, 
                          size_t height, 
-                         const std::vector<double>& params){
+                         const std::vector<double>& params,
+                         colmap::camera_t camera_id){
                 std::unique_ptr<Camera> camera = std::unique_ptr<Camera>(new Camera());
                 THROW_CHECK(ExistsCameraModelWithName(name));
                 camera->SetModelIdFromName(name);
                 camera->SetWidth(width);
                 camera->SetHeight(height);
                 camera->SetParams(params);
+                camera->SetCameraId(camera_id);
                 return camera;
-        }))
+        }), py::arg("model"), 
+            py::arg("width"), 
+            py::arg("height"),
+            py::arg("params"),
+            py::arg("id") = kInvalidCameraId)
         .def_property("camera_id", &Camera::CameraId, &Camera::SetCameraId,
                 "Unique identifier of the camera.")
         .def_property("model_id", &Camera::ModelId, [](Camera& self,int model_id){
@@ -538,16 +635,7 @@ void init_reconstruction(py::module &m) {
             return Camera(self);
         })
         .def("__repr__", [](const Camera &self) {
-            std::stringstream ss;
-            ss<<"<Camera 'camera_id=" 
-                <<(self.CameraId()!=kInvalidCameraId ? 
-                    std::to_string(self.CameraId()) : "Invalid")
-                <<", model="<<self.ModelName()
-                <<", width="<<self.Width()
-                <<", height="<<self.Height()
-                <<", num_params="<<self.NumParams()
-                <<"'>";
-            return ss.str();
+            return PrintCamera(self);
         })
         .def("summary", [](const Camera &self) {
             std::stringstream ss;
@@ -611,11 +699,18 @@ void init_reconstruction(py::module &m) {
         // .def("image", overload_cast_<image_t>()(&Reconstruction::Image, py::const_))
         // .def("camera", overload_cast_<camera_t>()(&Reconstruction::Camera, py::const_)) 
         // .def("point3D", overload_cast_<point3D_t>()(&Reconstruction::Point3D, py::const_))
-        .def("add_camera", &Reconstruction::AddCamera,
-                "Add new camera. There is only one camera per image, while multiple images\n"
+        .def("add_camera", 
+            [](Reconstruction& self, const class colmap::Camera& camera) {
+                THROW_CHECK(!self.ExistsCamera(camera.CameraId()));
+                THROW_CHECK(camera.VerifyParams());
+                self.AddCamera(camera);
+            }, "Add new camera. There is only one camera per image, while multiple images\n"
                 "might be taken by the same camera.")
-        .def("add_image", &Reconstruction::AddImage,
-                "Add new image.")
+        .def("add_image", 
+            [](Reconstruction& self, const class colmap::Image& image) {
+                THROW_CHECK(!self.ExistsImage(image.ImageId()));
+                self.AddImage(image);
+            }, "Add new image.")
         .def("add_point3D", &Reconstruction::AddPoint3D,
                 "Add new 3D object, and return its unique ID.")
         .def("add_observation", &Reconstruction::AddObservation,
@@ -657,12 +752,13 @@ void init_reconstruction(py::module &m) {
                 "registered images. Return true if the two reconstructions could be merged.")
         .def("align", [](Reconstruction& self, const std::vector<std::string>& image_names,
              const std::vector<Eigen::Vector3d>& locations,
-             const int min_common_images,
-             const Eigen::Matrix3x4d& tform_mat){
-                SimilarityTransform3 tform(tform_mat);
+             const int min_common_images){
+                SimilarityTransform3 tform;
                 THROW_CHECK_GE(min_common_images, 3);
                 THROW_CHECK_EQ(image_names.size(),locations.size());
-                return self.Align(image_names, locations, min_common_images, &tform);
+                bool success = self.Align(image_names, locations, min_common_images, &tform);
+                THROW_CHECK(success);
+                return tform;
              }, "Align the given reconstruction with a set of pre-defined camera positions.\n"
                 "Assuming that locations[i] gives the 3D coordinates of the center\n"
                 "of projection of the image with name image_names[i].")
