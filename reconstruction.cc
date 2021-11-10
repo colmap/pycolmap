@@ -920,4 +920,25 @@ void init_reconstruction(py::module &m) {
                 <<self.ComputeMeanReprojectionError();
             return ss.str();
         });
+    m.def("compute_alignment",
+        [](const Reconstruction& src_reconstruction,
+            const Reconstruction& ref_reconstruction,
+            const double min_inlier_observations, 
+            const double max_reproj_error) {
+            THROW_CHECK_GE(min_inlier_observations, 0.0);
+            THROW_CHECK_LE(min_inlier_observations, 1.0);
+            Eigen::Matrix3x4d tform;
+            bool success = 
+                ComputeAlignmentBetweenReconstructions(src_reconstruction,
+                    ref_reconstruction, min_inlier_observations, 
+                    max_reproj_error, &tform);
+            THROW_CHECK(success);
+            return tform;
+        },  
+        py::arg("src_reconstruction").noconvert(),
+        py::arg("ref_reconstruction").noconvert(),
+        py::arg("min_inlier_observations") = 0.3,
+        py::arg("max_reproj_error") = 8.0,
+        py::keep_alive<1,2>(),
+        py::keep_alive<1,3>());
 }
