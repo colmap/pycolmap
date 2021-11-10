@@ -13,6 +13,7 @@ using namespace colmap;
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
@@ -920,25 +921,116 @@ void init_reconstruction(py::module &m) {
                 <<self.ComputeMeanReprojectionError();
             return ss.str();
         });
-    m.def("compute_alignment",
-        [](const Reconstruction& src_reconstruction,
-            const Reconstruction& ref_reconstruction,
-            const double min_inlier_observations, 
-            const double max_reproj_error) {
-            THROW_CHECK_GE(min_inlier_observations, 0.0);
-            THROW_CHECK_LE(min_inlier_observations, 1.0);
-            Eigen::Matrix3x4d tform;
-            bool success = 
-                ComputeAlignmentBetweenReconstructions(src_reconstruction,
-                    ref_reconstruction, min_inlier_observations, 
-                    max_reproj_error, &tform);
-            THROW_CHECK(success);
-            return tform;
-        },  
-        py::arg("src_reconstruction").noconvert(),
-        py::arg("ref_reconstruction").noconvert(),
-        py::arg("min_inlier_observations") = 0.3,
-        py::arg("max_reproj_error") = 8.0,
-        py::keep_alive<1,2>(),
-        py::keep_alive<1,3>());
+
+    
+
+    m.def("compare_reconstructions",
+    [](const Reconstruction& reconstruction1,
+        const Reconstruction& reconstruction2,
+        const double min_inlier_observations, 
+        const double max_reproj_error,
+        bool verbose) {
+
+        THROW_CHECK_GE(min_inlier_observations, 0.0);
+        THROW_CHECK_LE(min_inlier_observations, 1.0);
+        auto PrintComparisonSummary=[](std::stringstream& ss,
+                                    std::vector<double>& rotation_errors,
+                                    std::vector<double>& translation_errors,
+                                    std::vector<double>& proj_center_errors) {
+            auto PrintErrorStats = [](std::stringstream& ss, 
+                                        std::vector<double>& vals) {
+                const size_t len = vals.size();
+                if (len == 0) {
+                    ss << "Cannot extract error statistics from empty input" << std::endl;
+                    return;
+                }
+                std::sort(vals.begin(), vals.end());
+                ss << "Min:    " << vals.front() << std::endl;
+                ss << "Max:    " << vals.back() << std::endl;
+                ss << "Mean:   " << Mean(vals) << std::endl;
+                ss << "Median: " << Median(vals) << std::endl;
+                ss << "P90:    " << vals[size_t(0.9 * len)] << std::endl;
+                ss << "P99:    " << vals[size_t(0.99 * len)] << std::endl;
+            };
+            ss << "# Image pose error summary" << std::endl;
+            ss << std::endl << "Rotation angular errors (degrees)" << std::endl;
+            PrintErrorStats(ss, rotation_errors);
+            ss << std::endl << "Translation distance errors" << std::endl;
+            PrintErrorStats(ss, translation_errors);
+            ss << std::endl << "Projection center distance errors" << std::endl;
+            PrintErrorStats(ss, proj_center_errors);
+        };
+
+        std::stringstream ss;
+        ss << std::endl<<"Reconstruction 1"<<std::endl;
+        ss << StringPrintf("Images: %d", reconstruction1.NumRegImages())
+                    << std::endl;
+        ss << StringPrintf("Points: %d", reconstruction1.NumPoints3D())
+                    << std::endl;
+
+        ss << std::endl<<"Reconstruction 2"<<std::endl;
+        ss << StringPrintf("Images: %d", reconstruction2.NumRegImages())
+                    << std::endl;
+        ss << StringPrintf("Points: %d", reconstruction2.NumPoints3D())
+                    << std::endl;
+        if (verbose) {py::print(ss.str()); ss.str("");};
+
+        ss << std::endl<<"Comparing reconstructed image poses"<<std::endl;
+        const auto common_image_ids =
+            reconstruction1.FindCommonRegImageIds(reconstruction2);
+        ss << StringPrintf("Common images: %d", common_image_ids.size())
+                    << std::endl;
+        if (verbose) {py::print(ss.str()); ss.str("");};
+
+        Eigen::Matrix3x4d alignment;
+        if (!ComputeAlignmentBetweenReconstructions(reconstruction2, reconstruction1,
+                                                    min_inlier_observations,
+                                                    max_reproj_error, &alignment)) {
+            THROW_EXCEPTION(std::runtime_error,"=> Reconstruction alignment failed.");
+        }
+
+        const SimilarityTransform3 tform(alignment);
+        ss << "Computed alignment transform:" << std::endl
+                    << tform.Matrix() << std::endl;
+        if (verbose) {py::print(ss.str()); ss.str("");};
+
+        const size_t num_images = common_image_ids.size();
+        std::vector<double> rotation_errors(num_images, 0.0);
+        std::vector<double> translation_errors(num_images, 0.0);
+        std::vector<double> proj_center_errors(num_images, 0.0);
+        for (size_t i = 0; i < num_images; ++i) {
+            const image_t image_id = common_image_ids[i];
+            Image image1 = reconstruction1.Image(image_id);  // copy!
+            Image image2 = reconstruction2.Image(image_id);  // copy!
+            tform.TransformPose(&image2.Qvec(), &image2.Tvec());
+
+            const Eigen::Vector4d normalized_qvec1 = NormalizeQuaternion(image1.Qvec());
+            const Eigen::Quaterniond quat1(normalized_qvec1(0), normalized_qvec1(1),
+                                        normalized_qvec1(2), normalized_qvec1(3));
+            const Eigen::Vector4d normalized_qvec2 = NormalizeQuaternion(image2.Qvec());
+            const Eigen::Quaterniond quat2(normalized_qvec2(0), normalized_qvec2(1),
+                                        normalized_qvec2(2), normalized_qvec2(3));
+
+            rotation_errors[i] = RadToDeg(quat1.angularDistance(quat2));
+            translation_errors[i] = (image1.Tvec() - image2.Tvec()).norm();
+            proj_center_errors[i] =
+                (image1.ProjectionCenter() - image2.ProjectionCenter()).norm();
+        }
+        PrintComparisonSummary(ss, rotation_errors, translation_errors,
+                            proj_center_errors);
+        if (verbose) {py::print(ss.str()); ss.str("");};
+        py::dict res(
+                    "alignment"_a=alignment,
+                    "rotation_errors"_a=rotation_errors,
+                    "translation_errors"_a=translation_errors,
+                    "proj_center_errors"_a=proj_center_errors);
+        return res;
+    },
+    py::arg("src_reconstruction").noconvert(),
+    py::arg("ref_reconstruction").noconvert(),
+    py::arg("min_inlier_observations") = 0.3,
+    py::arg("max_reproj_error") = 8.0,
+    py::arg("verbose") = true,
+    py::keep_alive<1,2>(),
+    py::keep_alive<1,3>());
 }

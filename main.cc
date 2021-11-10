@@ -17,6 +17,7 @@ namespace py = pybind11;
 #include "reconstruction.cc"
 
 void init_reconstruction(py::module &);
+void init_transforms(py::module &);
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
@@ -74,10 +75,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("max_error_px") = 4.0,
           "LORANSAC + 7-point algorithm.");
 
-    // Image-to-world and world-to-image.
-    m.def("image_to_world", &image_to_world, "Image to world transformation.");
-    m.def("world_to_image", &world_to_image, "World to image transformation.");
-
     // SIFT.
     m.def("extract_sift", &extract_sift,
           py::arg("image"),
@@ -103,6 +100,9 @@ PYBIND11_MODULE(pycolmap, m) {
 
     //Reconstruction bindings
     init_reconstruction(m);
+
+    // Transformation Bindings
+    init_transforms(m);
 
     m.def("qvec_to_rotmat", &colmap::QuaternionToRotationMatrix,
           py::arg("qvec"),

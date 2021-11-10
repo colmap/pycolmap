@@ -29,67 +29,81 @@
 //
 // Author: Johannes L. Schoenberger (jsch at inf.ethz.ch)
 
-#include <iostream>
-#include <fstream>
-
-#include "colmap/base/camera.h"
+#include "colmap/base/similarity_transform.h"
 
 using namespace colmap;
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
 
-py::dict image_to_world(
-        const std::vector<Eigen::Vector2d> points2D,
-        const py::dict camera_dict
-) {
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
+#include "log_exceptions.h"
 
-    // Image to world.
-    std::vector<Eigen::Vector2d> world_points2D;
-    for (size_t idx = 0; idx < points2D.size(); ++idx) {
-        world_points2D.push_back(camera.ImageToWorld(points2D[idx]));
-    }
-    
-    // Mean focal length.
-    const double mean_focal_length = camera.MeanFocalLength();
+void init_transforms(py::module& m) {
+    m.def("compute_alignment",
+        [](const Reconstruction& src_reconstruction,
+            const Reconstruction& ref_reconstruction,
+            const double min_inlier_observations, 
+            const double max_reproj_error) {
+            THROW_CHECK_GE(min_inlier_observations, 0.0);
+            THROW_CHECK_LE(min_inlier_observations, 1.0);
+            Eigen::Matrix3x4d alignment;
+            bool success = 
+                ComputeAlignmentBetweenReconstructions(src_reconstruction,
+                    ref_reconstruction, min_inlier_observations, 
+                    max_reproj_error, &alignment);
+            THROW_CHECK(success);
+            return alignment;
+        },  
+        py::arg("src_reconstruction").noconvert(),
+        py::arg("ref_reconstruction").noconvert(),
+        py::arg("min_inlier_observations") = 0.3,
+        py::arg("max_reproj_error") = 8.0,
+        py::keep_alive<1,2>(),
+        py::keep_alive<1,3>());
 
-    // Success output dictionary.
-    py::dict success_dict;
-    success_dict["world_points"] = world_points2D;
-    success_dict["mean_focal_length"] = mean_focal_length;
-    
-    return success_dict;
-}
+    py::class_<SimilarityTransform3>(m, "SimilarityTransform3")
+        .def(py::init<const Eigen::Matrix3x4d&>())
+        .def(py::init<double, Eigen::Vector4d, Eigen::Vector3d>())
+        .def_property_readonly_static("estimate", [](py::object){
+            return py::cpp_function([](std::vector<Eigen::Vector3d> src,
+                    std::vector<Eigen::Vector3d> dst){
+                SimilarityTransform3 tform;
+                bool success = tform.Estimate(src,dst);
+                THROW_CHECK(success);
+                return tform;
+            });
+        })
+        .def_property_readonly("rotation", &SimilarityTransform3::Rotation)
+        .def_property_readonly("translation", &SimilarityTransform3::Translation)
+        .def_property_readonly("scale", &SimilarityTransform3::Scale)
+        .def_property_readonly("matrix", &SimilarityTransform3::Matrix)
+        .def("transform_point", [](const SimilarityTransform3& self,
+                                   Eigen::Ref<Eigen::Vector3d> xyz){
+            Eigen::Vector3d cpy(xyz);
+            self.TransformPoint(&cpy);
+            xyz = cpy;
+        })
+        .def("transform_pose", [](const SimilarityTransform3& self,
+                                  Eigen::Ref<Eigen::Vector4d> qvec,
+                                  Eigen::Ref<Eigen::Vector3d> tvec){
+            Eigen::Vector3d cpyt(tvec);
+            Eigen::Vector4d cpyq(qvec);
+            self.TransformPose(&cpyq, &cpyt);
+            qvec = cpyq;
+            tvec = cpyt;
+        })
+        .def("inverse", &SimilarityTransform3::Inverse)
+        .def("__repr__", [](const SimilarityTransform3& self){
+            std::stringstream ss;
+            ss<<"SimilarityTransform3:\n"
+            <<self.Matrix();
+            return ss.str();
+        });
 
-py::dict world_to_image(
-        const std::vector<Eigen::Vector2d> world_points2D,
-        const py::dict camera_dict
-) {
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
 
-    // World to image.
-    std::vector<Eigen::Vector2d> image_points2D;
-    for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
-        image_points2D.push_back(camera.WorldToImage(world_points2D[idx]));
-    }
-    
-    // Success output dictionary.
-    py::dict success_dict;
-    success_dict["image_points"] = image_points2D;
-    
-    return success_dict;
+
 }
