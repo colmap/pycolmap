@@ -669,7 +669,7 @@ void init_reconstruction(py::module &m) {
                 auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
                 reconstruction->Read(path);
                 return reconstruction;
-            });
+            }, py::arg("sfm_dir"));
         })
         .def(py::init([](const py::object input_path){
             py::str py_path = py::str(input_path);
@@ -686,7 +686,7 @@ void init_reconstruction(py::module &m) {
             auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
             reconstruction->Read(path);
             return reconstruction;
-        }))
+        }), py::arg("sfm_dir"))
         .def("read", [](Reconstruction& self, const std::string& input_path) {
             THROW_CUSTOM_CHECK_MSG(
                 ExistsReconstruction(input_path),
