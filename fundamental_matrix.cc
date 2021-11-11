@@ -47,7 +47,11 @@ namespace py = pybind11;
 py::dict fundamental_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
-        const double max_error_px
+        const double max_error_px,
+        const double min_inlier_ratio,
+        const int min_num_trials,
+        const int max_num_trials,
+        const double confidence
 ) {
     SetPRNGSeed(0);
 
@@ -61,10 +65,10 @@ py::dict fundamental_matrix_estimation(
     // Fundamental matrix estimation parameters.
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error_px;
-    ransac_options.min_inlier_ratio = 0.01;
-    ransac_options.min_num_trials = 1000;
-    ransac_options.max_num_trials = 100000;
-    ransac_options.confidence = 0.9999;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
+    ransac_options.min_num_trials = min_num_trials;
+    ransac_options.max_num_trials = max_num_trials;
+    ransac_options.confidence = confidence;
     
     LORANSAC<
         FundamentalMatrixSevenPointEstimator,

@@ -206,7 +206,11 @@ py::dict rig_absolute_pose_estimation(
         const std::vector<py::dict> camera_dicts,
         const std::vector<Eigen::Vector4d> rig_qvecs,
         const std::vector<Eigen::Vector3d> rig_tvecs,
-        const double max_error_px
+        const double max_error_px,
+        const double min_inlier_ratio,
+        const int min_num_trials,
+        const int max_num_trials,
+        const double confidence
 ) {
     SetPRNGSeed(0);
 
@@ -253,13 +257,13 @@ py::dict rig_absolute_pose_estimation(
         return failure_dict;
     }
 
-    RANSACOptions options;
-    options.max_error = error_threshold;
-    options.min_inlier_ratio = 0.01;
-    options.min_num_trials = 1000;
-    options.max_num_trials = 100000;
-    options.confidence = 0.9999;
-    RANSAC<GP3PEstimator> ransac(options);
+    RANSACOptions ransac_options;
+    ransac_options.max_error = error_threshold;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
+    ransac_options.min_num_trials = min_num_trials;
+    ransac_options.max_num_trials = max_num_trials;
+    ransac_options.confidence = confidence;
+    RANSAC<GP3PEstimator> ransac(ransac_options);
     ransac.estimator.residual_type = GP3PEstimator::ResidualType::ReprojectionError;
     const auto report = ransac.Estimate(points2D_rig, points3D_all);
     size_t num_inliers = report.support.num_inliers;
