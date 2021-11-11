@@ -18,6 +18,10 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2D"), py::arg("points3D"),
           py::arg("camera_dict"),
           py::arg("max_error_px") = 12.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
           "Absolute pose estimation with non-linear refinement.");
 
     m.def("rig_absolute_pose_estimation", &rig_absolute_pose_estimation,
@@ -25,6 +29,10 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("camera_dicts"),
           py::arg("rig_qvecs"), py::arg("rig_tvecs"),
           py::arg("max_error_px") = 12.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
           "Absolute pose estimation of a multi-camera rig.");
 
     // Essential matrix.
@@ -32,6 +40,7 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("camera_dict1"), py::arg("camera_dict2"),
           py::arg("max_error_px") = 4.0,
+          py::arg("min_inlier_ratio") = 0.01,
           py::arg("min_num_trials") = 1000,
           py::arg("max_num_trials") = 100000,
           py::arg("confidence") = 0.9999,
@@ -41,6 +50,10 @@ PYBIND11_MODULE(pycolmap, m) {
     m.def("fundamental_matrix_estimation", &fundamental_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("max_error_px") = 4.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
           "LORANSAC + 7-point algorithm.");
 
     // Image-to-world and world-to-image.

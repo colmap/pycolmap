@@ -140,4 +140,3 @@ keypoints, scores, descriptors = pycolmap.extract_sift(img)
 
 - [ ] Add documentation
 - [ ] Add more detailed examples
-- [ ] Expose more RANSAC parameters to Python

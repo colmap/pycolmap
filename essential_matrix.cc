@@ -53,6 +53,7 @@ py::dict essential_matrix_estimation(
         const py::dict camera_dict1,
         const py::dict camera_dict2,
         const double max_error_px,
+        const double min_inlier_ratio,
         const int min_num_trials,
         const int max_num_trials,
         const double confidence
@@ -98,7 +99,7 @@ py::dict essential_matrix_estimation(
     // Essential matrix estimation parameters.
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error;
-    ransac_options.min_inlier_ratio = 0.01;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
     ransac_options.min_num_trials = min_num_trials;
     ransac_options.max_num_trials = max_num_trials;
     ransac_options.confidence = confidence;
