@@ -23,6 +23,28 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+const double TOL = 1e-5;
+
+
+const bool lowerVector3d(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2) {
+  if (v1.x() < v2.x()) {
+    return true;
+  } else if (v1.x() == v2.x()) {
+    if (v1.y() < v2.y()) {
+      return true;
+    } else if (v1.y() == v2.y()) {
+      return v1.z() < v2.z();
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+const bool equalVector3d(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2) {
+  return ((v1 - v2).norm() < TOL);
+}
 
 struct GeneralizedAbsolutePoseRefinementOptions {
   // Convergence criterion.
@@ -200,6 +222,73 @@ bool RefineGeneralizedAbsolutePose(
   return summary.IsSolutionUsable();
 }
 
+// Measure the support of a model by counting the number of unique inliers (e.g.,
+// visible 3D points), number of inliers, and summing all inlier residuals.
+// Each sample should have an associated id. Samples with the same id are only
+// counted once in num_unique_inliers.
+// The support is better if it has more unique inliers, more inliers,
+// and a smaller residual sum.
+struct UniqueInlierSupportMeasurer {
+  struct Support {
+    // The number of inliers. 
+    // This is still needed for determining the dynamic number of iterations.
+    size_t num_inliers = 0;
+
+    // The number of unique inliers;
+    size_t num_unique_inliers = 0;
+
+    // The sum of all inlier residuals.
+    double residual_sum = std::numeric_limits<double>::max();
+  };
+
+  void SetSampleIds(const std::vector<size_t>& sample_ids) {
+    sample_ids_ = sample_ids;
+  }
+
+  // Compute the support of the residuals.
+  Support Evaluate(const std::vector<double>& residuals,
+                   const double max_residual) {
+    CHECK_EQ(residuals.size(), sample_ids_.size());
+    Support support;
+    support.num_inliers = 0;
+    support.num_unique_inliers = 0;
+    support.residual_sum = 0;
+
+    std::unordered_set<size_t> inlier_point_ids;
+
+    for (size_t idx = 0; idx < residuals.size(); ++idx) {
+      if (residuals[idx] <= max_residual) {
+        support.num_inliers += 1;
+        inlier_point_ids.insert(sample_ids_[idx]);
+        support.residual_sum += residuals[idx];
+      }
+    }
+
+    support.num_unique_inliers = inlier_point_ids.size();
+
+    return support;
+  }
+
+  // Compare the two supports and return the better support.
+  bool Compare(const Support& support1, const Support& support2) {
+    if (support1.num_unique_inliers > support2.num_unique_inliers) {
+      return true;
+    } else if (support1.num_unique_inliers == support2.num_unique_inliers) {
+      if (support1.num_inliers > support2.num_inliers) {
+        return true;
+      } else {
+        return support1.num_inliers == support2.num_inliers &&
+               support1.residual_sum < support2.residual_sum;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  private:
+    std::vector<size_t> sample_ids_;
+};
+
 py::dict rig_absolute_pose_estimation(
         const std::vector<std::vector<Eigen::Vector2d>> points2D,
         const std::vector<std::vector<Eigen::Vector3d>> points3D,
@@ -251,10 +340,26 @@ py::dict rig_absolute_pose_estimation(
 
         error_threshold += camera.ImageToWorldThreshold(max_error_px) * points2D[i].size();
     }
-    // average of the errors over the cameras, weighted by the number of correspondences
+    // Average of the errors over the cameras, weighted by the number of correspondences
     error_threshold /= points3D_all.size();
     if (points3D_all.size() == 0) {
         return failure_dict;
+    }
+
+    // Associate unique ids to each 3D point.
+    // Needed for UniqueInlierSupportMeasurer to avoid counting the same 
+    // 3D point multiple times due to FoV overlap in rig.
+    std::vector<Eigen::Vector3d> unique_points3D = points3D_all;
+    std::sort(unique_points3D.begin(), unique_points3D.end(), lowerVector3d);
+    unique_points3D.erase(
+      std::unique(unique_points3D.begin(), unique_points3D.end(), equalVector3d),
+      unique_points3D.end()
+    );
+    std::vector<size_t> p3D_ids;
+    for (auto p3D : points3D_all) {
+      p3D_ids.push_back(
+        std::lower_bound(unique_points3D.begin(), unique_points3D.end(), p3D, lowerVector3d) - unique_points3D.begin()
+      );
     }
 
     RANSACOptions ransac_options;
@@ -263,11 +368,11 @@ py::dict rig_absolute_pose_estimation(
     ransac_options.min_num_trials = min_num_trials;
     ransac_options.max_num_trials = max_num_trials;
     ransac_options.confidence = confidence;
-    RANSAC<GP3PEstimator> ransac(ransac_options);
+    RANSAC<GP3PEstimator, UniqueInlierSupportMeasurer> ransac(ransac_options);
+    ransac.support_measurer.SetSampleIds(p3D_ids);
     ransac.estimator.residual_type = GP3PEstimator::ResidualType::ReprojectionError;
     const auto report = ransac.Estimate(points2D_rig, points3D_all);
-    size_t num_inliers = report.support.num_inliers;
-    if (num_inliers == 0) {
+    if (!report.success) {
         return failure_dict;
     }
 
@@ -301,7 +406,7 @@ py::dict rig_absolute_pose_estimation(
     success_dict["success"] = true;
     success_dict["qvec"] = qvec;
     success_dict["tvec"] = tvec;
-    success_dict["num_inliers"] = num_inliers;
+    success_dict["num_inliers"] = report.support.num_unique_inliers;
     success_dict["inliers"] = inliers;
 
     return success_dict;
