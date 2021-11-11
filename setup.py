@@ -67,7 +67,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='pycolmap',
-    version='0.0.1',
+    version='0.0.2',
     author='Mihai Dusmanu',
     author_email='mihai.dusmanu@inf.ethz.ch',
     description='COLMAP bindings',
