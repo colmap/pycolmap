@@ -30,6 +30,7 @@
 // Author: Johannes L. Schoenberger (jsch at inf.ethz.ch)
 
 #include "colmap/base/similarity_transform.h"
+#include "colmap/base/warp.h"
 
 using namespace colmap;
 
@@ -104,6 +105,22 @@ void init_transforms(py::module& m) {
             return ss.str();
         });
 
+    m.def("qvec_to_rotmat", &colmap::QuaternionToRotationMatrix,
+          py::arg("qvec"),
+          "Convert COLMAP quaternion to rotation matrix");
+    m.def("rotmat_to_qvec", &colmap::RotationMatrixToQuaternion,
+          py::arg("rotmat"),
+          "Convert rotation matrix to colmap quaternion");
+    m.def("qvec_rotate_point", &colmap::QuaternionRotatePoint,
+          py::arg("qvec"),
+          py::arg("xyz"),
+          "Rotate world point");
+    m.def("invert_qvec", &colmap::InvertQuaternion,
+          py::arg("qvec"),
+          "Returns inverted qvec");
+    m.def("normalize_qvec", &colmap::InvertQuaternion,
+          py::arg("qvec"),
+          "Returns normalized qvec");
 
 
 }
