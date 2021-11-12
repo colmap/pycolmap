@@ -56,6 +56,15 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("confidence") = 0.9999,
           "LORANSAC + 7-point algorithm.");
 
+    // Homography Decomposition.
+    m.def("homography_decomposition", &homography_decomposition_estimation,
+          py::arg("H"), 
+          py::arg("K1"),
+          py::arg("K2"),
+          py::arg("points1"),
+          py::arg("points2"),
+          "Analytical Homography Decomposition.");
+
     // Image-to-world and world-to-image.
     m.def("image_to_world", &image_to_world, "Image to world transformation.");
     m.def("world_to_image", &world_to_image, "World to image transformation.");
