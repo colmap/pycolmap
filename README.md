@@ -14,7 +14,7 @@ git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 ```bash
 pip install pycolmap
 ```
-These wheels were built using John Lambert's wheel-builder [here](https://github.com/johnwlambert/pycolmap-wheels).
+These wheels were built using [John Lambert's wheel-builder](https://github.com/johnwlambert/pycolmap-wheels).
 
 If you instead prefer to build the wheels from source, COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can then be installed using `pip`: 
 ```
@@ -22,23 +22,27 @@ pip install ./
 ```
 
 ## Windows
-To install pycolmap on Windows, we recommend to install colmap with [vcpkg](https://github.com/microsoft/vcpkg).
+To install PyCOLMAP on Windows, we recommend to install COLMAP with [vcpkg](https://github.com/microsoft/vcpkg).
 From your vcpkg directory, run
 ```
 .\vcpkg.exe install colmap --triplet=x64-windows
 ```
 
 Then set the `CMAKE_TOOLCHAIN_FILE` environment variable to your `vcpkg\scripts\buildsystems\vcpkg.cmake` path.
-
-example (powershell)
+Example (powershell):
 ```
 $env:CMAKE_TOOLCHAIN_FILE='C:\Workspace\vcpkg\scripts\buildsystems\vcpkg.cmake'
 ```
 
-Finally go to the pycolmap folder and run
+Finally go to the PyCOLMAP folder and run
 ```
 py -m pip install ./
 ```
+
+## Remark regarding building the wheels from source
+
+PyCOLMAP build is generally tested with the latest commit of the COLMAP [`dev` branch](https://github.com/colmap/colmap/tree/dev).
+Using a previous COLMAP build might not work.
 
 # Usage
 
