@@ -653,29 +653,23 @@ void init_reconstruction(py::module &m) {
 
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
-        .def_property_readonly_static("from_folder", [](py::object){
-            return py::cpp_function([](py::object input_path){
-                py::str py_path = py::str(input_path);
-                if (!py_path.check()) {
-                    THROW_EXCEPTION(std::invalid_argument, "Failed to cast path to string.");
-                }
-                std::string path = py_path.cast<std::string>();
-                THROW_CUSTOM_CHECK_MSG(
-                    ExistsReconstruction(path),
-                    std::invalid_argument,
-                    (std::string("cameras, images, points3D not found at ")
-                        +path).c_str()
-                );
-                auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
-                reconstruction->Read(path);
-                return reconstruction;
-            }, py::arg("sfm_dir"));
-        })
+        // .def_property_readonly_static("from_folder", [](py::object){
+        //     return py::cpp_function([](py::object input_path){
+        //         py::str py_path = py::str(input_path);
+        //         std::string path = py_path.cast<std::string>();
+        //         THROW_CUSTOM_CHECK_MSG(
+        //             ExistsReconstruction(path),
+        //             std::invalid_argument,
+        //             (std::string("cameras, images, points3D not found at ")
+        //                 +path).c_str()
+        //         );
+        //         auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
+        //         reconstruction->Read(path);
+        //         return reconstruction;
+        //     }, py::arg("sfm_dir"));
+        // })
         .def(py::init([](const py::object input_path){
             py::str py_path = py::str(input_path);
-            if (!py_path.check()) {
-                THROW_EXCEPTION(std::invalid_argument, "Failed to cast path to string.");
-            }
             std::string path = py_path.cast<std::string>();
             THROW_CUSTOM_CHECK_MSG(
                 ExistsReconstruction(path),
@@ -730,10 +724,21 @@ void init_reconstruction(py::module &m) {
             }, "Add new camera. There is only one camera per image, while multiple images\n"
                 "might be taken by the same camera.")
         .def("add_image", 
-            [](Reconstruction& self, const class colmap::Image& image) {
+            [](Reconstruction& self, const class colmap::Image& image, 
+               bool check_not_registered) {
                 THROW_CHECK(!self.ExistsImage(image.ImageId()));
+                if (check_not_registered) {
+                    THROW_CHECK(!image.IsRegistered());
+                }
                 self.AddImage(image);
-            }, "Add new image.")
+                if (image.IsRegistered()){
+                    THROW_CHECK_NE(image.ImageId(), colmap::kInvalidImageId);
+                    self.Image(image.ImageId()).SetRegistered(false);  //Set true in next line
+                    self.RegisterImage(image.ImageId());
+                }
+            }, py::arg("image"), py::arg("check_not_registered") = false,
+                "Add new image. If Image.IsRegistered()==true, either throw "
+                "if check_not_registered, or register image also in reconstr.")
         .def("add_point3D", &Reconstruction::AddPoint3D,
                 "Add new 3D object, and return its unique ID.")
         .def("add_observation", &Reconstruction::AddObservation,
@@ -748,8 +753,11 @@ void init_reconstruction(py::module &m) {
                 "Delete one observation from an image and the corresponding 3D point.\n"
                 "Note that this deletes the entire 3D point, if the track has two elements\n"
                 "prior to calling this method.")
-        .def("register_image", &Reconstruction::RegisterImage,
-                "Register an existing image.")
+        .def("register_image", [](colmap::Reconstruction& self, 
+        colmap::image_t imid) {
+            THROW_CHECK_EQ(self.Image(imid).IsRegistered(),self.IsImageRegistered(imid));
+            self.RegisterImage(imid);
+        }, "Register an existing image.")
         .def("deregister_image", &Reconstruction::DeRegisterImage,
                 "De-register an existing image, and all its references.")
         .def("is_image_registered", &Reconstruction::IsImageRegistered,
@@ -910,6 +918,26 @@ void init_reconstruction(py::module &m) {
                 "                     root path and the name of the image.")
         .def("create_image_dirs", &Reconstruction::CreateImageDirs,
                 "Create all image sub-directories in the given path.")
+        .def("check", [](colmap::Reconstruction& self) {
+            for (auto& p3D_p : self.Points3D()) {
+                const colmap::Point3D& p3D = p3D_p.second;
+                const colmap::point3D_t p3Did = p3D_p.first;
+                for (auto& track_el : p3D.Track().Elements()) {
+                    colmap::image_t image_id = track_el.image_id;
+                    colmap::point2D_t point2D_idx = track_el.point2D_idx;
+                    THROW_CHECK_MSG(self.ExistsImage(image_id), image_id);
+                    THROW_CHECK_MSG(self.IsImageRegistered(image_id), image_id);
+                    const colmap::Image& image = self.Image(image_id); 
+                    THROW_CHECK(image.IsRegistered());
+                    THROW_CHECK_EQ(image.Point2D(point2D_idx).Point3DId(),p3Did)
+                }
+            }
+            for (auto& image_id : self.RegImageIds()) {
+                THROW_CHECK_MSG(self.Image(image_id).HasCamera(), image_id);
+                colmap::camera_t camera_id = self.Image(image_id).CameraId();
+                THROW_CHECK_MSG(self.ExistsCamera(camera_id), camera_id);
+            }
+        }, "Check if current reconstruction is well formed.")
         .def("__copy__",  [](const Reconstruction &self) {
             return Reconstruction(self);
         })

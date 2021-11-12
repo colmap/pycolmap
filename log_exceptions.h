@@ -58,6 +58,16 @@ inline void __ThrowCheckImpl(const char* file, const int line, const bool result
     }
 }
 
+inline void __ThrowCheckImplMsg(const char* file, const int line, const bool result,
+                       const char* expr_str, std::string msg) {
+    if (!result) {
+        std::stringstream ss;
+        ss << expr_str << " : " << msg;
+        std::string m = ss.str();
+        throw TemplateException<py::value_error>(file, line, __GetCheckString(m.c_str()).c_str());
+    }
+}
+
 template <typename T1, typename T2>
 void __ThrowCheckOpImpl(const char* file, const int line, const bool result,
                          const T1& val1, const T2& val2, const char* val1_str,
@@ -74,6 +84,9 @@ void __ThrowCheckOpImpl(const char* file, const int line, const bool result,
 // program, but simply returns false on failure.
 #define THROW_CHECK(expr) \
   __ThrowCheckImpl(__FILE__, __LINE__, (expr), #expr);
+
+#define THROW_CHECK_MSG(expr, msg)                                             \
+  __ThrowCheckImplMsg(__FILE__, __LINE__, (expr), #expr, std::to_string(msg))                                 
 
 #define THROW_CHECK_OP(name, op, val1, val2)                                   \
   __ThrowCheckOpImpl(__FILE__, __LINE__, (val1 op val2), val1, val2,           \
