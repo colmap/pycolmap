@@ -30,7 +30,7 @@ py::dict homography_decomposition_estimation (
     std::vector<Eigen::Vector3d> points3D;
 
     // Homography Decomposition Estimation
-    PoseFromHomographyMatrix(H, K1, K2, points1, points2, &R, &t, &n, &points3D)
+    PoseFromHomographyMatrix(H, K1, K2, points1, points2, &R, &t, &n, &points3D);
 
     // Success output dictionary.
     py::dict success_dict;
