@@ -38,6 +38,7 @@ py::dict homography_decomposition_estimation (
     success_dict["R"] = R;
     success_dict["t"] = t;
     success_dict["n"] = n;
+    success_dict["best_points3D"] = points3D;
     
     return success_dict;
 }

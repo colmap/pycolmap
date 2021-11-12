@@ -6,6 +6,7 @@ namespace py = pybind11;
 #include "generalized_absolute_pose.cc"
 #include "essential_matrix.cc"
 #include "fundamental_matrix.cc"
+#include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
 #include "pose_refinement.cc"
