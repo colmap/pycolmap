@@ -23,7 +23,6 @@ py::dict homography_decomposition_estimation (
     // Check that both vectors have the same size.
     assert(points1.size() == points2.size());
 
-    // Pointers to R, t, n
     Eigen::Matrix3d R;
     Eigen::Vector3d t;
     Eigen::Vector3d n;
@@ -38,7 +37,7 @@ py::dict homography_decomposition_estimation (
     success_dict["R"] = R;
     success_dict["t"] = t;
     success_dict["n"] = n;
-    success_dict["best_points3D"] = points3D;
+    success_dict["points3D"] = points3D;
     
     return success_dict;
 }
