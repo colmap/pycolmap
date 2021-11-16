@@ -11,6 +11,17 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+/**
+ * Recover the most probable pose from the inputted homography matrix.
+ * 
+ * @param H 3x3 homography matrix.
+ * @param K1 3x3 intrinsics matrix for first camera.
+ * @param K2 3x3 intrinsics matrix for second camera.
+ * @param points1 First set of corresponding points: normalized beforehand.
+ * @param points2 Second set of corresponding points: normalized beforehand.
+ * @return The most probable rotation matrix (3x3), translation vector (3x1), normal vector (3x1),
+ *         and triangulated 3D points.
+ */
 py::dict homography_decomposition_estimation (
     const Eigen::Matrix3d H,
     const Eigen::Matrix3d K1,
