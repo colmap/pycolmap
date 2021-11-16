@@ -31,6 +31,7 @@
 
 #include "colmap/base/similarity_transform.h"
 #include "colmap/base/warp.h"
+#include "colmap/base/camera_models.h"
 
 using namespace colmap;
 
@@ -122,5 +123,48 @@ void init_transforms(py::module& m) {
           py::arg("qvec"),
           "Returns normalized qvec");
 
+    m.def("world_to_image", [](int model_id, 
+        Eigen::Ref<Eigen::VectorXd> camera_params,
+        Eigen::Ref<Eigen::Vector2d> uv,
+        Eigen::Ref<Eigen::Vector2d> xy) {
+        int num_params;
+        switch (model_id) {
+            #define CAMERA_MODEL_CASE(CameraModel)                             \
+            case CameraModel::kModelId:                                        \
+                num_params = CameraModel::kNumParams;                          \
+                THROW_CHECK_EQ(num_params,camera_params.size());               \
+                CameraModel::WorldToImage<double>(                             \
+                    camera_params.data(), uv(0), uv(1),                        \
+                    xy.data(), xy.data()+1);                                   \
+                break;  
+            CAMERA_MODEL_SWITCH_CASES
+            #undef CAMERA_MODEL_CASE
+        }
+    }, py::arg("model_id"), 
+       py::arg("camera_params").noconvert(), 
+       py::arg("uv").noconvert(), 
+       py::arg("xy").noconvert());
+
+    m.def("image_to_world", [](int model_id, 
+        Eigen::Ref<Eigen::VectorXd> camera_params,
+        Eigen::Ref<Eigen::Vector2d> xy,
+        Eigen::Ref<Eigen::Vector2d> uv) {
+        int num_params;
+        switch (model_id) {
+            #define CAMERA_MODEL_CASE(CameraModel)                             \
+            case CameraModel::kModelId:                                        \
+                num_params = CameraModel::kNumParams;                          \
+                THROW_CHECK_EQ(num_params,camera_params.size());               \
+                CameraModel::ImageToWorld<double>(                             \
+                    camera_params.data(), xy(0), xy(1),                        \
+                    uv.data(), uv.data()+1);                                   \
+                break;  
+            CAMERA_MODEL_SWITCH_CASES
+            #undef CAMERA_MODEL_CASE
+        }
+    }, py::arg("model_id"), 
+       py::arg("camera_params").noconvert(), 
+       py::arg("xy").noconvert(), 
+       py::arg("uv").noconvert());
 
 }
