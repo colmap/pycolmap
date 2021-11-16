@@ -14,7 +14,7 @@ namespace py = pybind11;
 #include "sift.cc"
 #include "pose_refinement.cc"
 
-#include "reconstruction.cc"
+#include "reconstruction/reconstruction.cc"
 
 void init_reconstruction(py::module &);
 void init_transforms(py::module &);
