@@ -25,7 +25,7 @@ pip install ./
 To install PyCOLMAP on Windows, we recommend to install COLMAP with [vcpkg](https://github.com/microsoft/vcpkg).
 From your vcpkg directory, run
 ```
-.\vcpkg.exe install colmap --triplet=x64-windows
+.\vcpkg.exe install colmap --triplet=x64-windows --head
 ```
 
 Then set the `CMAKE_TOOLCHAIN_FILE` environment variable to your `vcpkg\scripts\buildsystems\vcpkg.cmake` path.
