@@ -6,6 +6,7 @@ namespace py = pybind11;
 #include "generalized_absolute_pose.cc"
 #include "essential_matrix.cc"
 #include "fundamental_matrix.cc"
+#include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
 #include "pose_refinement.cc"
@@ -55,6 +56,15 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("max_num_trials") = 100000,
           py::arg("confidence") = 0.9999,
           "LORANSAC + 7-point algorithm.");
+
+    // Homography Decomposition.
+    m.def("homography_decomposition", &homography_decomposition_estimation,
+          py::arg("H"), 
+          py::arg("K1"),
+          py::arg("K2"),
+          py::arg("points1"),
+          py::arg("points2"),
+          "Analytical Homography Decomposition.");
 
     // Image-to-world and world-to-image.
     m.def("image_to_world", &image_to_world, "Image to world transformation.");
