@@ -209,6 +209,18 @@ void init_image(py::module& m) {
 
             return valid_points2D;
         })
+        .def("project", [](const Image& self, const Reconstruction& rec) {
+            const Eigen::Matrix3x4d projection_matrix = self.ProjectionMatrix();
+            std::vector<Eigen::Vector2d> world_points;
+            for (auto& p2D: self.Points2D()) {
+                if (!p2D.HasPoint3D()) {
+                    continue;
+                }
+                world_points.push_back(
+                    (projection_matrix * rec.Point3D(p2D.Point3DId()).XYZ().homogeneous()).hnormalized());
+            }
+            return world_points;
+        })
         .def("project", [](const Image& self, const Eigen::Vector3d& world_xyz){
             const Eigen::Vector3d image_point = self.ProjectionMatrix() * world_xyz.homogeneous();
             return image_point.hnormalized();

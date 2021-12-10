@@ -47,6 +47,30 @@ bool ExistsReconstruction(const std::string& path) {
     return (ExistsReconstructionText(path) || ExistsReconstructionBinary(path));
 }
 
+
+template <bool kEstimateScale>
+bool ComputeRobustAlignmentBetweenPoints(
+        const std::vector<Eigen::Vector3d>& src,
+        const std::vector<Eigen::Vector3d>& dst,
+        double max_error, double min_inlier_ratio,
+        Eigen::Matrix3x4d* alignment) {
+
+    RANSACOptions ransac_options;
+    ransac_options.max_error = max_error;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
+
+    LORANSAC<SimilarityTransformEstimator<3, kEstimateScale>,
+            SimilarityTransformEstimator<3, kEstimateScale>>
+        ransac(ransac_options);
+
+    const auto report = ransac.Estimate(src, dst);
+
+    if (report.success) {
+        *alignment = report.model;
+    }
+    return report.success;
+}
+
 //Reconstruction Bindings
 void init_reconstruction(py::module &m) {
     // STL Containers, required for fast looping over members (avoids copying)
@@ -184,12 +208,86 @@ void init_reconstruction(py::module &m) {
             SimilarityTransform3 tform(tform_mat);
             self.Transform(tform);
         }, "Apply the 3D similarity transformation to all images and points.")
+        .def("transform", &Reconstruction::Transform, 
+            "Apply the 3D similarity transformation to all images and points.")
         .def("merge", &Reconstruction::Merge,
                 "Merge the given reconstruction into this reconstruction by registering the\n"
                 "images registered in the given but not in this reconstruction and by\n"
                 "merging the two clouds and their tracks. The coordinate frames of the two\n"
                 "reconstructions are aligned using the projection centers of common\n"
                 "registered images. Return true if the two reconstructions could be merged.")
+        .def("align_poses", [](Reconstruction& self, const Reconstruction& ref_reconstruction,
+             const double min_inlier_observations, double max_reproj_error){
+                THROW_CHECK_GE(min_inlier_observations, 0.0);
+                THROW_CHECK_LE(min_inlier_observations, 1.0);
+                Eigen::Matrix3x4d alignment;
+                bool success = 
+                    ComputeAlignmentBetweenReconstructions(self,
+                        ref_reconstruction, min_inlier_observations, 
+                        max_reproj_error, &alignment);
+                THROW_CHECK(success);
+                SimilarityTransform3 tform(alignment);
+                self.Transform(tform);
+                return tform;
+             }, py::arg("ref_reconstruction"), 
+                py::arg("min_inlier_observations") = 0.3, 
+                py::arg("max_reproj_error") = 8.0,
+                "Align to reference reconstruction using RANSAC.")
+        .def("align_points", [](Reconstruction& self, const Reconstruction& ref,
+                int min_overlap, double max_error, double min_inlier_ratio){
+            std::vector<Eigen::Vector3d> src;
+            std::vector<Eigen::Vector3d> dst;
+            // std::vector<std::map<point3D_t,size_t>> counts;
+            for (auto& p3D_p : self.Points3D()) {
+                std::map<point3D_t,size_t> counts;
+                const Track& track = p3D_p.second.Track();
+                for (auto& track_el : track.Elements()) {
+                    if (!ref.IsImageRegistered(track_el.image_id)) {
+                        continue;
+                    }
+                    const Point2D& p2D_dst = 
+                    ref.Image(track_el.image_id).Point2D(track_el.point2D_idx);
+                    if (p2D_dst.HasPoint3D()) {
+                        if (counts.find(p2D_dst.Point3DId()) != counts.end()) {
+                            counts[p2D_dst.Point3DId()]++;
+                        } else {
+                            counts[p2D_dst.Point3DId()] = 0;
+                        }
+                    }
+                }
+                if (counts.size() == 0) {
+                    continue;
+                }
+                auto best_p3D = std::max_element(
+                counts.begin(), counts.end(),
+                []( const std::pair<point3D_t, size_t>& p1, 
+                    const std::pair<point3D_t, size_t>& p2) 
+                {return p1.second < p2.second; });
+                if (best_p3D->second >= min_overlap) {
+                    src.push_back(p3D_p.second.XYZ());
+                    dst.push_back(ref.Point3D(best_p3D->first).XYZ());
+                }
+            }
+            THROW_CHECK_EQ(src.size(), dst.size());
+            std::cerr<<"Found "<<src.size()<< " / "<<self.NumPoints3D()
+            <<" valid correspondences."<<std::endl;
+            
+            Eigen::Matrix3x4d alignment;
+            bool success = 
+                    ComputeRobustAlignmentBetweenPoints<true>(
+                    src, dst, max_error, min_inlier_ratio, &alignment);
+            THROW_CHECK(success);
+            SimilarityTransform3 tform(alignment);
+            self.Transform(tform);
+            return tform;
+        }, py::arg("reference_reconstruction"),
+            py::arg("min_overlap") = 3,
+            py::arg("max_error") = 0.005,
+            py::arg("min_inlier_ratio") = 0.9,
+            "Align 3D points to reference reconstruction using LORANSAC.\n"
+            "Estimates pose by aligning corresponding 3D points.\n"
+            "Correspondences are estimated by counting similar detection idxs.\n"
+            "Assumes image_ids and point2D_idx overlap.")    
         .def("align", [](Reconstruction& self, const std::vector<std::string>& image_names,
              const std::vector<Eigen::Vector3d>& locations,
              const int min_common_images){
@@ -202,6 +300,29 @@ void init_reconstruction(py::module &m) {
              }, "Align the given reconstruction with a set of pre-defined camera positions.\n"
                 "Assuming that locations[i] gives the 3D coordinates of the center\n"
                 "of projection of the image with name image_names[i].")
+        .def("align_robust", [](Reconstruction& self, const std::vector<std::string>& image_names,
+             const std::vector<Eigen::Vector3d>& locations,
+             const int min_common_images, double max_error, double min_inlier_ratio){
+                SimilarityTransform3 tform;
+                THROW_CHECK_GE(min_common_images, 3);
+                THROW_CHECK_EQ(image_names.size(),locations.size());
+                RANSACOptions options;
+                options.max_error = max_error;
+                options.min_inlier_ratio = min_inlier_ratio;
+                bool success = self.AlignRobust(image_names, locations, 
+                                          min_common_images, options, &tform);
+                THROW_CHECK(success);
+                return tform;
+             }, py::arg("image_names"), py::arg("locations"), 
+                py::arg("min_common_images"), py::arg("max_error") = 12.0, 
+                py::arg("min_inlier_ratio") = 0.1,
+                "Robust alignment using RANSAC. \n"
+                "Align the given reconstruction with a set of pre-defined camera positions.\n"
+                "Assuming that locations[i] gives the 3D coordinates of the center\n"
+                "of projection of the image with name image_names[i].")
+        .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox,
+            py::arg("p0")=0.0, py::arg("p1")=1.0)
+        .def("crop",&Reconstruction::Crop)
         // .def("align_robust", &Reconstruction::AlignRobust,
         //         "Robust alignment using RANSAC.")
         .def("find_image_with_name", &Reconstruction::FindImageWithName, 

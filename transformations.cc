@@ -44,6 +44,7 @@ namespace py = pybind11;
 
 #include "log_exceptions.h"
 
+
 void init_transforms(py::module& m) {
     m.def("compute_alignment",
         [](const Reconstruction& src_reconstruction,
