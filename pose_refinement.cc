@@ -100,21 +100,3 @@ py::dict pose_refinement(
     
     return success_dict;
 }
-
-py::dict pose_refinement_camera_dict(
-        const Eigen::Vector3d tvec,
-        const Eigen::Vector4d qvec,
-        const std::vector<Eigen::Vector2d> points2D,
-        const std::vector<Eigen::Vector3d> points3D,
-        const std::vector<bool> inlier_mask,
-        const py::dict camera_dict
-) {
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
-
-    return pose_refinement(tvec,qvec,points2D,points3D,inlier_mask,camera);
-}
