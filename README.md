@@ -10,29 +10,39 @@ git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 ```
 
 ## Unix
-COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can be installed using `pip`: 
+**Preferred:** `pycolmap` is now available for Python 3.7 and Python 3.8 via [pypi](https://pypi.org/project/pycolmap/0.0.1/):
+```bash
+pip install pycolmap
+```
+These wheels were built using [John Lambert's wheel-builder](https://github.com/johnwlambert/pycolmap-wheels).
+
+If you instead prefer to build the wheels from source, COLMAP should be installed as a library before proceeding. Please refer to the official website for installation instructions. PyCOLMAP can then be installed using `pip`: 
 ```
 pip install ./
 ```
 
 ## Windows
-To install pycolmap on Windows, we recommend to install colmap with [vcpkg](https://github.com/microsoft/vcpkg).
+To install PyCOLMAP on Windows, we recommend to install COLMAP with [vcpkg](https://github.com/microsoft/vcpkg).
 From your vcpkg directory, run
 ```
-.\vcpkg.exe install colmap --triplet=x64-windows
+.\vcpkg.exe install colmap --triplet=x64-windows --head
 ```
 
 Then set the `CMAKE_TOOLCHAIN_FILE` environment variable to your `vcpkg\scripts\buildsystems\vcpkg.cmake` path.
-
-example (powershell)
+Example (powershell):
 ```
 $env:CMAKE_TOOLCHAIN_FILE='C:\Workspace\vcpkg\scripts\buildsystems\vcpkg.cmake'
 ```
 
-Finally go to the pycolmap folder and run
+Finally go to the PyCOLMAP folder and run
 ```
 py -m pip install ./
 ```
+
+## Remark regarding building the wheels from source
+
+PyCOLMAP build is generally tested with the latest commit of the COLMAP [`dev` branch](https://github.com/colmap/colmap/tree/dev).
+Using a previous COLMAP build might not work.
 
 # Usage
 
@@ -170,14 +180,13 @@ reconstruction.export_PLY("path/to/new/reconstruction/reconstruction.ply")
 World-to-Image projection is inherently supported:
 
 ```python
-uv = camera.world_to_image(image.project(point3D.xyz))
+xy = camera.world_to_image(image.project(point3D.xyz))
 ```
 
-For more details and Image-to-World transformation check out the tests.
+For backwards compatibility, functions requiring a Camera object argument can also be called with a camera dict, and will be implicitly converted when the function is called.
 
 # TODO
 
 - [ ] Add documentation
 - [ ] Add more detailed examples
-- [ ] Expose more RANSAC parameters to Python
-- [ ] Add visualization for pycolmap.Reconstruction
+- [ ] Add examples for reconstruction bindings

@@ -50,7 +50,11 @@ py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
         Camera& camera,
-        const double max_error_px
+        const double max_error_px,
+        const double min_inlier_ratio,
+        const int min_num_trials,
+        const int max_num_trials,
+        const double confidence
 ) {
     SetPRNGSeed(0);
 
@@ -65,10 +69,10 @@ py::dict absolute_pose_estimation(
     AbsolutePoseEstimationOptions abs_pose_options;
     abs_pose_options.estimate_focal_length = false;
     abs_pose_options.ransac_options.max_error = max_error_px;
-    abs_pose_options.ransac_options.min_inlier_ratio = 0.01;
-    abs_pose_options.ransac_options.min_num_trials = 1000;
-    abs_pose_options.ransac_options.max_num_trials = 100000;
-    abs_pose_options.ransac_options.confidence = 0.9999;
+    abs_pose_options.ransac_options.min_inlier_ratio = min_inlier_ratio;
+    abs_pose_options.ransac_options.min_num_trials = min_num_trials;
+    abs_pose_options.ransac_options.max_num_trials = max_num_trials;
+    abs_pose_options.ransac_options.confidence = confidence;
 
     // Absolute pose estimation.
     Eigen::Vector4d qvec;
@@ -110,20 +114,4 @@ py::dict absolute_pose_estimation(
     success_dict["inliers"] = inliers;
     
     return success_dict;
-}
-
-py::dict absolute_pose_estimation_camera_dict(
-        const std::vector<Eigen::Vector2d> points2D,
-        const std::vector<Eigen::Vector3d> points3D,
-        const py::dict camera_dict,
-        const double max_error_px
-) {
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
-
-    return absolute_pose_estimation(points2D, points3D, camera, max_error_px);
 }

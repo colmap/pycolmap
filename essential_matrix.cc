@@ -54,7 +54,11 @@ py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D2,
         Camera& camera1,
         Camera& camera2,
-        const double max_error_px
+        const double max_error_px,
+        const double min_inlier_ratio,
+        const int min_num_trials,
+        const int max_num_trials,
+        const double confidence
 ) {
     SetPRNGSeed(0);
 
@@ -84,10 +88,10 @@ py::dict essential_matrix_estimation(
     // Essential matrix estimation parameters.
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error;
-    ransac_options.min_inlier_ratio = 0.01;
-    ransac_options.min_num_trials = 1000;
-    ransac_options.max_num_trials = 100000;
-    ransac_options.confidence = 0.9999;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
+    ransac_options.min_num_trials = min_num_trials;
+    ransac_options.max_num_trials = max_num_trials;
+    ransac_options.confidence = confidence;
     
     LORANSAC<
         EssentialMatrixFivePointEstimator,
@@ -144,28 +148,4 @@ py::dict essential_matrix_estimation(
     success_dict["inliers"] = inliers;
     
     return success_dict;
-}
-
-py::dict essential_matrix_estimation_camera_dict(
-        const std::vector<Eigen::Vector2d> points2D1,
-        const std::vector<Eigen::Vector2d> points2D2,
-        const py::dict camera_dict1,
-        const py::dict camera_dict2,
-        const double max_error_px
-) {
-    // Create cameras.
-    Camera camera1;
-    camera1.SetModelIdFromName(camera_dict1["model"].cast<std::string>());
-    camera1.SetWidth(camera_dict1["width"].cast<size_t>());
-    camera1.SetHeight(camera_dict1["height"].cast<size_t>());
-    camera1.SetParams(camera_dict1["params"].cast<std::vector<double>>());
-
-    Camera camera2;
-    camera2.SetModelIdFromName(camera_dict2["model"].cast<std::string>());
-    camera2.SetWidth(camera_dict2["width"].cast<size_t>());
-    camera2.SetHeight(camera_dict2["height"].cast<size_t>());
-    camera2.SetParams(camera_dict2["params"].cast<std::vector<double>>());
-
-    return essential_matrix_estimation(points2D1, points2D2,
-        camera1, camera2, max_error_px);
 }
