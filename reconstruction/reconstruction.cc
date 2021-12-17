@@ -87,8 +87,7 @@ void init_reconstruction(py::module &m) {
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
         .def(py::init([](const py::object input_path){
-            py::str py_path = py::str(input_path);
-            std::string path = py_path.cast<std::string>();
+            std::string path = py::str(input_path).cast<std::string>();
             THROW_CUSTOM_CHECK_MSG(
                 ExistsReconstruction(path),
                 std::invalid_argument,
@@ -99,23 +98,25 @@ void init_reconstruction(py::module &m) {
             reconstruction->Read(path);
             return reconstruction;
         }), py::arg("sfm_dir"))
-        .def("read", [](Reconstruction& self, const std::string& input_path) {
+        .def("read", [](Reconstruction& self, py::object input_path) {
+            std::string path = py::str(input_path).cast<std::string>();
             THROW_CUSTOM_CHECK_MSG(
-                ExistsReconstruction(input_path),
+                ExistsReconstruction(path),
                 std::invalid_argument,
                 (std::string("cameras, images, points3D not found at ")
-                    +input_path).c_str()
+                    +path).c_str()
             );
-            self.Read(input_path);
-        }, "Read reconstruction in COLMAP format. Prefer binary.")
-        .def("write", [](const Reconstruction& self,const std::string& path) {
+            self.Read(path);
+        }, py::arg("sfm_dir"), "Read reconstruction in COLMAP format. Prefer binary.")
+        .def("write", [](const Reconstruction& self, py::object output_path) {
+            std::string path = py::str(output_path).cast<std::string>();
             THROW_CUSTOM_CHECK_MSG(
                 ExistsDir(path),
                 std::invalid_argument,
                 (std::string("Directory ")+ path + " does not exist.").c_str()
             );
             self.Write(path);
-        }, "Write reconstruction in COLMAP binary format.")
+        }, py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
         .def("num_images", &Reconstruction::NumImages)
         .def("num_cameras", &Reconstruction::NumCameras)
         .def("num_reg_images", &Reconstruction::NumRegImages)
@@ -488,7 +489,6 @@ void init_reconstruction(py::module &m) {
         });
 
     
-
     m.def("compare_reconstructions",
     [](const Reconstruction& reconstruction1,
         const Reconstruction& reconstruction2,
