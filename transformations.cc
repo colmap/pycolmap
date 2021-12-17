@@ -49,6 +49,14 @@ py::dict image_to_world(
         const std::vector<Eigen::Vector2d> points2D,
         const colmap::Camera& camera
 ) {
+    static unsigned int m_warnings = 0;
+    m_warnings++;
+    if (m_warnings == 1) {
+        std::cerr<<"DeprecationWarning: This function will "
+        <<"be removed in a future release. "
+        <<"Use camera.image_to_world instead."<<std::endl;
+    }
+    
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D;
     for (size_t idx = 0; idx < points2D.size(); ++idx) {
@@ -70,6 +78,14 @@ py::dict world_to_image(
         const std::vector<Eigen::Vector2d> world_points2D,
         const colmap::Camera& camera
 ) {
+    static unsigned int m_warnings = 0;
+    m_warnings++;
+    if (m_warnings == 1) {
+        std::cerr<<"DeprecationWarning: This function will "
+        <<"be removed in a future release. "
+        <<"Use camera.world_to_image instead."<<std::endl;
+    }
+
     // World to image.
     std::vector<Eigen::Vector2d> image_points2D;
     for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
