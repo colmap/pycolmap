@@ -86,21 +86,6 @@ void init_reconstruction(py::module &m) {
 
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
-        // .def_property_readonly_static("from_folder", [](py::object){
-        //     return py::cpp_function([](py::object input_path){
-        //         py::str py_path = py::str(input_path);
-        //         std::string path = py_path.cast<std::string>();
-        //         THROW_CUSTOM_CHECK_MSG(
-        //             ExistsReconstruction(path),
-        //             std::invalid_argument,
-        //             (std::string("cameras, images, points3D not found at ")
-        //                 +path).c_str()
-        //         );
-        //         auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
-        //         reconstruction->Read(path);
-        //         return reconstruction;
-        //     }, py::arg("sfm_dir"));
-        // })
         .def(py::init([](const py::object input_path){
             py::str py_path = py::str(input_path);
             std::string path = py_path.cast<std::string>();
