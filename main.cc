@@ -93,14 +93,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("camera"),
           "Non-linear refinement.");
 
-    // Standalone Pose Refinement
-    m.def("pose_refinement", &pose_refinement_camera_dict, 
-          py::arg("tvec"), py::arg("qvec"),
-          py::arg("points2D"), py::arg("points3D"),
-          py::arg("inlier_mask"),
-          py::arg("camera_dict"),
-          "Non-linear refinement.");
-
     // Reconstruction bindings
     init_reconstruction(m);
 

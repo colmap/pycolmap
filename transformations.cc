@@ -44,6 +44,44 @@ namespace py = pybind11;
 
 #include "log_exceptions.h"
 
+   
+py::dict image_to_world(
+        const std::vector<Eigen::Vector2d> points2D,
+        const colmap::Camera& camera
+) {
+    // Image to world.
+    std::vector<Eigen::Vector2d> world_points2D;
+    for (size_t idx = 0; idx < points2D.size(); ++idx) {
+        world_points2D.push_back(camera.ImageToWorld(points2D[idx]));
+    }
+    
+    // Mean focal length.
+    const double mean_focal_length = camera.MeanFocalLength();
+
+    // Success output dictionary.
+    py::dict success_dict;
+    success_dict["world_points"] = world_points2D;
+    success_dict["mean_focal_length"] = mean_focal_length;
+    
+    return success_dict;
+}
+
+py::dict world_to_image(
+        const std::vector<Eigen::Vector2d> world_points2D,
+        const colmap::Camera& camera
+) {
+    // World to image.
+    std::vector<Eigen::Vector2d> image_points2D;
+    for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
+        image_points2D.push_back(camera.WorldToImage(world_points2D[idx]));
+    }
+    
+    // Success output dictionary.
+    py::dict success_dict;
+    success_dict["image_points"] = image_points2D;
+    
+    return success_dict;
+}
 
 void init_transforms(py::module& m) {
     m.def("compute_alignment",
@@ -165,6 +203,10 @@ void init_transforms(py::module& m) {
        py::arg("camera_params").noconvert(), 
        py::arg("uv").noconvert(), 
        py::arg("xy").noconvert());
+
+    // Image-to-world and world-to-image.
+    m.def("image_to_world", &image_to_world, "Image to world transformation.");
+    m.def("world_to_image", &world_to_image, "World to image transformation.");
 
     m.def("image_to_world", [](int model_id, 
         Eigen::Ref<Eigen::VectorXd> camera_params,
