@@ -124,6 +124,26 @@ void init_transforms(py::module& m) {
           py::arg("qvec"),
           "Returns normalized qvec");
 
+    m.def("projection_center_from_pose", &colmap::ProjectionCenterFromPose,
+          py::arg("qvec"), py::arg("tvec"),
+          "Extract camera projection center from projection parameters.");
+    m.def("projection_center_from_matrix", &colmap::ProjectionCenterFromMatrix,
+          py::arg("proj_matrix"),
+          "Extract camera projection center from projection matrix, "
+          "i.e. the projection center in world coordinates `-R^T t`.");
+
+    m.def("relative_pose", [](const Eigen::Vector4d& qvec1,
+                         const Eigen::Vector3d& tvec1,
+                         const Eigen::Vector4d& qvec2,
+                         const Eigen::Vector3d& tvec2) {
+            Eigen::Vector4d qvec12;
+            Eigen::Vector3d tvec12;
+            colmap::ComputeRelativePose(
+                qvec1, tvec1, qvec2, tvec2, &qvec12, &tvec12);
+            return std::make_pair(qvec12, tvec12);
+        },
+        py::arg("qvec1"), py::arg("tvec1"), py::arg("qvec2"), py::arg("tvec2"));
+
     m.def("world_to_image", [](int model_id, 
         Eigen::Ref<Eigen::VectorXd> camera_params,
         Eigen::Ref<Eigen::Vector2d> uv,
