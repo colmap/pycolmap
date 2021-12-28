@@ -32,15 +32,7 @@ PYBIND11_MODULE(pycolmap, m) {
 #endif
 
     // Absolute pose.
-    m.def("absolute_pose_estimation", &absolute_pose_estimation,
-          py::arg("points2D"), py::arg("points3D"),
-          py::arg("camera"),
-          py::arg("max_error_px") = 12.0,
-          py::arg("min_inlier_ratio") = 0.01,
-          py::arg("min_num_trials") = 1000,
-          py::arg("max_num_trials") = 100000,
-          py::arg("confidence") = 0.9999,
-          "Absolute pose estimation with non-linear refinement.");
+    bind_absolute_pose_estimation(m);
 
     m.def("rig_absolute_pose_estimation", &rig_absolute_pose_estimation,
           py::arg("points2D"), py::arg("points3D"),
