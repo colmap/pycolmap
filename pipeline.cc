@@ -157,6 +157,7 @@ void verify_matches(
         std::invalid_argument,
         (std::string("List of image pairs does not exist: ")+ database_path).c_str()
     );
+    py::gil_scoped_release release;  // verification is multi-threaded
 
     SiftMatchingOptions options;
     options.use_gpu = false;
@@ -297,6 +298,7 @@ Reconstruction triangulate_points(
     std::string output_path = py::str(output_path_).cast<std::string>();
     CreateDirIfNotExists(output_path);
 
+    py::gil_scoped_release release;
     IncrementalMapperOptions mapper_options;
     return RunPointTriangulator(
         reconstruction, database_path, image_path, output_path,
@@ -327,6 +329,7 @@ std::map<size_t, Reconstruction> incremental_mapping(
     std::string output_path = py::str(output_path_).cast<std::string>();
     CreateDirIfNotExists(output_path);
 
+    py::gil_scoped_release release;
     IncrementalMapperOptions options;
     options.num_threads = num_threads;
     options.min_num_matches = min_num_matches;
