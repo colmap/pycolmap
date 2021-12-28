@@ -16,6 +16,7 @@ namespace py = pybind11;
 #include "sift.cc"
 #include "pose_refinement.cc"
 #include "two_view_geometry_estimation.cc"
+#include "pipeline.cc"
 
 #include "reconstruction/reconstruction.cc"
 
@@ -125,6 +126,12 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
+
     // Transformation Bindings
     init_transforms(m);
+
+    // Main reconstruction steps
+    init_pipeline(m);
+
+    py::add_ostream_redirect(m, "ostream");
 }
