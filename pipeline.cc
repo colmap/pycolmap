@@ -101,6 +101,44 @@ void import_images(
     }
 }
 
+Camera infer_camera_from_image(const py::object image_path_) {
+    std::string image_path = py::str(image_path_).cast<std::string>();
+    THROW_CUSTOM_CHECK_MSG(
+        ExistsFile(image_path),
+        std::invalid_argument,
+        (std::string("Image file does not exist: ") + image_path).c_str()
+    );
+
+    Bitmap bitmap;
+    THROW_CUSTOM_CHECK_MSG(
+        bitmap.Read(image_path, false),
+        std::invalid_argument,
+        (std::string("Cannot read image file: ") + image_path).c_str()
+    );
+
+    ImageReaderOptions options;
+    Camera camera;
+    camera.SetCameraId(kInvalidCameraId);
+    camera.SetModelIdFromName(options.camera_model);
+    double focal_length = 0.0;
+    if (bitmap.ExifFocalLength(&focal_length)) {
+        camera.SetPriorFocalLength(true);
+    } else {
+        focal_length = options.default_focal_length_factor *
+                       std::max(bitmap.Width(), bitmap.Height());
+        camera.SetPriorFocalLength(false);
+    }
+    camera.InitializeWithId(camera.ModelId(), focal_length,
+                            bitmap.Width(), bitmap.Height());
+    THROW_CUSTOM_CHECK_MSG(
+        camera.VerifyParams(),
+        std::invalid_argument,
+        (std::string("Invalid camera params: ") + camera.ParamsToString()).c_str()
+    );
+
+    return camera;
+}
+
 void verify_matches(
         const py::object database_path_,
         const py::object pairs_path_,
@@ -364,4 +402,9 @@ void init_pipeline(py::module& m) {
           py::arg("num_threads") = IncrementalMapperOptions().num_threads,
           py::arg("min_num_matches") = IncrementalMapperOptions().min_num_matches,
           "Triangulate 3D points from known poses");
+
+    m.def("infer_camera_from_image",
+          &infer_camera_from_image,
+          py::arg("image_path"),
+          "Guess the camera parameters from the EXIF metadata");
 }
