@@ -6,10 +6,11 @@ namespace py = pybind11;
 
 #include <colmap/base/pose.h>
 
-#include "absolute_pose.cc"
-#include "generalized_absolute_pose.cc"
-#include "essential_matrix.cc"
-#include "fundamental_matrix.cc"
+#include "estimators/absolute_pose.cc"
+#include "estimators/generalized_absolute_pose.cc"
+#include "estimators/essential_matrix.cc"
+#include "estimators/fundamental_matrix.cc"
+
 #include "homography_estimation.cc"
 #include "homography_decomposition.cc"
 #include "transformations.cc"
