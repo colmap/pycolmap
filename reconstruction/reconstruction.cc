@@ -21,8 +21,7 @@ using namespace pybind11::literals;
 #include "reconstruction/point2D.cc"
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
-
-#include "reconstruction/utils.h"
+#include "reconstruction/utils.cc"
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
@@ -32,6 +31,7 @@ void init_point2D(py::module&);
 void init_point3D(py::module&);
 void init_image(py::module&);
 void init_camera(py::module&);
+void init_reconstruction_utils(py::module&);
 
 bool ExistsReconstructionText(const std::string& path) {
     return (ExistsFile(JoinPaths(path, "cameras.txt")) &&
