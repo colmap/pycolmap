@@ -56,17 +56,9 @@ void import_images(
         const std::vector<std::string> image_list
 ) {
     std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(database_path),
-        std::invalid_argument,
-        (std::string("Database file does not exist: ")+ database_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsDir(image_path),
-        std::invalid_argument,
-        (std::string("Image directory does not exist: ")+ image_path).c_str()
-    );
+    THROW_CHECK_DIR_EXISTS(image_path);
 
     ImageReaderOptions options;
     options.database_path = database_path;
@@ -103,11 +95,7 @@ void import_images(
 
 Camera infer_camera_from_image(const py::object image_path_) {
     std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(image_path),
-        std::invalid_argument,
-        (std::string("Image file does not exist: ") + image_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(image_path);
 
     Bitmap bitmap;
     THROW_CUSTOM_CHECK_MSG(
@@ -146,17 +134,9 @@ void verify_matches(
         const float min_inlier_ratio
 ) {
     std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(database_path),
-        std::invalid_argument,
-        (std::string("Database file does not exist: ")+ database_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(database_path);
     std::string pairs_path = py::str(pairs_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(pairs_path),
-        std::invalid_argument,
-        (std::string("List of image pairs does not exist: ")+ database_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(pairs_path);
     py::gil_scoped_release release;  // verification is multi-threaded
 
     SiftMatchingOptions options;
@@ -284,17 +264,9 @@ Reconstruction triangulate_points(
         const bool clear_points
 ) {
     std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(database_path),
-        std::invalid_argument,
-        (std::string("Database file does not exist: ")+ database_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsDir(image_path),
-        std::invalid_argument,
-        (std::string("Image directory does not exist: ")+ image_path).c_str()
-    );
+    THROW_CHECK_DIR_EXISTS(image_path);
     std::string output_path = py::str(output_path_).cast<std::string>();
     CreateDirIfNotExists(output_path);
 
@@ -303,7 +275,6 @@ Reconstruction triangulate_points(
     return RunPointTriangulator(
         reconstruction, database_path, image_path, output_path,
         mapper_options, clear_points);
-
 }
 
 // Copied from colmap/exe/sfm.cc
@@ -315,17 +286,9 @@ std::map<size_t, Reconstruction> incremental_mapping(
         const int min_num_matches
 ) {
     std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsFile(database_path),
-        std::invalid_argument,
-        (std::string("Database file does not exist: ")+ database_path).c_str()
-    );
+    THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsDir(image_path),
-        std::invalid_argument,
-        (std::string("Image directory does not exist: ")+ image_path).c_str()
-    );
+    THROW_CHECK_DIR_EXISTS(image_path);
     std::string output_path = py::str(output_path_).cast<std::string>();
     CreateDirIfNotExists(output_path);
 
