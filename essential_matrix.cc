@@ -54,11 +54,7 @@ py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D2,
         Camera& camera1,
         Camera& camera2,
-        const double max_error_px,
-        const double min_inlier_ratio,
-        const int min_num_trials,
-        const int max_num_trials,
-        const double confidence
+        const RANSACOptions options
 ) {
     SetPRNGSeed(0);
 
@@ -81,17 +77,12 @@ py::dict essential_matrix_estimation(
     }
 
     // Compute world error.
+    const double max_error_px = options.max_error;
     const double max_error = 0.5 * (
         max_error_px / camera1.MeanFocalLength() + max_error_px / camera2.MeanFocalLength()
     );
-
-    // Essential matrix estimation parameters.
-    RANSACOptions ransac_options;
+    RANSACOptions ransac_options(options);
     ransac_options.max_error = max_error;
-    ransac_options.min_inlier_ratio = min_inlier_ratio;
-    ransac_options.min_num_trials = min_num_trials;
-    ransac_options.max_num_trials = max_num_trials;
-    ransac_options.confidence = confidence;
 
     LORANSAC<
         EssentialMatrixFivePointEstimator,
@@ -148,4 +139,58 @@ py::dict essential_matrix_estimation(
     success_dict["inliers"] = inliers;
 
     return success_dict;
+}
+
+py::dict essential_matrix_estimation(
+        const std::vector<Eigen::Vector2d> points2D1,
+        const std::vector<Eigen::Vector2d> points2D2,
+        Camera& camera1,
+        Camera& camera2,
+        const double max_error_px,
+        const double min_inlier_ratio,
+        const int min_num_trials,
+        const int max_num_trials,
+        const double confidence
+) {
+    RANSACOptions ransac_options;
+    ransac_options.max_error = max_error_px;
+    ransac_options.min_inlier_ratio = min_inlier_ratio;
+    ransac_options.min_num_trials = min_num_trials;
+    ransac_options.max_num_trials = max_num_trials;
+    ransac_options.confidence = confidence;
+    return essential_matrix_estimation(
+            points2D1, points2D2, camera1, camera2, ransac_options);
+}
+
+void bind_essential_matrix_estimation(py::module& m) {
+    auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
+
+    m.def(
+        "essential_matrix_estimation",
+        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
+                                 const std::vector<Eigen::Vector2d>,
+                                 Camera&, Camera&,
+                                 const RANSACOptions
+                                 )>(&essential_matrix_estimation),
+        py::arg("points2D1"), py::arg("points2D2"),
+        py::arg("camera1"), py::arg("camera2"),
+        py::arg("estimation_options") = est_options,
+        "LORANSAC + 5-point algorithm.");
+
+    m.def(
+        "essential_matrix_estimation",
+        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
+                                 const std::vector<Eigen::Vector2d>,
+                                 Camera&, Camera&,
+                                 const double, const double,
+                                 const int, const int, const double
+                                 )>(&essential_matrix_estimation),
+        py::arg("points2D1"), py::arg("points2D2"),
+        py::arg("camera1"), py::arg("camera2"),
+        py::arg("max_error_px") = est_options.max_error,
+        py::arg("min_inlier_ratio") = est_options.min_inlier_ratio,
+        py::arg("min_num_trials") = est_options.min_num_trials,
+        py::arg("max_num_trials") = est_options.max_num_trials,
+        py::arg("confidence") = est_options.confidence,
+        "LORANSAC + 5-point algorithm.");
 }

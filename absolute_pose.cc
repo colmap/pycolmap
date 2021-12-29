@@ -45,6 +45,7 @@ using namespace colmap;
 namespace py = pybind11;
 
 #include "log_exceptions.h"
+#include "helpers.h"
 
 
 py::dict absolute_pose_estimation(
@@ -130,70 +131,128 @@ py::dict absolute_pose_estimation(
 }
 
 
-void bind_absolute_pose_estimation(py::module& m) {
-    py::class_<RANSACOptions>(m, "RANSACOptions")
-        .def(py::init<>())
-        .def_readwrite("max_error", &RANSACOptions::max_error)
-        .def_readwrite("min_inlier_ratio", &RANSACOptions::min_inlier_ratio)
-        .def_readwrite("confidence", &RANSACOptions::confidence)
-        .def_readwrite("dyn_num_trials_multiplier", &RANSACOptions::dyn_num_trials_multiplier)
-        .def_readwrite("min_num_trials", &RANSACOptions::min_num_trials)
-        .def_readwrite("max_num_trials", &RANSACOptions::max_num_trials);
+py::dict pose_refinement(
+        const Eigen::Vector3d tvec,
+        const Eigen::Vector4d qvec,
+        const std::vector<Eigen::Vector2d> points2D,
+        const std::vector<Eigen::Vector3d> points3D,
+        const std::vector<bool> inlier_mask,
+        const Camera camera,
+        const AbsolutePoseRefinementOptions refinement_options
+) {
+    SetPRNGSeed(0);
 
-    py::class_<AbsolutePoseEstimationOptions>(m, "AbsolutePoseEstimationOptions")
-        .def(py::init<>())
+    // Check that both vectors have the same size.
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
+    THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
+
+    // Failure output dictionary.
+    py::dict failure_dict;
+    failure_dict["success"] = false;
+
+    // Absolute pose estimation.
+    Eigen::Vector4d qvec_refined = qvec;
+    Eigen::Vector3d tvec_refined = tvec;
+    std::vector<char> inlier_mask_char;
+    for (size_t i = 0; i < inlier_mask.size(); ++i) {
+        if(inlier_mask[i])
+        {
+            inlier_mask_char.emplace_back(1);
+        }
+        else
+        {
+            inlier_mask_char.emplace_back(0);
+        }
+    }
+
+    // Absolute pose refinement.
+    if (!RefineAbsolutePose(
+            refinement_options, inlier_mask_char,
+            points2D, points3D, &qvec_refined, &tvec_refined,
+            const_cast<Camera*>(&camera))) {
+        return failure_dict;
+    }
+
+    // Success output dictionary.
+    py::dict success_dict;
+    success_dict["success"] = true;
+    success_dict["qvec"] = qvec_refined;
+    success_dict["tvec"] = tvec_refined;
+
+    return success_dict;
+}
+
+
+void bind_absolute_pose_estimation(py::module& m) {
+    auto PyEstimationOptions =
+        py::class_<AbsolutePoseEstimationOptions>(m, "AbsolutePoseEstimationOptions")
+        .def(py::init<>([]() {
+            AbsolutePoseEstimationOptions options;
+            options.estimate_focal_length = false;
+            return options;
+        }))
         .def_readwrite("estimate_focal_length", &AbsolutePoseEstimationOptions::estimate_focal_length)
         .def_readwrite("num_focal_length_samples", &AbsolutePoseEstimationOptions::num_focal_length_samples)
         .def_readwrite("min_focal_length_ratio", &AbsolutePoseEstimationOptions::min_focal_length_ratio)
         .def_readwrite("max_focal_length_ratio", &AbsolutePoseEstimationOptions::max_focal_length_ratio)
         .def_readwrite("ransac", &AbsolutePoseEstimationOptions::ransac_options);
+    make_dataclass(PyEstimationOptions);
 
-    py::class_<AbsolutePoseRefinementOptions>(m, "AbsolutePoseRefinementOptions")
-        .def(py::init<>())
+    auto PyRefinementOptions =
+        py::class_<AbsolutePoseRefinementOptions>(m, "AbsolutePoseRefinementOptions")
+        .def(py::init<>([]() {
+            AbsolutePoseRefinementOptions options;
+            options.refine_focal_length = false;
+            options.refine_extra_params = false;
+            options.print_summary = false;
+            return options;
+        }))
         .def_readwrite("gradient_tolerance", &AbsolutePoseRefinementOptions::gradient_tolerance)
         .def_readwrite("max_num_iterations", &AbsolutePoseRefinementOptions::max_num_iterations)
         .def_readwrite("loss_function_scale", &AbsolutePoseRefinementOptions::loss_function_scale)
         .def_readwrite("refine_focal_length", &AbsolutePoseRefinementOptions::refine_focal_length)
         .def_readwrite("refine_extra_params", &AbsolutePoseRefinementOptions::refine_extra_params)
         .def_readwrite("print_summary", &AbsolutePoseRefinementOptions::print_summary);
+    make_dataclass(PyRefinementOptions);
 
-    AbsolutePoseEstimationOptions estimation_options;
-    estimation_options.ransac_options.max_error = 12.0;
-    estimation_options.ransac_options.min_inlier_ratio = 0.01;
-    estimation_options.ransac_options.confidence = 0.9999;
-    estimation_options.ransac_options.min_num_trials = 1000;
-    estimation_options.ransac_options.max_num_trials = 100000;
+    auto est_options = PyEstimationOptions().cast<AbsolutePoseEstimationOptions>();
+    auto ref_options = PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();
 
-    AbsolutePoseRefinementOptions refinement_options;
-    refinement_options.refine_focal_length = false;
-    refinement_options.refine_extra_params = false;
-    refinement_options.print_summary = false;
-
-    m.def("absolute_pose_estimation",
+    m.def(
+        "absolute_pose_estimation",
         static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector3d> points3D,
+                                 const std::vector<Eigen::Vector3d>,
                                  Camera&,
                                  const AbsolutePoseEstimationOptions,
                                  const AbsolutePoseRefinementOptions
                                  )>(&absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"),
-        py::arg("camera"),
-        py::arg("estimation_options") = estimation_options,
-        py::arg("refinement_options") = refinement_options,
+        py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
+        py::arg("estimation_options") = est_options,
+        py::arg("refinement_options") = ref_options,
         "Absolute pose estimation with non-linear refinement.");
 
-    m.def("absolute_pose_estimation",
+    m.def(
+        "absolute_pose_estimation",
         static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector3d> points3D,
-                                 Camera&, const double, const double,
+                                 const std::vector<Eigen::Vector3d>,
+                                 Camera&,
+                                 const double, const double,
                                  const int, const int, const double
                                  )>(&absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"),
-        py::arg("camera"),
-        py::arg("max_error_px") = estimation_options.ransac_options.max_error,
-        py::arg("min_inlier_ratio") = estimation_options.ransac_options.min_inlier_ratio,
-        py::arg("min_num_trials") = estimation_options.ransac_options.min_num_trials,
-        py::arg("max_num_trials") = estimation_options.ransac_options.max_num_trials,
-        py::arg("confidence") = estimation_options.ransac_options.confidence,
+        py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
+        py::arg("max_error_px") = est_options.ransac_options.max_error,
+        py::arg("min_inlier_ratio") = est_options.ransac_options.min_inlier_ratio,
+        py::arg("min_num_trials") = est_options.ransac_options.min_num_trials,
+        py::arg("max_num_trials") = est_options.ransac_options.max_num_trials,
+        py::arg("confidence") = est_options.ransac_options.confidence,
         "Absolute pose estimation with non-linear refinement.");
+
+    m.def(
+        "pose_refinement", &pose_refinement,
+        py::arg("tvec"), py::arg("qvec"),
+        py::arg("points2D"), py::arg("points3D"),
+        py::arg("inlier_mask"),
+        py::arg("camera"),
+        py::arg("refinement_options") = ref_options,
+        "Non-linear refinement.");
 }
