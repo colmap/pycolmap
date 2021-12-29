@@ -22,6 +22,8 @@ using namespace pybind11::literals;
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
 
+#include "reconstruction/utils.h"
+
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
@@ -47,25 +49,19 @@ bool ExistsReconstruction(const std::string& path) {
     return (ExistsReconstructionText(path) || ExistsReconstructionBinary(path));
 }
 
-template <bool kEstimateScale>
-bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3d>& src,
-                                         const std::vector<Eigen::Vector3d>& dst, double max_error,
-                                         double min_inlier_ratio, Eigen::Matrix3x4d* alignment) {
-    RANSACOptions ransac_options;
-    ransac_options.max_error = max_error;
-    ransac_options.min_inlier_ratio = min_inlier_ratio;
+#define THROW_CHECK_RECONSTRUCTION_TEXT_EXISTS(input_path)           \
+    THROW_CUSTOM_CHECK_MSG(                                          \
+        ExistsReconstructionText(input_path), std::invalid_argument, \
+        std::string("cameras.txt, images.txt, points3D.txt not found at ") + input_path);
 
-    LORANSAC<SimilarityTransformEstimator<3, kEstimateScale>,
-             SimilarityTransformEstimator<3, kEstimateScale>>
-        ransac(ransac_options);
+#define THROW_CHECK_RECONSTRUCTION_BIN_EXISTS(input_path)              \
+    THROW_CUSTOM_CHECK_MSG(                                            \
+        ExistsReconstructionBinary(input_path), std::invalid_argument, \
+        std::string("cameras.bin, images.bin, points3D.bin not found at ") + input_path);
 
-    const auto report = ransac.Estimate(src, dst);
-
-    if (report.success) {
-        *alignment = report.model;
-    }
-    return report.success;
-}
+#define THROW_CHECK_RECONSTRUCTION_EXISTS(input_path)                               \
+    THROW_CUSTOM_CHECK_MSG(ExistsReconstruction(input_path), std::invalid_argument, \
+                           std::string("cameras, images, points3D not found at ") + input_path);
 
 // Reconstruction Bindings
 void init_reconstruction(py::module& m) {
@@ -79,14 +75,13 @@ void init_reconstruction(py::module& m) {
     init_point3D(m);
     init_image(m);
     init_camera(m);
+    init_reconstruction_utils(m);
 
     py::class_<Reconstruction>(m, "Reconstruction")
         .def(py::init<>())
         .def(py::init([](const py::object input_path) {
                  std::string path = py::str(input_path).cast<std::string>();
-                 THROW_CUSTOM_CHECK_MSG(
-                     ExistsReconstruction(path), std::invalid_argument,
-                     (std::string("cameras, images, points3D not found at ") + path).c_str());
+                 THROW_CHECK_RECONSTRUCTION_EXISTS(path);
                  auto reconstruction = std::unique_ptr<Reconstruction>(new Reconstruction());
                  reconstruction->Read(path);
                  return reconstruction;
@@ -96,9 +91,7 @@ void init_reconstruction(py::module& m) {
             "read",
             [](Reconstruction& self, py::object input_path) {
                 std::string path = py::str(input_path).cast<std::string>();
-                THROW_CUSTOM_CHECK_MSG(
-                    ExistsReconstruction(path), std::invalid_argument,
-                    (std::string("cameras, images, points3D not found at ") + path).c_str());
+                THROW_CHECK_RECONSTRUCTION_EXISTS(path);
                 self.Read(path);
             },
             py::arg("sfm_dir"), "Read reconstruction in COLMAP format. Prefer binary.")
@@ -106,12 +99,44 @@ void init_reconstruction(py::module& m) {
             "write",
             [](const Reconstruction& self, py::object output_path) {
                 std::string path = py::str(output_path).cast<std::string>();
-                THROW_CUSTOM_CHECK_MSG(
-                    ExistsDir(path), std::invalid_argument,
-                    (std::string("Directory ") + path + " does not exist.").c_str());
+                THROW_CHECK_DIR_EXISTS(path);
                 self.Write(path);
             },
             py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
+        // .def(
+        //     "read_cameras",
+        //     [](const Reconstruction& self, py::object input_path) {
+        //         std::string path = py::str(input_path).cast<std::string>();
+        //         if (ExistsFile(JoinPaths(path, "cameras.bin"))) {
+        //             self.ReadCamerasBinary(path);
+        //         } else if (ExistsFile(JoinPaths(path, "cameras.txt"))) {
+        //             self.ReadCamerasText(path);
+        //         } else {
+        //             THROW_EXCEPTION(std::invalid_argument, "Camera file does not exist at " +
+        //             path);
+        //         }
+        //     },
+        //     py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
+        .def("read_text",
+             [](Reconstruction& self, const std::string& input_path) {
+                 THROW_CHECK_RECONSTRUCTION_TEXT_EXISTS(input_path);
+                 self.ReadText(input_path);
+             })
+        .def("read_binary",
+             [](Reconstruction& self, const std::string& input_path) {
+                 THROW_CHECK_RECONSTRUCTION_BIN_EXISTS(input_path);
+                 self.ReadBinary(input_path);
+             })
+        .def("write_text",
+             [](const Reconstruction& self, const std::string& path) {
+                 THROW_CHECK_DIR_EXISTS(path);
+                 self.WriteText(path);
+             })
+        .def("write_binary",
+             [](const Reconstruction& self, const std::string& path) {
+                 THROW_CHECK_DIR_EXISTS(path);
+                 self.WriteBinary(path);
+             })
         .def("num_images", &Reconstruction::NumImages)
         .def("num_cameras", &Reconstruction::NumCameras)
         .def("num_reg_images", &Reconstruction::NumRegImages)
@@ -205,116 +230,27 @@ void init_reconstruction(py::module& m) {
              "merging the two clouds and their tracks. The coordinate frames of the two\n"
              "reconstructions are aligned using the projection centers of common\n"
              "registered images. Return true if the two reconstructions could be merged.")
-        .def(
-            "align_poses",
-            [](Reconstruction& self, const Reconstruction& ref_reconstruction,
-               const double min_inlier_observations, double max_reproj_error) {
-                THROW_CHECK_GE(min_inlier_observations, 0.0);
-                THROW_CHECK_LE(min_inlier_observations, 1.0);
-                Eigen::Matrix3x4d alignment;
-                bool success = ComputeAlignmentBetweenReconstructions(self, ref_reconstruction,
-                                                                      min_inlier_observations,
-                                                                      max_reproj_error, &alignment);
-                THROW_CHECK(success);
-                SimilarityTransform3 tform(alignment);
-                self.Transform(tform);
-                return tform;
-            },
-            py::arg("ref_reconstruction"), py::arg("min_inlier_observations") = 0.3,
-            py::arg("max_reproj_error") = 8.0, "Align to reference reconstruction using RANSAC.")
-        .def(
-            "align_points",
-            [](Reconstruction& self, const Reconstruction& ref, int min_overlap, double max_error,
-               double min_inlier_ratio) {
-                std::vector<Eigen::Vector3d> src;
-                std::vector<Eigen::Vector3d> dst;
-                // Associate 3D points using point2D_idx
-                for (auto& p3D_p : self.Points3D()) {
-                    // Count how often a 3D point in ref is associated to this 3D point
-                    std::map<point3D_t, size_t> counts;
-                    const Track& track = p3D_p.second.Track();
-                    for (auto& track_el : track.Elements()) {
-                        if (!ref.IsImageRegistered(track_el.image_id)) {
-                            continue;
-                        }
-                        const Point2D& p2D_dst =
-                            ref.Image(track_el.image_id).Point2D(track_el.point2D_idx);
-                        if (p2D_dst.HasPoint3D()) {
-                            if (counts.find(p2D_dst.Point3DId()) != counts.end()) {
-                                counts[p2D_dst.Point3DId()]++;
-                            } else {
-                                counts[p2D_dst.Point3DId()] = 0;
-                            }
-                        }
-                    }
-                    if (counts.size() == 0) {
-                        continue;
-                    }
-                    // The 3D point in ref who is associated the most is selected
-                    auto best_p3D = std::max_element(counts.begin(), counts.end(),
-                                                     [](const std::pair<point3D_t, size_t>& p1,
-                                                        const std::pair<point3D_t, size_t>& p2) {
-                                                         return p1.second < p2.second;
-                                                     });
-                    if (best_p3D->second >= min_overlap) {
-                        src.push_back(p3D_p.second.XYZ());
-                        dst.push_back(ref.Point3D(best_p3D->first).XYZ());
-                    }
-                }
-                THROW_CHECK_EQ(src.size(), dst.size());
-                std::cerr << "Found " << src.size() << " / " << self.NumPoints3D()
-                          << " valid correspondences." << std::endl;
-
-                Eigen::Matrix3x4d alignment;
-                bool success = ComputeRobustAlignmentBetweenPoints<true>(
-                    src, dst, max_error, min_inlier_ratio, &alignment);
-                THROW_CHECK(success);
-                SimilarityTransform3 tform(alignment);
-                self.Transform(tform);
-                return tform;
-            },
-            py::arg("reference_reconstruction"), py::arg("min_overlap") = 3,
-            py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,
-            "Align 3D points to reference reconstruction using LORANSAC.\n"
-            "Estimates pose by aligning corresponding 3D points.\n"
-            "Correspondences are estimated by counting similar detection idxs.\n"
-            "Assumes image_ids and point2D_idx overlap.")
-        .def(
-            "align",
-            [](Reconstruction& self, const std::vector<std::string>& image_names,
-               const std::vector<Eigen::Vector3d>& locations, const int min_common_images) {
-                SimilarityTransform3 tform;
-                THROW_CHECK_GE(min_common_images, 3);
-                THROW_CHECK_EQ(image_names.size(), locations.size());
-                bool success = self.Align(image_names, locations, min_common_images, &tform);
-                THROW_CHECK(success);
-                return tform;
-            },
-            "Align the given reconstruction with a set of pre-defined camera positions.\n"
-            "Assuming that locations[i] gives the 3D coordinates of the center\n"
-            "of projection of the image with name image_names[i].")
-        .def(
-            "align_robust",
-            [](Reconstruction& self, const std::vector<std::string>& image_names,
-               const std::vector<Eigen::Vector3d>& locations, const int min_common_images,
-               double max_error, double min_inlier_ratio) {
-                SimilarityTransform3 tform;
-                THROW_CHECK_GE(min_common_images, 3);
-                THROW_CHECK_EQ(image_names.size(), locations.size());
-                RANSACOptions options;
-                options.max_error = max_error;
-                options.min_inlier_ratio = min_inlier_ratio;
-                bool success =
-                    self.AlignRobust(image_names, locations, min_common_images, options, &tform);
-                THROW_CHECK(success);
-                return tform;
-            },
-            py::arg("image_names"), py::arg("locations"), py::arg("min_common_images"),
-            py::arg("max_error") = 12.0, py::arg("min_inlier_ratio") = 0.1,
-            "Robust alignment using RANSAC. \n"
-            "Align the given reconstruction with a set of pre-defined camera positions.\n"
-            "Assuming that locations[i] gives the 3D coordinates of the center\n"
-            "of projection of the image with name image_names[i].")
+        .def("align_poses", &AlignPosesBetweenReconstructions, py::arg("ref_reconstruction"),
+             py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
+             "Align to reference reconstruction using RANSAC.")
+        .def("align_points", &AlignPointsBetweenReconstructions,
+             py::arg("reference_reconstruction"), py::arg("min_overlap") = 3,
+             py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,
+             "Align 3D points to reference reconstruction using LORANSAC.\n"
+             "Estimates pose by aligning corresponding 3D points.\n"
+             "Correspondences are estimated by counting similar detection idxs.\n"
+             "Assumes image_ids and point2D_idx overlap.")
+        .def("align", &AlignReconstruction,
+             "Align the given reconstruction with a set of pre-defined camera positions.\n"
+             "Assuming that locations[i] gives the 3D coordinates of the center\n"
+             "of projection of the image with name image_names[i].")
+        .def("align_robust", &RobustAlignReconstruction, py::arg("image_names"),
+             py::arg("locations"), py::arg("min_common_images"), py::arg("max_error") = 12.0,
+             py::arg("min_inlier_ratio") = 0.1,
+             "Robust alignment using RANSAC. \n"
+             "Align the given reconstruction with a set of pre-defined camera positions.\n"
+             "Assuming that locations[i] gives the 3D coordinates of the center\n"
+             "of projection of the image with name image_names[i].")
         .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, py::arg("p0") = 0.0,
              py::arg("p1") = 1.0)
         .def("crop", &Reconstruction::Crop)
@@ -357,38 +293,6 @@ void init_reconstruction(py::module& m) {
         .def("compute_mean_observations_per_reg_image",
              &Reconstruction::ComputeMeanObservationsPerRegImage)
         .def("compute_mean_reprojection_error", &Reconstruction::ComputeMeanReprojectionError)
-        .def("read_text",
-             [](Reconstruction& self, const std::string& input_path) {
-                 THROW_CUSTOM_CHECK_MSG(
-                     ExistsReconstructionText(input_path), std::invalid_argument,
-                     (std::string("cameras.txt, images.txt, points3D.txt not found at ") +
-                      input_path)
-                         .c_str());
-                 self.ReadText(input_path);
-             })
-        .def("read_binary",
-             [](Reconstruction& self, const std::string& input_path) {
-                 THROW_CUSTOM_CHECK_MSG(
-                     ExistsReconstructionBinary(input_path), std::invalid_argument,
-                     (std::string("cameras.bin, images.bin, points3D.bin not found at ") +
-                      input_path)
-                         .c_str());
-                 self.ReadBinary(input_path);
-             })
-        .def("write_text",
-             [](const Reconstruction& self, const std::string& path) {
-                 THROW_CUSTOM_CHECK_MSG(
-                     ExistsDir(path), std::invalid_argument,
-                     (std::string("Directory ") + path + " does not exist.").c_str());
-                 self.WriteText(path);
-             })
-        .def("write_binary",
-             [](const Reconstruction& self, const std::string& path) {
-                 THROW_CUSTOM_CHECK_MSG(
-                     ExistsDir(path), std::invalid_argument,
-                     (std::string("Directory ") + path + " does not exist.").c_str());
-                 self.WriteBinary(path);
-             })
         .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
         .def("import_PLY", overload_cast_<const std::string&>()(&Reconstruction::ImportPLY),
              "Import from PLY format. Note that these import functions are\n"
@@ -489,108 +393,4 @@ void init_reconstruction(py::module& m) {
                << "\n\tmean_reprojection_error = " << self.ComputeMeanReprojectionError();
             return ss.str();
         });
-
-    m.def(
-        "compare_reconstructions",
-        [](const Reconstruction& reconstruction1, const Reconstruction& reconstruction2,
-           const double min_inlier_observations, const double max_reproj_error, bool verbose) {
-            THROW_CHECK_GE(min_inlier_observations, 0.0);
-            THROW_CHECK_LE(min_inlier_observations, 1.0);
-            auto PrintComparisonSummary = [](std::stringstream& ss,
-                                             std::vector<double>& rotation_errors,
-                                             std::vector<double>& translation_errors,
-                                             std::vector<double>& proj_center_errors) {
-                auto PrintErrorStats = [](std::stringstream& ss, std::vector<double>& vals) {
-                    const size_t len = vals.size();
-                    if (len == 0) {
-                        ss << "Cannot extract error statistics from empty input" << std::endl;
-                        return;
-                    }
-                    std::sort(vals.begin(), vals.end());
-                    ss << "Min:    " << vals.front() << std::endl;
-                    ss << "Max:    " << vals.back() << std::endl;
-                    ss << "Mean:   " << Mean(vals) << std::endl;
-                    ss << "Median: " << Median(vals) << std::endl;
-                    ss << "P90:    " << vals[size_t(0.9 * len)] << std::endl;
-                    ss << "P99:    " << vals[size_t(0.99 * len)] << std::endl;
-                };
-                ss << "# Image pose error summary" << std::endl;
-                ss << std::endl << "Rotation angular errors (degrees)" << std::endl;
-                PrintErrorStats(ss, rotation_errors);
-                ss << std::endl << "Translation distance errors" << std::endl;
-                PrintErrorStats(ss, translation_errors);
-                ss << std::endl << "Projection center distance errors" << std::endl;
-                PrintErrorStats(ss, proj_center_errors);
-            };
-
-            std::stringstream ss;
-            ss << std::endl << "Reconstruction 1" << std::endl;
-            ss << StringPrintf("Images: %d", reconstruction1.NumRegImages()) << std::endl;
-            ss << StringPrintf("Points: %d", reconstruction1.NumPoints3D()) << std::endl;
-
-            ss << std::endl << "Reconstruction 2" << std::endl;
-            ss << StringPrintf("Images: %d", reconstruction2.NumRegImages()) << std::endl;
-            ss << StringPrintf("Points: %d", reconstruction2.NumPoints3D()) << std::endl;
-            if (verbose) {
-                py::print(ss.str());
-                ss.str("");
-            };
-
-            ss << std::endl << "Comparing reconstructed image poses" << std::endl;
-            const auto common_image_ids = reconstruction1.FindCommonRegImageIds(reconstruction2);
-            ss << StringPrintf("Common images: %d", common_image_ids.size()) << std::endl;
-            if (verbose) {
-                py::print(ss.str());
-                ss.str("");
-            };
-
-            Eigen::Matrix3x4d alignment;
-            if (!ComputeAlignmentBetweenReconstructions(reconstruction2, reconstruction1,
-                                                        min_inlier_observations, max_reproj_error,
-                                                        &alignment)) {
-                THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
-            }
-
-            const SimilarityTransform3 tform(alignment);
-            ss << "Computed alignment transform:" << std::endl << tform.Matrix() << std::endl;
-            if (verbose) {
-                py::print(ss.str());
-                ss.str("");
-            };
-
-            const size_t num_images = common_image_ids.size();
-            std::vector<double> rotation_errors(num_images, 0.0);
-            std::vector<double> translation_errors(num_images, 0.0);
-            std::vector<double> proj_center_errors(num_images, 0.0);
-            for (size_t i = 0; i < num_images; ++i) {
-                const image_t image_id = common_image_ids[i];
-                Image image1 = reconstruction1.Image(image_id);  // copy!
-                Image image2 = reconstruction2.Image(image_id);  // copy!
-                tform.TransformPose(&image2.Qvec(), &image2.Tvec());
-
-                const Eigen::Vector4d normalized_qvec1 = NormalizeQuaternion(image1.Qvec());
-                const Eigen::Quaterniond quat1(normalized_qvec1(0), normalized_qvec1(1),
-                                               normalized_qvec1(2), normalized_qvec1(3));
-                const Eigen::Vector4d normalized_qvec2 = NormalizeQuaternion(image2.Qvec());
-                const Eigen::Quaterniond quat2(normalized_qvec2(0), normalized_qvec2(1),
-                                               normalized_qvec2(2), normalized_qvec2(3));
-
-                rotation_errors[i] = RadToDeg(quat1.angularDistance(quat2));
-                translation_errors[i] = (image1.Tvec() - image2.Tvec()).norm();
-                proj_center_errors[i] =
-                    (image1.ProjectionCenter() - image2.ProjectionCenter()).norm();
-            }
-            PrintComparisonSummary(ss, rotation_errors, translation_errors, proj_center_errors);
-            if (verbose) {
-                py::print(ss.str());
-                ss.str("");
-            };
-            py::dict res("alignment"_a = alignment, "rotation_errors"_a = rotation_errors,
-                         "translation_errors"_a = translation_errors,
-                         "proj_center_errors"_a = proj_center_errors);
-            return res;
-        },
-        py::arg("src_reconstruction").noconvert(), py::arg("ref_reconstruction").noconvert(),
-        py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
-        py::arg("verbose") = true, py::keep_alive<1, 2>(), py::keep_alive<1, 3>());
 }

@@ -112,6 +112,6 @@ py::dict absolute_pose_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
-    
+
     return success_dict;
 }
