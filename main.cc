@@ -24,7 +24,7 @@ PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
 
     // Absolute pose.
-    m.def("absolute_pose_estimation", 
+    m.def("absolute_pose_estimation",
             &absolute_pose_estimation,
             py::arg("points2D"), py::arg("points3D"),
             py::arg("camera"),
@@ -47,7 +47,7 @@ PYBIND11_MODULE(pycolmap, m) {
           "Absolute pose estimation with non-linear refinement.");
 
     // Essential matrix.
-    m.def("essential_matrix_estimation", 
+    m.def("essential_matrix_estimation",
           &essential_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("camera1"), py::arg("camera2"),
@@ -57,9 +57,9 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("max_num_trials") = 100000,
           py::arg("confidence") = 0.9999,
           "LORANSAC + 5-point algorithm.");
-    
+
     // Fundamental matrix.
-    m.def("fundamental_matrix_estimation", 
+    m.def("fundamental_matrix_estimation",
           &fundamental_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("max_error_px") = 4.0,
@@ -71,7 +71,7 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Homography Decomposition.
     m.def("homography_decomposition", &homography_decomposition_estimation,
-          py::arg("H"), 
+          py::arg("H"),
           py::arg("K1"),
           py::arg("K2"),
           py::arg("points1"),
@@ -86,7 +86,7 @@ PYBIND11_MODULE(pycolmap, m) {
           "Extract SIFT features.");
 
     // Standalone Pose Refinement
-    m.def("pose_refinement", &pose_refinement, 
+    m.def("pose_refinement", &pose_refinement,
           py::arg("tvec"), py::arg("qvec"),
           py::arg("points2D"), py::arg("points3D"),
           py::arg("inlier_mask"),
@@ -98,7 +98,6 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
-    
     // Transformation Bindings
     init_transforms(m);
 }

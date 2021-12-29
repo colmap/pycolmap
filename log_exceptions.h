@@ -44,19 +44,19 @@ inline std::string __MergeTwoConstChar(const char* expr1, const char* expr2) {
 inline void __ThrowCheckImpl(const char* file, const int line,
                              const bool result, const char* expr_str) {
     if (!result) {
-        throw TemplateException<py::value_error>(file, line, 
+        throw TemplateException<py::value_error>(file, line,
                                           __GetCheckString(expr_str).c_str());
     }
 }
 
-inline void __ThrowCheckImplMsg(const char* file, const int line, 
-                                const bool result, const char* expr_str, 
+inline void __ThrowCheckImplMsg(const char* file, const int line,
+                                const bool result, const char* expr_str,
                                 std::string msg) {
     if (!result) {
         std::stringstream ss;
         ss << expr_str << " : " << msg;
         std::string m = ss.str();
-        throw TemplateException<py::value_error>(file, line, 
+        throw TemplateException<py::value_error>(file, line,
                                           __GetCheckString(m.c_str()).c_str());
     }
 }
@@ -67,10 +67,10 @@ void __ThrowCheckOpImpl(const char* file, const int line, const bool result,
                          const char* val2_str, const char* op_str) {
   if (!result) {
       std::stringstream ss;
-      ss << val1_str << " " << op_str << " " << val2_str 
+      ss << val1_str << " " << op_str << " " << val2_str
       <<" ("<<val1<<" vs. "<<val2<<")";
       std::string msg = ss.str();
-      throw TemplateException<py::value_error>(file, line, 
+      throw TemplateException<py::value_error>(file, line,
                                         __GetCheckString(msg.c_str()).c_str());
   }
 }

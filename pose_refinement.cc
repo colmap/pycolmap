@@ -86,8 +86,8 @@ py::dict pose_refinement(
     abs_pose_refinement_options.print_summary = false;
 
     // Absolute pose refinement.
-    if (!RefineAbsolutePose(abs_pose_refinement_options, inlier_mask_char, 
-                    points2D, points3D, &qvec_refined, &tvec_refined, 
+    if (!RefineAbsolutePose(abs_pose_refinement_options, inlier_mask_char,
+                    points2D, points3D, &qvec_refined, &tvec_refined,
                     const_cast<Camera*>(&camera))) {
         return failure_dict;
     }
@@ -97,6 +97,6 @@ py::dict pose_refinement(
     success_dict["success"] = true;
     success_dict["qvec"] = qvec_refined;
     success_dict["tvec"] = tvec_refined;
-    
+
     return success_dict;
 }

@@ -229,7 +229,7 @@ bool RefineGeneralizedAbsolutePose(
 // and a smaller residual sum.
 struct UniqueInlierSupportMeasurer {
   struct Support {
-    // The number of inliers. 
+    // The number of inliers.
     // This is still needed for determining the dynamic number of iterations.
     size_t num_inliers = 0;
 
@@ -337,7 +337,7 @@ py::dict rig_absolute_pose_estimation(
     }
 
     // Associate unique ids to each 3D point.
-    // Needed for UniqueInlierSupportMeasurer to avoid counting the same 
+    // Needed for UniqueInlierSupportMeasurer to avoid counting the same
     // 3D point multiple times due to FoV overlap in rig.
     std::vector<Eigen::Vector3d> unique_points3D = points3D_all;
     std::sort(unique_points3D.begin(), unique_points3D.end(), lowerVector3d);
@@ -378,7 +378,7 @@ py::dict rig_absolute_pose_estimation(
     if (!RefineGeneralizedAbsolutePose(
           abs_pose_refinement_options, report.inlier_mask,
           points2D_all, points3D_all, camera_idxs,
-          rig_qvecs, rig_tvecs, &qvec, &tvec, 
+          rig_qvecs, rig_tvecs, &qvec, &tvec,
           const_cast<std::vector<Camera>*>(&cameras))) {
         return failure_dict;
     }

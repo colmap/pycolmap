@@ -79,7 +79,7 @@ py::dict essential_matrix_estimation(
     for (size_t idx = 0; idx < points2D2.size(); ++idx) {
         world_points2D2.push_back(camera2.ImageToWorld(points2D2[idx]));
     }
-    
+
     // Compute world error.
     const double max_error = 0.5 * (
         max_error_px / camera1.MeanFocalLength() + max_error_px / camera2.MeanFocalLength()
@@ -92,7 +92,7 @@ py::dict essential_matrix_estimation(
     ransac_options.min_num_trials = min_num_trials;
     ransac_options.max_num_trials = max_num_trials;
     ransac_options.confidence = confidence;
-    
+
     LORANSAC<
         EssentialMatrixFivePointEstimator,
         EssentialMatrixFivePointEstimator
@@ -127,7 +127,7 @@ py::dict essential_matrix_estimation(
     PoseFromEssentialMatrix(E, inlier_world_points2D1, inlier_world_points2D2, &R, &tvec, &points3D);
 
     Eigen::Vector4d qvec = RotationMatrixToQuaternion(R);
-    
+
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers;
     for (auto it : inlier_mask) {
@@ -146,6 +146,6 @@ py::dict essential_matrix_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
-    
+
     return success_dict;
 }
