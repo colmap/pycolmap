@@ -34,11 +34,10 @@ brew upgrade gcc
 brew info gcc
 
 echo 'export PATH="/usr/local/opt/qt@5/bin:$PATH"' >> /Users/runner/.bash_profile
+export Qt5_CMAKE_DIR="/usr/local/opt/qt@5/lib/cmake/Qt5"
 
 CURRDIR=$(pwd)
 ls -ltrh $CURRDIR
-
-
 
 # Build Boost staticly
 mkdir -p boost_build
@@ -89,11 +88,9 @@ for PYVER in ${PYTHON_VERS[@]}; do
     PYTHON_EXECUTABLE=${PYBIN}/python3
 
 
-    # Install `delocate` -- OSX equivalent of `auditwheel` -- see https://pypi.org/project/delocate/ for more details
+    # Install `delocate` -- OSX equivalent of `auditwheel`
+    # see https://pypi.org/project/delocate/ for more details
     cd $CURRDIR
-    #git clone https://github.com/matthew-brett/delocate.git
-    #cd delocate
-    #"${PYBIN}/pip3" install -e . # delocate==0.8.2
     "${PYBIN}/pip3" install delocate==0.10.0
 
     ls -ltrh /usr/local
@@ -104,7 +101,7 @@ for PYVER in ${PYTHON_VERS[@]}; do
     git checkout dev
     mkdir build_$PYTHONVER
     cd build_$PYTHONVER
-    cmake .. -DQt5_DIR=/usr/local/opt/qt@5/lib/cmake/Qt5
+    cmake .. -DQt5_DIR=$Qt5_CMAKE_DIR
 
     # examine exit code of last command
     ec=$?
@@ -126,12 +123,12 @@ for PYVER in ${PYTHON_VERS[@]}; do
 
     # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
     # see https://github.com/quantumlib/qsim/issues/242 for more details
-    Qt5_DIR="/usr/local/opt/qt@5/lib/cmake/Qt5" CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib "${PYBIN}/python3" setup.py bdist_wheel
+    Qt5_DIR="Qt5_CMAKE_DIR" CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib "${PYBIN}/python3" setup.py bdist_wheel
     cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
 done
 
-ls -ltrh $CURRDIR/wheelhouse_unrepaired/
 # Bundle external shared libraries into the wheels
+ls -ltrh $CURRDIR/wheelhouse_unrepaired/
 for whl in $CURRDIR/wheelhouse_unrepaired/*.whl; do
     delocate-listdeps --all "$whl"
     delocate-wheel -w "$CURRDIR/wheelhouse" -v "$whl"
