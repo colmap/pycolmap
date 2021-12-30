@@ -1,0 +1,75 @@
+name: Pybind11 CI
+
+on:
+  push:
+    branches:
+      - master
+      - wheels
+  pull_request:
+    types: [ assigned, opened, synchronize, reopened ]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  linux-build:
+    name: Wrapper Linux Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pyversion: ["cp37-cp37m","cp38-cp38"] # "cp36-cp36m",  "cp39-cp39"
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Build the Linux wheels
+      run: |
+        # must be run in docker, cannot be run as freestanding script for toolchain issues
+        # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
+        # see https://github.com/varunagrawal/docker-images/blob/master/gtsam-manylinux/Dockerfile for an example
+        # container, but it does not have some necesssary boost packages --> varunagrawal/gtsam-manylinux:latest
+        sudo docker run --rm -e PLAT=manylinux2014_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux2014_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
+        # cleanup for custom runner
+        sudo chown -R $(whoami):$(whoami) .
+    - name: Archive wheels
+      uses: actions/upload-artifact@v2
+      with:
+        # we strip the version number from the artifact name
+        name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
+        path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+    - name: Publish package
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        packages_dir: wheelhouse/
+
+  mac-build:
+    name: Wrapper macOS Build
+    runs-on: macos-11
+    strategy:
+      matrix:
+        pyversion: ["python@3.8", "python@3.9"] # "python@3.7" not supported in Github Actions
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Build the macOS wheels
+      run: |
+        ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
+    - name: Archive wheels
+      uses: actions/upload-artifact@v2
+      with:
+        # we strip the version number from the artifact name
+        name: pycolmap-${{ matrix.pyversion }}-macosx_11_0_x86_64
+        path: ./wheelhouse/pycolmap-*-macosx_11_0_x86_64.whl
+    - name: Publish package
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        packages_dir: wheelhouse/
