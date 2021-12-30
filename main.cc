@@ -13,6 +13,11 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
+#ifdef VERSION_INFO
+    m.attr("__version__") = py::str(VERSION_INFO);
+#else
+    m.attr("__version__") = py::str("dev");
+#endif
 
     // Absolute pose.
     m.def("absolute_pose_estimation", &absolute_pose_estimation,

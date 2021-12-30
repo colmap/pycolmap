@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.6)
 project(PyCOLMAP)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 find_package(COLMAP REQUIRED)
 include_directories(${COLMAP_INCLUDE_DIRS})
 link_directories(${COLMAP_LINK_DIRS})
+
+if (${CERES_VERSION} VERSION_LESS "2.0.0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
 
 add_subdirectory(pybind11)
 
