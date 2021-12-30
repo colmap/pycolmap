@@ -54,16 +54,10 @@ cd $CURRDIR
 mkdir -p $CURRDIR/wheelhouse_unrepaired
 mkdir -p $CURRDIR/wheelhouse
 
-ORIGPATH=$PATH
-
 PYTHON_LIBRARY=$(cd $(dirname $0); pwd)/libpython-not-needed-symbols-exported-by-interpreter
 touch ${PYTHON_LIBRARY}
 
 declare -a PYTHON_VERS=( $1 )
-
-# Get the python version numbers only by splitting the string
-split_array=(${PYTHON_VERS//@/ })
-VERSION_NUMBER=${split_array[1]}
 
 git clone https://github.com/colmap/colmap.git
 
@@ -75,57 +69,48 @@ do
     $compiler --version
 done
 
-echo "Python versions: ${PYTHON_VERS[@]}"
-# Compile wheels
-for PYVER in ${PYTHON_VERS[@]}; do
-    PYBIN="/usr/local/opt/$PYVER/bin"
+# Get the python version numbers only by splitting the string
+PYBIN="/usr/local/opt/$PYTHON_VERS/bin"
+PYTHONVER="$(basename $(dirname $PYBIN))"
+export PATH=$PYBIN:/usr/local/bin:$PATH
+echo "Python bin path: $PYBIN"
+echo "Python version: $PYTHONVER"
 
-    PYTHONVER="$(basename $(dirname $PYBIN))"
-    BUILDDIR="$CURRDIR/colmap_$PYTHONVER/colmap_build"
-    mkdir -p $BUILDDIR
-    cd $BUILDDIR
-    export PATH=$PYBIN:$PYBIN:/usr/local/bin:$ORIGPATH
-    PYTHON_EXECUTABLE=${PYBIN}/python3
+# Install `delocate` -- OSX equivalent of `auditwheel`
+# see https://pypi.org/project/delocate/ for more details
+cd $CURRDIR
+"${PYBIN}/pip3" install delocate==0.10.0
 
+ls -ltrh /usr/local
+ls -ltrh /usr/local/opt
 
-    # Install `delocate` -- OSX equivalent of `auditwheel`
-    # see https://pypi.org/project/delocate/ for more details
-    cd $CURRDIR
-    "${PYBIN}/pip3" install delocate==0.10.0
+cd $CURRDIR
+cd colmap
+git checkout dev
+mkdir build
+cd build
+cmake .. -DQt5_DIR=$Qt5_CMAKE_DIR
 
-    ls -ltrh /usr/local
-    ls -ltrh /usr/local/opt
+# examine exit code of last command
+ec=$?
+if [ $ec -ne 0 ]; then
+    echo "Error:"
+    cat ./CMakeCache.txt
+    exit $ec
+fi
+set -e -x
 
-    cd $CURRDIR
-    cd colmap
-    git checkout dev
-    mkdir build_$PYTHONVER
-    cd build_$PYTHONVER
-    cmake .. -DQt5_DIR=$Qt5_CMAKE_DIR
+NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
+echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
+make -j $NUM_LOGICAL_CPUS install
+sudo make install
 
-    # examine exit code of last command
-    ec=$?
-
-    if [ $ec -ne 0 ]; then
-        echo "Error:"
-        cat ./CMakeCache.txt
-        exit $ec
-    fi
-    set -e -x
-
-    NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
-    echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
-    make -j $NUM_LOGICAL_CPUS install
-    sudo make install
-
-    cd $CURRDIR
-    cat setup.py
-
-    # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
-    # see https://github.com/quantumlib/qsim/issues/242 for more details
-    Qt5_DIR="Qt5_CMAKE_DIR" CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib "${PYBIN}/python3" setup.py bdist_wheel
-    cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
-done
+cd $CURRDIR
+cat setup.py
+# flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
+# see https://github.com/quantumlib/qsim/issues/242 for more details
+Qt5_DIR="$Qt5_CMAKE_DIR" CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib "${PYBIN}/python3" setup.py bdist_wheel
+cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
 
 # Bundle external shared libraries into the wheels
 ls -ltrh $CURRDIR/wheelhouse_unrepaired/
