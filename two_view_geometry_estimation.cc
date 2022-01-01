@@ -3,9 +3,7 @@
 #include <fstream>
 
 #include "colmap/base/camera.h"
-#include "colmap/base/essential_matrix.h"
 #include "colmap/base/pose.h"
-#include "colmap/estimators/essential_matrix.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/random.h"
@@ -75,40 +73,18 @@ py::dict two_view_geometry_estimation(
     TwoViewGeometry::Options two_view_geometry_options;
     two_view_geometry_options.ransac_options.min_num_trials = 30;
     two_view_geometry_options.ransac_options.max_error = options.init_max_error;
-    two_view_geometry.EstimateCalibrated(camera1, points1, camera2, points2, matches, two_view_geometry_options);
+    two_view_geometry.EstimateCalibrated(camera1, points2D1, camera2, points2D2, matches, two_view_geometry_options);
 
     // Success output dictionary.
     py::dict success_dict;
 
-    if (!two_view_geometry.EstimateRelativePose(camera1, points1, camera2, points2)) {
+    if (!two_view_geometry.EstimateRelativePose(camera1, points2D1, camera2, points2D2)) {
         return failure_dict;
     } else {
         success_dict["success"] = true;
     }
   
-
-    // Recover data from report.
-    const Eigen::Matrix3d E = report.model;
-    const size_t num_inliers = report.support.num_inliers;
-    const auto inlier_mask = report.inlier_mask;
-
-    // Pose from essential matrix.
-    std::vector<Eigen::Vector2d> inlier_world_points2D1;
-    std::vector<Eigen::Vector2d> inlier_world_points2D2;
-
-    for (size_t idx = 0; idx < inlier_mask.size(); ++idx) {
-        if (inlier_mask[idx]) {
-            inlier_world_points2D1.push_back(world_points2D1[idx]);
-            inlier_world_points2D2.push_back(world_points2D2[idx]);
-        }
-    }
-
-    Eigen::Matrix3d R;
-    Eigen::Vector3d tvec;
-    std::vector<Eigen::Vector3d> points3D;
-    PoseFromEssentialMatrix(E, inlier_world_points2D1, inlier_world_points2D2, &R, &tvec, &points3D);
-
-    Eigen::Vector4d qvec = RotationMatrixToQuaternion(R);
+    FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
     
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers;
@@ -120,6 +96,7 @@ py::dict two_view_geometry_estimation(
         }
     }
   
+    // Recover data.
     success_dict["configuration_type"] = two_view_geometry.config;
     success_dict["qvec"] = two_view_geometry.qvec;
     success_dict["tvec"] = two_view_geometry.tvec;
