@@ -66,13 +66,21 @@ py::dict two_view_geometry_estimation(
     camera2.SetHeight(camera_dict2["height"].cast<size_t>());
     camera2.SetParams(camera_dict2["params"].cast<std::vector<double>>());
 
-    const FeatureMatches matches;
-    const Options options;
+    FeatureMatches matches;
+    matches.reserve(points2D1.size());
+    
+    for (size_t i=0; i < points2D1.size(); i++) {
+       matches.emplace_back(i,i);
+    }
  
     TwoViewGeometry two_view_geometry;
     TwoViewGeometry::Options two_view_geometry_options;
-    two_view_geometry_options.ransac_options.min_num_trials = 30;
-    two_view_geometry_options.ransac_options.max_error = options.init_max_error;
+    two_view_geometry_options.ransac_options.max_error = max_error;
+    two_view_geometry_options.ransac_options.min_inlier_ratio = min_inlier_ratio;
+    two_view_geometry_options.ransac_options.min_num_trials = min_num_trials;
+    two_view_geometry_options.ransac_options.max_num_trials = max_num_trials;
+    two_view_geometry_options.ransac_options.confidence = confidence;
+    
     two_view_geometry.EstimateCalibrated(camera1, points2D1, camera2, points2D2, matches, two_view_geometry_options);
 
     // Success output dictionary.
@@ -84,16 +92,12 @@ py::dict two_view_geometry_estimation(
         success_dict["success"] = true;
     }
   
-    FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
+    const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
     
     // Convert vector<char> to vector<int>.
-    std::vector<bool> inliers;
-    for (auto it : inlier_mask) {
-        if (it) {
-            inliers.push_back(true);
-        } else {
-            inliers.push_back(false);
-        }
+    std::vector<bool> inliers(points2D1.size(), false);
+    for (auto it : inlier_matches) {
+        inliers[it.first] = true;
     }
   
     // Recover data.
