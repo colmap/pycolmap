@@ -117,10 +117,10 @@ answer = pycolmap.pose_refinement(tvec, qvec, points2D, points3D, inlier_mask, c
 
 ```python
 return_dict = pycolmap.essential_matrix_estimation(
-  points2D_1,  # 2D pixel coordinates in image 1
-  points2D_2,  # 2D pixel coordinates in image 2
-  camera_1,    # camera model of image 1
-  camera_2,    # camera model of image 2
+    points2D_1,  # 2D pixel coordinates in image 1
+    points2D_2,  # 2D pixel coordinates in image 2
+    camera_1,    # camera model of image 1
+    camera_2,    # camera model of image 2
 )
 ```
 
@@ -130,10 +130,10 @@ All estimators expect a COLMAP camera object, which can be created as follow:
 
 ```python
 camera = pycolmap.Camera(
-  COLMAP_CAMERA_MODEL_NAME,
-  IMAGE_WIDTH, 
-  IMAGE_HEIGHT,
-  EXTRA_CAMERA_PARAMETERS,
+    COLMAP_CAMERA_MODEL_NAME,
+    IMAGE_WIDTH, 
+    IMAGE_HEIGHT,
+    EXTRA_CAMERA_PARAMETERS,
 )
 ```
 
@@ -141,10 +141,10 @@ The different camera models and their extra parameters are defined in [colmap/sr
 
 ```python
 camera = pycolmap.Camera(
-	model='SIMPLE_PINHOLE',
-  width=width,
-  height=height,
-  params=[focal_length, cx, cy],
+    model='SIMPLE_PINHOLE',
+    width=width,
+    height=height,
+    params=[focal_length, cx, cy],
 )
 ```
 
