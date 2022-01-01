@@ -75,7 +75,7 @@ py::dict two_view_geometry_estimation(
  
     TwoViewGeometry two_view_geometry;
     TwoViewGeometry::Options two_view_geometry_options;
-    two_view_geometry_options.ransac_options.max_error = max_error;
+    two_view_geometry_options.ransac_options.max_error = max_error_px;
     two_view_geometry_options.ransac_options.min_inlier_ratio = min_inlier_ratio;
     two_view_geometry_options.ransac_options.min_num_trials = min_num_trials;
     two_view_geometry_options.ransac_options.max_num_trials = max_num_trials;
@@ -96,15 +96,15 @@ py::dict two_view_geometry_estimation(
     
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers(points2D1.size(), false);
-    for (auto it : inlier_matches) {
-        inliers[it.first] = true;
+    for (auto m : inlier_matches) {
+        inliers[m.point2D_idx1] = true;
     }
   
     // Recover data.
     success_dict["configuration_type"] = two_view_geometry.config;
     success_dict["qvec"] = two_view_geometry.qvec;
     success_dict["tvec"] = two_view_geometry.tvec;
-    success_dict["num_inliers"] = num_inliers;
+    success_dict["num_inliers"] = inlier_matches.size();
     success_dict["inliers"] = inliers;
     
     return success_dict;
