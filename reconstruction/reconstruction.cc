@@ -103,20 +103,6 @@ void init_reconstruction(py::module& m) {
                 self.Write(path);
             },
             py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
-        // .def(
-        //     "read_cameras",
-        //     [](const Reconstruction& self, py::object input_path) {
-        //         std::string path = py::str(input_path).cast<std::string>();
-        //         if (ExistsFile(JoinPaths(path, "cameras.bin"))) {
-        //             self.ReadCamerasBinary(path);
-        //         } else if (ExistsFile(JoinPaths(path, "cameras.txt"))) {
-        //             self.ReadCamerasText(path);
-        //         } else {
-        //             THROW_EXCEPTION(std::invalid_argument, "Camera file does not exist at " +
-        //             path);
-        //         }
-        //     },
-        //     py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
         .def("read_text",
              [](Reconstruction& self, const std::string& input_path) {
                  THROW_CHECK_RECONSTRUCTION_TEXT_EXISTS(input_path);
@@ -254,8 +240,6 @@ void init_reconstruction(py::module& m) {
         .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, py::arg("p0") = 0.0,
              py::arg("p1") = 1.0)
         .def("crop", &Reconstruction::Crop)
-        // .def("align_robust", &Reconstruction::AlignRobust,
-        //         "Robust alignment using RANSAC.")
         .def("find_image_with_name", &Reconstruction::FindImageWithName,
              py::return_value_policy::reference_internal,
              "Find image with matching name. Returns None if no match is found.")
