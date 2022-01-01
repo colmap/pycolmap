@@ -99,7 +99,7 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("max_error_px"),
           py::arg("min_inlier_ratio"),
           py::arg("min_num_trials"),
-          py::arg("max_num_trials),
+          py::arg("max_num_trials"),
           py::arg("confidence"),
           "Generic two-view geometry estimation");
 }
