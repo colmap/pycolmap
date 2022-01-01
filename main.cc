@@ -10,6 +10,7 @@ namespace py = pybind11;
 #include "transformations.cc"
 #include "sift.cc"
 #include "pose_refinement.cc"
+#include "two_view_geometry_estimation.cc"
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
