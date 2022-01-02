@@ -6,9 +6,9 @@ include_directories(${COLMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 link_directories(${COLMAP_LINK_DIRS})
 
 if (${CERES_VERSION} VERSION_LESS "2.0.0")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 else()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
 add_subdirectory(pybind11)
