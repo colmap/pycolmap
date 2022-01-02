@@ -31,16 +31,15 @@ PYBIND11_MODULE(pycolmap, m) {
 #endif
 
     // Absolute pose.
-    m.def("absolute_pose_estimation",
-            &absolute_pose_estimation,
-            py::arg("points2D"), py::arg("points3D"),
-            py::arg("camera"),
-            py::arg("max_error_px") = 12.0,
-            py::arg("min_inlier_ratio") = 0.01,
-            py::arg("min_num_trials") = 1000,
-            py::arg("max_num_trials") = 100000,
-            py::arg("confidence") = 0.9999,
-            "Absolute pose estimation with non-linear refinement.");
+    m.def("absolute_pose_estimation", &absolute_pose_estimation,
+          py::arg("points2D"), py::arg("points3D"),
+          py::arg("camera"),
+          py::arg("max_error_px") = 12.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
+          "Absolute pose estimation with non-linear refinement.");
 
     m.def("rig_absolute_pose_estimation", &rig_absolute_pose_estimation,
           py::arg("points2D"), py::arg("points3D"),
@@ -54,8 +53,7 @@ PYBIND11_MODULE(pycolmap, m) {
           "Absolute pose estimation with non-linear refinement.");
 
     // Essential matrix.
-    m.def("essential_matrix_estimation",
-          &essential_matrix_estimation,
+    m.def("essential_matrix_estimation", &essential_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("camera1"), py::arg("camera2"),
           py::arg("max_error_px") = 4.0,
@@ -66,8 +64,7 @@ PYBIND11_MODULE(pycolmap, m) {
           "LORANSAC + 5-point algorithm.");
 
     // Fundamental matrix.
-    m.def("fundamental_matrix_estimation",
-          &fundamental_matrix_estimation,
+    m.def("fundamental_matrix_estimation", &fundamental_matrix_estimation,
           py::arg("points2D1"), py::arg("points2D2"),
           py::arg("max_error_px") = 4.0,
           py::arg("min_inlier_ratio") = 0.01,
@@ -75,19 +72,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("max_num_trials") = 100000,
           py::arg("confidence") = 0.9999,
           "LORANSAC + 7-point algorithm.");
-  
-    // Generic two view geometry estimation.
-    m.def("two_view_geometry_estimation", &two_view_geometry_estimation,
-          py::arg("points2D1"),
-          py::arg("points2D2"),
-          py::arg("camera_dict1"),
-          py::arg("camera_dict2"),
-          py::arg("max_error_px") = 4.0,
-          py::arg("min_inlier_ratio") = 0.01,
-          py::arg("min_num_trials") = 1000,
-          py::arg("max_num_trials") = 100000,
-          py::arg("confidence") = 0.9999,
-          "Generic two-view geometry estimation");
 
     // Homography matrix estimation.
     m.def("homography_matrix_estimation", &homography_matrix_estimation,
@@ -122,6 +106,19 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("inlier_mask"),
           py::arg("camera"),
           "Non-linear refinement.");
+  
+    // Generic two view geometry estimation.
+    m.def("two_view_geometry_estimation", &two_view_geometry_estimation,
+          py::arg("points2D1"),
+          py::arg("points2D2"),
+          py::arg("camera_dict1"),
+          py::arg("camera_dict2"),
+          py::arg("max_error_px") = 4.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
+          "Generic two-view geometry estimation");
 
     // Reconstruction bindings
     init_reconstruction(m);
