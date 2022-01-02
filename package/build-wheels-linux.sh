@@ -13,8 +13,6 @@ yum -y install wget
 
 ls -ltrh /io/
 
-yum -y install qt5-qtbase-devel
-
 # we cannot simply use `pip` or `python`, since points to old 2.7 version
 PYBIN="/opt/python/$PYTHON_VERSION/bin"
 PYVER_NUM=$($PYBIN/python -c "import sys;print(sys.version.split(\" \")[0])")
@@ -72,10 +70,7 @@ yum install \
     libgoogle-glog-dev \
     libgflags-dev \
     libglew-dev \
-    qtbase5-dev \
-    libqt5opengl5-dev \
     libcgal-dev
-yum install libcgal-qt5-dev
 
 
 # Note: `yum install gflags` will not work, since the version is too old (2.1)
@@ -137,10 +132,7 @@ yum install libsuitesparse-dev
 yum install libgoogle-glog-dev
 yum install libgflags-dev
 yum install libglew-dev
-yum install qtbase5-dev
-yum install libqt5opengl5-dev
 yum install libcgal-dev
-yum install libcgal-qt5-dev
 
 yum -y install freeimage
 
@@ -162,9 +154,10 @@ cd colmap
 git checkout dev
 mkdir build/
 cd build/
-cmake .. -DCMAKE_BUILD_TYPE=Release \
+CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DBoost_USE_STATIC_LIBS=ON \
          -DBOOST_ROOT=/usr/local \
+         -DGUI_ENABLED=OFF \
          -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
 
 if [ $ec -ne 0 ]; then
