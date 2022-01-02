@@ -11,6 +11,7 @@ namespace py = pybind11;
 #include "transformations.cc"
 #include "sift.cc"
 #include "pose_refinement.cc"
+#include "two_view_geometry_estimation.cc"
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
@@ -100,4 +101,17 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("inlier_mask"),
           py::arg("camera_dict"),
           "Non-linear refinement.");
+    
+    // Generic two view geometry estimation.
+    m.def("two_view_geometry_estimation", &two_view_geometry_estimation,
+          py::arg("points2D1"),
+          py::arg("points2D2"),
+          py::arg("camera_dict1"),
+          py::arg("camera_dict2"),
+          py::arg("max_error_px") = 4.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
+          "Generic two-view geometry estimation");
 }
