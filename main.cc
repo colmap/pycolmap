@@ -10,12 +10,12 @@ namespace py = pybind11;
 #include "estimators/generalized_absolute_pose.cc"
 #include "estimators/essential_matrix.cc"
 #include "estimators/fundamental_matrix.cc"
+#include "estimators/two_view_geometry.cc"
+#include "estimators/homography.cc"
 
-#include "homography_estimation.cc"
 #include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
-#include "two_view_geometry_estimation.cc"
 #include "pipeline.cc"
 #include "helpers.h"
 
@@ -55,17 +55,9 @@ PYBIND11_MODULE(pycolmap, m) {
     bind_essential_matrix_estimation(m);
     bind_fundamental_matrix_estimation(m);
     bind_generalized_absolute_pose_estimation(m);
+    bind_homography_estimation(m);
+    bind_two_view_geometry_estimation(m);
 
-    // Homography matrix estimation.
-    m.def("homography_matrix_estimation", &homography_matrix_estimation,
-          py::arg("points2D1"), py::arg("points2D2"),
-          py::arg("max_error_px") = 4.0,
-          py::arg("min_inlier_ratio") = 0.01,
-          py::arg("min_num_trials") = 1000,
-          py::arg("max_num_trials") = 100000,
-          py::arg("confidence") = 0.9999,
-          "LORANSAC + 4-point DLT algorithm.");
-    
     // Homography Decomposition.
     m.def("homography_decomposition", &homography_decomposition_estimation,
           py::arg("H"),
@@ -81,19 +73,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
           py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
           "Extract SIFT features.");
-  
-    // Generic two view geometry estimation.
-    m.def("two_view_geometry_estimation", &two_view_geometry_estimation,
-          py::arg("points2D1"),
-          py::arg("points2D2"),
-          py::arg("camera_dict1"),
-          py::arg("camera_dict2"),
-          py::arg("max_error_px") = 4.0,
-          py::arg("min_inlier_ratio") = 0.01,
-          py::arg("min_num_trials") = 1000,
-          py::arg("max_num_trials") = 100000,
-          py::arg("confidence") = 0.9999,
-          "Generic two-view geometry estimation");
 
     // Reconstruction bindings
     init_reconstruction(m);

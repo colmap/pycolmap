@@ -49,6 +49,7 @@ namespace py = pybind11;
 
 #include "log_exceptions.h"
 
+
 py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
