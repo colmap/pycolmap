@@ -97,10 +97,10 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2D2"),
           py::arg("camera_dict1"),
           py::arg("camera_dict2"),
-          py::arg("max_error_px"),
-          py::arg("min_inlier_ratio"),
-          py::arg("min_num_trials"),
-          py::arg("max_num_trials"),
-          py::arg("confidence"),
+          py::arg("max_error_px") = 4.0,
+          py::arg("min_inlier_ratio") = 0.01,
+          py::arg("min_num_trials") = 1000,
+          py::arg("max_num_trials") = 100000,
+          py::arg("confidence") = 0.9999,
           "Generic two-view geometry estimation");
 }
