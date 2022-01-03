@@ -1,4 +1,4 @@
-name: Pybind11 CI
+name: PyCOLMAP build and publish
 
 on:
   push:
@@ -38,15 +38,6 @@ jobs:
         # we strip the version number from the artifact name
         name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
         path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
-    - name: Publish package
-      # We publish the wheel to pypi when a new tag is pushed,
-      # either by creating a new GitHub release or explictly with `git tag`
-      if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags') }}
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: wheelhouse/
 
   mac-build:
     name: Wrapper macOS Build
@@ -68,10 +59,24 @@ jobs:
       with:
         name: pycolmap-${{ matrix.pyversion }}-${{ matrix.os }}
         path: ./wheelhouse/pycolmap-*.whl
+
+  pypi-publish:
+    name: Publish wheels to PyPI
+    needs: [linux-build, mac-build]
+    runs-on: ubuntu-latest
+    # We publish the wheel to pypi when a new tag is pushed,
+    # either by creating a new GitHub release or explictly with `git tag`
+    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags') }}
+    steps:
+    - name: Download wheels
+      uses: actions/download-artifact@v2
+      with:
+        path: ./artifacts/
+    - name: Move wheels
+      run: mkdir ./wheelhouse && mv ./artifacts/**/*.whl ./wheelhouse/
     - name: Publish package
-      if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags') }}
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: wheelhouse/
+        packages_dir: ./wheelhouse/
