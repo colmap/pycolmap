@@ -47,11 +47,13 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict essential_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
-        const py::dict camera_dict1,
-        const py::dict camera_dict2,
+        Camera& camera1,
+        Camera& camera2,
         const double max_error_px,
         const double min_inlier_ratio,
         const int min_num_trials,
@@ -61,24 +63,11 @@ py::dict essential_matrix_estimation(
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D1.size() == points2D2.size());
+    THROW_CHECK_EQ(points2D1.size(), points2D2.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-
-    // Create cameras.
-    Camera camera1;
-    camera1.SetModelIdFromName(camera_dict1["model"].cast<std::string>());
-    camera1.SetWidth(camera_dict1["width"].cast<size_t>());
-    camera1.SetHeight(camera_dict1["height"].cast<size_t>());
-    camera1.SetParams(camera_dict1["params"].cast<std::vector<double>>());
-
-    Camera camera2;
-    camera2.SetModelIdFromName(camera_dict2["model"].cast<std::string>());
-    camera2.SetWidth(camera_dict2["width"].cast<size_t>());
-    camera2.SetHeight(camera_dict2["height"].cast<size_t>());
-    camera2.SetParams(camera_dict2["params"].cast<std::vector<double>>());
 
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D1;
@@ -90,7 +79,7 @@ py::dict essential_matrix_estimation(
     for (size_t idx = 0; idx < points2D2.size(); ++idx) {
         world_points2D2.push_back(camera2.ImageToWorld(points2D2[idx]));
     }
-    
+
     // Compute world error.
     const double max_error = 0.5 * (
         max_error_px / camera1.MeanFocalLength() + max_error_px / camera2.MeanFocalLength()
@@ -103,7 +92,7 @@ py::dict essential_matrix_estimation(
     ransac_options.min_num_trials = min_num_trials;
     ransac_options.max_num_trials = max_num_trials;
     ransac_options.confidence = confidence;
-    
+
     LORANSAC<
         EssentialMatrixFivePointEstimator,
         EssentialMatrixFivePointEstimator
@@ -138,7 +127,7 @@ py::dict essential_matrix_estimation(
     PoseFromEssentialMatrix(E, inlier_world_points2D1, inlier_world_points2D2, &R, &tvec, &points3D);
 
     Eigen::Vector4d qvec = RotationMatrixToQuaternion(R);
-    
+
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers;
     for (auto it : inlier_mask) {
@@ -157,6 +146,6 @@ py::dict essential_matrix_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
-    
+
     return success_dict;
 }

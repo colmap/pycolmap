@@ -14,7 +14,6 @@
 #include "colmap/optim/bundle_adjustment.h"
 #include "colmap/base/cost_functions.h"
 
-
 using namespace colmap;
 
 #include <pybind11/pybind11.h>
@@ -23,8 +22,8 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
 const double TOL = 1e-5;
-
 
 const bool lowerVector3d(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2) {
   if (v1.x() < v2.x()) {
@@ -66,9 +65,9 @@ struct GeneralizedAbsolutePoseRefinementOptions {
   bool print_summary = true;
 
   void Check() const {
-    CHECK_GE(gradient_tolerance, 0.0);
-    CHECK_GE(max_num_iterations, 0);
-    CHECK_GE(loss_function_scale, 0.0);
+    THROW_CHECK_GE(gradient_tolerance, 0.0);
+    THROW_CHECK_GE(max_num_iterations, 0);
+    THROW_CHECK_GE(loss_function_scale, 0.0);
   }
 };
 
@@ -82,13 +81,13 @@ bool RefineGeneralizedAbsolutePose(
                         const std::vector<Eigen::Vector3d>& rig_tvecs,
                         Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
                         std::vector<Camera>* cameras) {
-  CHECK_EQ(points2D.size(), inlier_mask.size());
-  CHECK_EQ(points2D.size(), points3D.size());
-  CHECK_EQ(points2D.size(), camera_idxs.size());
-  CHECK_EQ(rig_qvecs.size(), rig_tvecs.size());
-  CHECK_EQ(rig_qvecs.size(), cameras->size());
-  CHECK_GE(*std::min_element(camera_idxs.begin(), camera_idxs.end()), 0);
-  CHECK_LT(*std::max_element(camera_idxs.begin(), camera_idxs.end()), cameras->size());
+  THROW_CHECK_EQ(points2D.size(), inlier_mask.size());
+  THROW_CHECK_EQ(points2D.size(), points3D.size());
+  THROW_CHECK_EQ(points2D.size(), camera_idxs.size());
+  THROW_CHECK_EQ(rig_qvecs.size(), rig_tvecs.size());
+  THROW_CHECK_EQ(rig_qvecs.size(), cameras->size());
+  THROW_CHECK_GE(*std::min_element(camera_idxs.begin(), camera_idxs.end()), 0);
+  THROW_CHECK_LT(*std::max_element(camera_idxs.begin(), camera_idxs.end()), cameras->size());
   options.Check();
 
   ceres::LossFunction* loss_function =
@@ -230,7 +229,7 @@ bool RefineGeneralizedAbsolutePose(
 // and a smaller residual sum.
 struct UniqueInlierSupportMeasurer {
   struct Support {
-    // The number of inliers. 
+    // The number of inliers.
     // This is still needed for determining the dynamic number of iterations.
     size_t num_inliers = 0;
 
@@ -292,7 +291,7 @@ struct UniqueInlierSupportMeasurer {
 py::dict rig_absolute_pose_estimation(
         const std::vector<std::vector<Eigen::Vector2d>> points2D,
         const std::vector<std::vector<Eigen::Vector3d>> points3D,
-        const std::vector<py::dict> camera_dicts,
+        const std::vector<Camera> cameras,
         const std::vector<Eigen::Vector4d> rig_qvecs,
         const std::vector<Eigen::Vector3d> rig_tvecs,
         const double max_error_px,
@@ -303,11 +302,11 @@ py::dict rig_absolute_pose_estimation(
 ) {
     SetPRNGSeed(0);
 
-    CHECK_EQ(points2D.size(), points3D.size());
-    CHECK_EQ(points2D.size(), camera_dicts.size());
-    CHECK_EQ(points2D.size(), rig_qvecs.size());
-    CHECK_EQ(points2D.size(), rig_tvecs.size());
-    CHECK_GT(max_error_px, 0.);
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
+    THROW_CHECK_EQ(points2D.size(), cameras.size());
+    THROW_CHECK_EQ(points2D.size(), rig_qvecs.size());
+    THROW_CHECK_EQ(points2D.size(), rig_tvecs.size());
+    THROW_CHECK_GT(max_error_px, 0.);
 
     // Failure output dictionary.
     py::dict failure_dict;
@@ -317,28 +316,19 @@ py::dict rig_absolute_pose_estimation(
     std::vector<Eigen::Vector3d> points3D_all;
     std::vector<Eigen::Vector2d> points2D_all;
     std::vector<size_t> camera_idxs;
-    std::vector<Camera> cameras;
     double error_threshold = 0.;
     for (size_t i = 0; i < points2D.size(); ++i) {
-        const auto& camera_dict = camera_dicts[i];
-        Camera camera;
-        camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-        camera.SetWidth(camera_dict["width"].cast<size_t>());
-        camera.SetHeight(camera_dict["height"].cast<size_t>());
-        camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
-        cameras.push_back(camera);
-
         const Eigen::Matrix3x4d rig_tform = ComposeProjectionMatrix(rig_qvecs[i], rig_tvecs[i]);
         for (size_t j = 0; j < points2D[i].size(); ++j) {
             points2D_rig.emplace_back();
-            points2D_rig.back().xy = camera.ImageToWorld(points2D[i][j]);
+            points2D_rig.back().xy = cameras[i].ImageToWorld(points2D[i][j]);
             points2D_rig.back().rel_tform = rig_tform;
             camera_idxs.push_back(i);
         }
         points3D_all.insert(points3D_all.end(), points3D[i].begin(), points3D[i].end());
         points2D_all.insert(points2D_all.end(), points2D[i].begin(), points2D[i].end());
 
-        error_threshold += camera.ImageToWorldThreshold(max_error_px) * points2D[i].size();
+        error_threshold += cameras[i].ImageToWorldThreshold(max_error_px) * points2D[i].size();
     }
     // Average of the errors over the cameras, weighted by the number of correspondences
     error_threshold /= points3D_all.size();
@@ -347,7 +337,7 @@ py::dict rig_absolute_pose_estimation(
     }
 
     // Associate unique ids to each 3D point.
-    // Needed for UniqueInlierSupportMeasurer to avoid counting the same 
+    // Needed for UniqueInlierSupportMeasurer to avoid counting the same
     // 3D point multiple times due to FoV overlap in rig.
     std::vector<Eigen::Vector3d> unique_points3D = points3D_all;
     std::sort(unique_points3D.begin(), unique_points3D.end(), lowerVector3d);
@@ -388,7 +378,8 @@ py::dict rig_absolute_pose_estimation(
     if (!RefineGeneralizedAbsolutePose(
           abs_pose_refinement_options, report.inlier_mask,
           points2D_all, points3D_all, camera_idxs,
-          rig_qvecs, rig_tvecs, &qvec, &tvec, &cameras)) {
+          rig_qvecs, rig_tvecs, &qvec, &tvec,
+          const_cast<std::vector<Camera>*>(&cameras))) {
         return failure_dict;
     }
 

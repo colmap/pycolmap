@@ -13,7 +13,7 @@ namespace py = pybind11;
 
 /**
  * Recover the most probable pose from the inputted homography matrix.
- * 
+ *
  * @param H 3x3 homography matrix.
  * @param K1 3x3 intrinsics matrix for first camera.
  * @param K2 3x3 intrinsics matrix for second camera.
@@ -49,6 +49,6 @@ py::dict homography_decomposition_estimation (
     success_dict["t"] = t;
     success_dict["n"] = n;
     success_dict["points3D"] = points3D;
-    
+
     return success_dict;
 }

@@ -44,30 +44,25 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict pose_refinement(
         const Eigen::Vector3d tvec,
         const Eigen::Vector4d qvec,
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
         const std::vector<bool> inlier_mask,
-        const py::dict camera_dict
+        const Camera camera
 ) {
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D.size() == points3D.size());
-    assert(inlier_mask.size() == points2D.size());
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
+    THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
 
     // Absolute pose estimation.
     Eigen::Vector4d qvec_refined = qvec;
@@ -91,7 +86,9 @@ py::dict pose_refinement(
     abs_pose_refinement_options.print_summary = false;
 
     // Absolute pose refinement.
-    if (!RefineAbsolutePose(abs_pose_refinement_options, inlier_mask_char, points2D, points3D, &qvec_refined, &tvec_refined, &camera)) {
+    if (!RefineAbsolutePose(abs_pose_refinement_options, inlier_mask_char,
+                    points2D, points3D, &qvec_refined, &tvec_refined,
+                    const_cast<Camera*>(&camera))) {
         return failure_dict;
     }
 
@@ -100,6 +97,6 @@ py::dict pose_refinement(
     success_dict["success"] = true;
     success_dict["qvec"] = qvec_refined;
     success_dict["tvec"] = tvec_refined;
-    
+
     return success_dict;
 }
