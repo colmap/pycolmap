@@ -255,5 +255,5 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
         py::arg("inlier_mask"),
         py::arg("camera"),
         py::arg("refinement_options") = ref_options,
-        "Non-linear refinement.");
+        "Non-linear refinement of absolute pose.");
 }

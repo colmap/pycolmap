@@ -42,6 +42,8 @@ Finally go to the PyCOLMAP folder and run
 py -m pip install ./
 ```
 
+##
+
 ## Reconstruction object
 
 We can load and manipulate an existing COLMAP 3D reconstruction:
@@ -81,22 +83,45 @@ print(tfm.rotation, tfm.translation)
 
 ## Estimators
 
+We provide robust RANSAC-based estimators for absolute camera pose (single-camera and multi-camera-rig), essential matrix, fundamental matrix, homography, and two-view relative pose for calibrated cameras. 
+
+All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/src/optim/ransac.h`](https://github.com/colmap/colmap/blob/dev/src/optim/ransac.h#L47-L76) and their default values are:
+
+```python
+ransac_options = pycolmap.RANSACOptions(
+    max_error=4.0,  # reprojection error in pixels
+    min_inlier_ratio=0.01,  
+    confidence=0.9999,
+    min_num_trials=1000,
+    max_num_trials=100000,
+)
+```
+
 ### Absolute pose estimation
 
-For instance, the following snippet estimates the absolute pose for a query camera given 2D-3D correspondences:
+For instance, to estimate the absolute pose of a query camera given 2D-3D correspondences:
 ```python
 # Parameters:
 # - points2D: Nx2 array; pixel coordinates
 # - points3D: Nx3 array; world coordinates
 # - camera: pycolmap.Camera
-# Named parameters
-# - max_error_px: float; RANSAC inlier threshold in pixels
-answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera)
-# Returns:
-# - dictionary containing the RANSAC output
+# Optional parameters:
+# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
+# - estimation_options: dict or pycolmap.AbsolutePoseEstimationOptions
+# - refinement_options: dict or pycolmap.AbsolutePoseRefinementOptions
+answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera, max_error_px=12.0)
+# Returns: dictionary of estimation outputs
 ```
 
-2D and 3D points can be passed as Numpy arrays.
+2D and 3D points are passed as Numpy arrays or lists. The options are defined in [`estimators/absolute_pose.cc`](./estimators/absolute_pose.cc#L187-L220) and can be passed as regular (nested) Python dictionaries:
+
+```python
+pycolmap.absolute_pose_estimation(
+    points2D, points3D, camera,
+    estimation_options={'ransac': {'max_error': 12.0}},
+    refinement_options={'refine_focal_length': True},
+)
+```
 
 ### Absolute Pose Refinement
 
@@ -107,24 +132,70 @@ answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera)
 # - points2D: Nx2 array; pixel coordinates
 # - points3D: Nx3 array; world coordinates
 # - inlier_mask: array of N bool; inlier_mask[i] is true if correpondence i is an inlier
-# - camera_dict: pycolmap.Camera
+# - camera: pycolmap.Camera
+# Optional parameters:
+# - refinement_options: dict or pycolmap.AbsolutePoseRefinementOptions
 answer = pycolmap.pose_refinement(tvec, qvec, points2D, points3D, inlier_mask, camera)
-# Returns:
-# - dictionary containing the RANSAC output
+# Returns: dictionary of refinement outputs
 ```
 
 ### Essential matrix estimation
 
 ```python
-return_dict = pycolmap.essential_matrix_estimation(
-    points2D_1,  # 2D pixel coordinates in image 1
-    points2D_2,  # 2D pixel coordinates in image 2
-    camera_1,    # camera model of image 1
-    camera_2,    # camera model of image 2
+# Parameters:
+# - points2D1: Nx2 array; pixel coordinates in image 1
+# - points2D2: Nx2 array; pixel coordinates in image 2
+# - camera1: pycolmap.Camera of image 1
+# - camera2: pycolmap.Camera of image 2
+# Optional parameters:
+# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
+# - options: dict or pycolmap.RANSACOptions
+answer = pycolmap.essential_matrix_estimation(points2D1, points2D2, camera1, camera2)
+# Returns: dictionary of estimation outputs
+```
+
+### Fundamental matrix estimation
+
+```python
+answer = pycolmap.fundamental_matrix_estimation(
+    points2D1,
+    points2D2,
+    [max_error_px],  # optional RANSAC inlier threshold in pixels
+    [options],       # optional dict or pycolmap.RANSACOptions
 )
 ```
 
-### Camera object
+### Homography estimation
+
+```python
+answer = pycolmap.homography_matrix_estimation(
+    points2D1,
+    points2D2,
+    [max_error_px],  # optional RANSAC inlier threshold in pixels
+    [options],       # optional dict or pycolmap.RANSACOptions
+)
+```
+
+### Two-view geometry estimation
+
+COLMAP can also estimate a relative pose between two calibrated cameras by estimating both E and H and accounting for the degeneracies of each model.
+
+```python
+# Parameters:
+# - points2D1: Nx2 array; pixel coordinates in image 1
+# - points2D2: Nx2 array; pixel coordinates in image 2
+# - camera1: pycolmap.Camera of image 1
+# - camera2: pycolmap.Camera of image 2
+# Optional parameters:
+# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
+# - options: dict or pycolmap.TwoViewGeometryOptions
+answer = pycolmap.homography_matrix_estimation(points2D1, points2D2)
+# Returns: dictionary of estimation outputs
+```
+
+ The options are defined in [`estimators/absolute_pose.cc`](estimators/two_view_geometry.cc#L102-L117) and control how each model is selected. The return dictionary contains the relative pose, inlier mask, as well as the type of camera configuration, such as degenerate or planar. This type is an instance of the enum `pycolmap.TwoViewGeometry` whose values are explained in [`colmap/src/estimators/two_view_geometry.h`](https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L47-L67).
+
+### Camera argument
 
 All estimators expect a COLMAP camera object, which can be created as follow:
 
@@ -137,7 +208,7 @@ camera = pycolmap.Camera(
 )
 ```
 
-The different camera models and their extra parameters are defined in [colmap/src/base/camera_models.h](https://github.com/colmap/colmap/blob/master/src/base/camera_models.h). For example for a pinhole camera:
+The different camera models and their extra parameters are defined in [`colmap/src/base/camera_models.h`](https://github.com/colmap/colmap/blob/master/src/base/camera_models.h). For example for a pinhole camera:
 
 ```python
 camera = pycolmap.Camera(
@@ -159,7 +230,19 @@ camera_dict = {
 }
 ```
 
-### SIFT feature extraction
+## Reconstruction pipeline
+
+We provide bindings for multiple step of the standard reconstruction pipeline. They are defined in `pipeline.cc` and include:
+
+- importing an image folder into a COLMAP database
+- inferring the camera parameters from the EXIF metadata of an image file
+- running two-view geometric verification of matches on a COLMAP database
+- triangulating points into an existing COLMAP model
+- running incremental reconstruction from a COLMAP database
+
+For an example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
+
+## SIFT feature extraction
 
 ```python
 import numpy as np
@@ -189,7 +272,7 @@ keypoints, scores, descriptors = pycolmap.extract_sift(img)
 # - descriptors: Nx128 array; L2-normalized descriptors
 ```
 
-# TODO
+## TODO
 
 - [ ] Add documentation
 - [ ] Add more detailed examples

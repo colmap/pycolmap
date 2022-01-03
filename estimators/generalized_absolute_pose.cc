@@ -417,7 +417,7 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
         py::arg("estimation_options") = est_options,
         py::arg("refinement_options") = ref_options,
-        "Absolute pose estimation with non-linear refinement.");
+        "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 
     m.def(
         "rig_absolute_pose_estimation",
@@ -436,5 +436,5 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         py::arg("min_num_trials") = est_options.min_num_trials,
         py::arg("max_num_trials") = est_options.max_num_trials,
         py::arg("confidence") = est_options.confidence,
-        "Absolute pose estimation with non-linear refinement.");
+        "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 }
