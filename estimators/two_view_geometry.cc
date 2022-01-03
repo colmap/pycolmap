@@ -98,13 +98,13 @@ py::dict two_view_geometry_estimation(
             points2D1, points2D2, camera1, camera2, two_view_geometry_options);
 }
 
-void bind_two_view_geometry_estimation(py::module& m) {
+void bind_two_view_geometry_estimation(py::module& m, py::class_<RANSACOptions> PyRANSACOptions) {
     auto PyEstimationOptions =
         py::class_<TwoViewGeometry::Options>(m, "TwoViewGeometryOptions")
-        .def(py::init<>([&m]() {
+        .def(py::init<>([PyRANSACOptions]() {
             TwoViewGeometry::Options options;
             // init through Python to obtain the new defaults defined in __init__
-            options.ransac_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
+            options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
             return options;
         }))
         .def_readwrite("min_num_inliers", &TwoViewGeometry::Options::min_num_inliers)
@@ -118,8 +118,7 @@ void bind_two_view_geometry_estimation(py::module& m) {
     make_dataclass(PyEstimationOptions);
     auto est_options = PyEstimationOptions().cast<TwoViewGeometry::Options>();
 
-    py::enum_<TwoViewGeometry::ConfigurationType>(
-            m, "TwoViewGeometry")
+    py::enum_<TwoViewGeometry::ConfigurationType>(m, "TwoViewGeometry")
         .value("UNDEFINED", TwoViewGeometry::UNDEFINED)
         .value("DEGENERATE", TwoViewGeometry::DEGENERATE)
         .value("CALIBRATED", TwoViewGeometry::CALIBRATED)

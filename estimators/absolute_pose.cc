@@ -183,14 +183,14 @@ py::dict pose_refinement(
 }
 
 
-void bind_absolute_pose_estimation(py::module& m) {
+void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRANSACOptions) {
     auto PyEstimationOptions =
         py::class_<AbsolutePoseEstimationOptions>(m, "AbsolutePoseEstimationOptions")
-        .def(py::init<>([&m]() {
+        .def(py::init<>([PyRANSACOptions]() {
             AbsolutePoseEstimationOptions options;
             options.estimate_focal_length = false;
             // init through Python to obtain the new defaults defined in __init__
-            options.ransac_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
+            options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
             return options;
         }))
         .def_readwrite("estimate_focal_length", &AbsolutePoseEstimationOptions::estimate_focal_length)
