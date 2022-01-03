@@ -17,6 +17,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "helpers.h"
 
 
 // Copied from colmap/exe/features.cc
@@ -328,11 +329,12 @@ std::map<size_t, Reconstruction> incremental_mapping(
 
 
 void init_pipeline(py::module& m) {
-    py::enum_<CameraMode>(m, "CameraMode")
+    auto PyCameraMode = py::enum_<CameraMode>(m, "CameraMode")
         .value("AUTO", CameraMode::AUTO)
         .value("SINGLE", CameraMode::SINGLE)
         .value("PER_FOLDER", CameraMode::PER_FOLDER)
         .value("PER_IMAGE", CameraMode::PER_IMAGE);
+    AddStringToEnumConstructor(PyCameraMode);
 
     m.def("import_images",
           &import_images,
