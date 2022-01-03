@@ -44,10 +44,12 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
-        const py::dict camera_dict,
+        Camera& camera,
         const double max_error_px,
         const double min_inlier_ratio,
         const int min_num_trials,
@@ -57,18 +59,11 @@ py::dict absolute_pose_estimation(
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D.size() == points3D.size());
+    THROW_CHECK_EQ(points2D.size(), points3D.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-
-    // Create camera.
-    Camera camera;
-    camera.SetModelIdFromName(camera_dict["model"].cast<std::string>());
-    camera.SetWidth(camera_dict["width"].cast<size_t>());
-    camera.SetHeight(camera_dict["height"].cast<size_t>());
-    camera.SetParams(camera_dict["params"].cast<std::vector<double>>());
 
     // Absolute pose estimation parameters.
     AbsolutePoseEstimationOptions abs_pose_options;
@@ -117,6 +112,6 @@ py::dict absolute_pose_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
-    
+
     return success_dict;
 }

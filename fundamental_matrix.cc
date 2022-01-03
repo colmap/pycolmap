@@ -44,6 +44,8 @@ using namespace colmap;
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
+
 py::dict fundamental_matrix_estimation(
         const std::vector<Eigen::Vector2d> points2D1,
         const std::vector<Eigen::Vector2d> points2D2,
@@ -56,7 +58,7 @@ py::dict fundamental_matrix_estimation(
     SetPRNGSeed(0);
 
     // Check that both vectors have the same size.
-    assert(points2D1.size() == points2D2.size());
+    THROW_CHECK_EQ(points2D1.size(), points2D2.size());
 
     // Failure output dictionary.
     py::dict failure_dict;
@@ -69,7 +71,7 @@ py::dict fundamental_matrix_estimation(
     ransac_options.min_num_trials = min_num_trials;
     ransac_options.max_num_trials = max_num_trials;
     ransac_options.confidence = confidence;
-    
+
     LORANSAC<
         FundamentalMatrixSevenPointEstimator,
         FundamentalMatrixEightPointEstimator
@@ -86,7 +88,7 @@ py::dict fundamental_matrix_estimation(
     const Eigen::Matrix3d F = report.model;
     const size_t num_inliers = report.support.num_inliers;
     const auto inlier_mask = report.inlier_mask;
-    
+
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers;
     for (auto it : inlier_mask) {
@@ -103,6 +105,6 @@ py::dict fundamental_matrix_estimation(
     success_dict["F"] = F;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
-    
+
     return success_dict;
 }
