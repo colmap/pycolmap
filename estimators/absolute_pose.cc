@@ -186,9 +186,11 @@ py::dict pose_refinement(
 void bind_absolute_pose_estimation(py::module& m) {
     auto PyEstimationOptions =
         py::class_<AbsolutePoseEstimationOptions>(m, "AbsolutePoseEstimationOptions")
-        .def(py::init<>([]() {
+        .def(py::init<>([&m]() {
             AbsolutePoseEstimationOptions options;
             options.estimate_focal_length = false;
+            // init through Python to obtain the new defaults defined in __init__
+            options.ransac_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
             return options;
         }))
         .def_readwrite("estimate_focal_length", &AbsolutePoseEstimationOptions::estimate_focal_length)
@@ -197,6 +199,7 @@ void bind_absolute_pose_estimation(py::module& m) {
         .def_readwrite("max_focal_length_ratio", &AbsolutePoseEstimationOptions::max_focal_length_ratio)
         .def_readwrite("ransac", &AbsolutePoseEstimationOptions::ransac_options);
     make_dataclass(PyEstimationOptions);
+    auto est_options = PyEstimationOptions().cast<AbsolutePoseEstimationOptions>();
 
     auto PyRefinementOptions =
         py::class_<AbsolutePoseRefinementOptions>(m, "AbsolutePoseRefinementOptions")
@@ -214,8 +217,6 @@ void bind_absolute_pose_estimation(py::module& m) {
         .def_readwrite("refine_extra_params", &AbsolutePoseRefinementOptions::refine_extra_params)
         .def_readwrite("print_summary", &AbsolutePoseRefinementOptions::print_summary);
     make_dataclass(PyRefinementOptions);
-
-    auto est_options = PyEstimationOptions().cast<AbsolutePoseEstimationOptions>();
     auto ref_options = PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();
 
     m.def(

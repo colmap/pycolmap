@@ -101,7 +101,12 @@ py::dict two_view_geometry_estimation(
 void bind_two_view_geometry_estimation(py::module& m) {
     auto PyEstimationOptions =
         py::class_<TwoViewGeometry::Options>(m, "TwoViewGeometryOptions")
-        .def(py::init<>())
+        .def(py::init<>([&m]() {
+            TwoViewGeometry::Options options;
+            // init through Python to obtain the new defaults defined in __init__
+            options.ransac_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
+            return options;
+        }))
         .def_readwrite("min_num_inliers", &TwoViewGeometry::Options::min_num_inliers)
         .def_readwrite("min_E_F_inlier_ratio", &TwoViewGeometry::Options::min_E_F_inlier_ratio)
         .def_readwrite("max_H_inlier_ratio", &TwoViewGeometry::Options::max_H_inlier_ratio)
