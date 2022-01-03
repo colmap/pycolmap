@@ -191,6 +191,7 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
             options.estimate_focal_length = false;
             // init through Python to obtain the new defaults defined in __init__
             options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
+            options.ransac_options.max_error = 12.0;
             return options;
         }))
         .def_readwrite("estimate_focal_length", &AbsolutePoseEstimationOptions::estimate_focal_length)

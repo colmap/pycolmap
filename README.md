@@ -83,14 +83,14 @@ print(tfm.rotation, tfm.translation)
 
 ## Estimators
 
-We provide robust RANSAC-based estimators for absolute camera pose (single-camera and multi-camera-rig), essential matrix, fundamental matrix, homography, and two-view relative pose for calibrated cameras. 
+We provide robust RANSAC-based estimators for absolute camera pose (single-camera and multi-camera-rig), essential matrix, fundamental matrix, homography, and two-view relative pose for calibrated cameras.
 
 All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/src/optim/ransac.h`](https://github.com/colmap/colmap/blob/dev/src/optim/ransac.h#L47-L76) and their default values are:
 
 ```python
 ransac_options = pycolmap.RANSACOptions(
     max_error=4.0,  # reprojection error in pixels
-    min_inlier_ratio=0.01,  
+    min_inlier_ratio=0.01,
     confidence=0.9999,
     min_num_trials=1000,
     max_num_trials=100000,
@@ -106,7 +106,7 @@ For instance, to estimate the absolute pose of a query camera given 2D-3D corres
 # - points3D: Nx3 array; world coordinates
 # - camera: pycolmap.Camera
 # Optional parameters:
-# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
+# - max_error_px: float; RANSAC inlier threshold in pixels (default=12.0)
 # - estimation_options: dict or pycolmap.AbsolutePoseEstimationOptions
 # - refinement_options: dict or pycolmap.AbsolutePoseRefinementOptions
 answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera, max_error_px=12.0)
