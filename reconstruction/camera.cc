@@ -93,6 +93,7 @@ void init_camera(py::module& m) {
         .def_property("focal_length", &Camera::FocalLength, &Camera::SetFocalLength)
         .def_property("focal_length_x", &Camera::FocalLengthX, &Camera::SetFocalLengthX)
         .def_property("focal_length_y", &Camera::FocalLengthY, &Camera::SetFocalLengthY)
+        .def_property("has_prior_focal_length", &Camera::HasPriorFocalLength, &Camera::SetPriorFocalLength)
         .def_property("principal_point_x", &Camera::PrincipalPointX, &Camera::SetPrincipalPointX)
         .def_property("principal_point_y", &Camera::PrincipalPointY, &Camera::SetPrincipalPointY)
         .def("focal_length_idxs", &Camera::FocalLengthIdxs,
