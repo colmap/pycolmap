@@ -5,6 +5,8 @@
 #include "colmap/feature/sift.h"
 #include "colmap/feature/matching.h"
 #include "colmap/controllers/incremental_mapper.h"
+#include "colmap/exe/feature.h"
+#include "colmap/exe/sfm.h"
 
 using namespace colmap;
 
@@ -19,35 +21,6 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "helpers.h"
 
-
-// Copied from colmap/exe/features.cc
-// TODO: expose these in headers
-enum class CameraMode { AUTO = 0, SINGLE = 1, PER_FOLDER = 2, PER_IMAGE = 3 };
-void UpdateImageReaderOptionsFromCameraMode(ImageReaderOptions& options,
-                                            CameraMode mode) {
-  switch (mode) {
-    case CameraMode::AUTO:
-      options.single_camera = false;
-      options.single_camera_per_folder = false;
-      options.single_camera_per_image = false;
-      break;
-    case CameraMode::SINGLE:
-      options.single_camera = true;
-      options.single_camera_per_folder = false;
-      options.single_camera_per_image = false;
-      break;
-    case CameraMode::PER_FOLDER:
-      options.single_camera = false;
-      options.single_camera_per_folder = true;
-      options.single_camera_per_image = false;
-      break;
-    case CameraMode::PER_IMAGE:
-      options.single_camera = false;
-      options.single_camera_per_folder = false;
-      options.single_camera_per_image = true;
-      break;
-  }
-}
 
 void import_images(
         const py::object database_path_,
@@ -154,109 +127,6 @@ void verify_matches(
     feature_matcher.Wait();
 }
 
-// Copied from colmap/exe/sfm.cc
-// TODO: split options vs body and expose in header
-Reconstruction RunPointTriangulator(
-    Reconstruction reconstruction,
-    const std::string database_path,
-    const std::string image_path,
-    const std::string output_path,
-    IncrementalMapperOptions mapper_options,
-    const bool clear_points = true
-) {
-    DatabaseCache database_cache;
-    {
-        Database database(database_path);
-
-        const size_t min_num_matches =
-            static_cast<size_t>(mapper_options.min_num_matches);
-        database_cache.Load(database, min_num_matches,
-                            mapper_options.ignore_watermarks,
-                            mapper_options.image_names);
-
-        if (clear_points) {
-            reconstruction.DeleteAllPoints2DAndPoints3D();
-            reconstruction.TranscribeImageIdsToDatabase(database);
-        }
-    }
-
-    CHECK_GE(reconstruction.NumRegImages(), 2)
-        << "Need at least two images for triangulation";
-
-    IncrementalMapper mapper(&database_cache);
-    mapper.BeginReconstruction(&reconstruction);
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Triangulation
-    //////////////////////////////////////////////////////////////////////////////
-    const auto tri_options = mapper_options.Triangulation();
-    const auto& reg_image_ids = reconstruction.RegImageIds();
-    for (size_t i = 0; i < reg_image_ids.size(); ++i) {
-        const image_t image_id = reg_image_ids[i];
-        const auto& image = reconstruction.Image(image_id);
-        //PrintHeading1(StringPrintf("Triangulating image #%d (%d)", image_id, i));
-        const size_t num_existing_points3D = image.NumPoints3D();
-        //std::cout << "  => Image sees " << num_existing_points3D << " / "
-                  //<< image.NumObservations() << " points" << std::endl;
-        mapper.TriangulateImage(tri_options, image_id);
-        //std::cout << "  => Triangulated "
-                  //<< (image.NumPoints3D() - num_existing_points3D) << " points"
-                  //<< std::endl;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Retriangulation
-    //////////////////////////////////////////////////////////////////////////////
-    PrintHeading1("Retriangulation");
-    CompleteAndMergeTracks(mapper_options, &mapper);
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Bundle adjustment
-    //////////////////////////////////////////////////////////////////////////////
-    auto ba_options = mapper_options.GlobalBundleAdjustment();
-    ba_options.refine_focal_length = false;
-    ba_options.refine_principal_point = false;
-    ba_options.refine_extra_params = false;
-    ba_options.refine_extrinsics = false;
-    ba_options.print_summary = false;
-
-    // Configure bundle adjustment.
-    BundleAdjustmentConfig ba_config;
-    for (const image_t image_id : reconstruction.RegImageIds()) {
-        ba_config.AddImage(image_id);
-    }
-
-    for (int i = 0; i < mapper_options.ba_global_max_refinements; ++i) {
-        // Avoid degeneracies in bundle adjustment.
-        reconstruction.FilterObservationsWithNegativeDepth();
-
-        const size_t num_observations = reconstruction.ComputeNumObservations();
-
-        //PrintHeading1("Bundle adjustment");
-        BundleAdjuster bundle_adjuster(ba_options, ba_config);
-        CHECK(bundle_adjuster.Solve(&reconstruction));
-
-        size_t num_changed_observations = 0;
-        num_changed_observations += CompleteAndMergeTracks(mapper_options, &mapper);
-        num_changed_observations += FilterPoints(mapper_options, &mapper);
-        const double changed =
-        static_cast<double>(num_changed_observations) / num_observations;
-        std::cout << StringPrintf("  => Changed observations: %.6f", changed)
-                  << std::endl;
-        if (changed < mapper_options.ba_global_max_refinement_change) {
-            break;
-        }
-    }
-
-    PrintHeading1("Extracting colors");
-    reconstruction.ExtractColorsForAllImages(image_path);
-
-    const bool kDiscardReconstruction = false;
-    mapper.EndReconstruction(kDiscardReconstruction);
-    reconstruction.Write(output_path);
-    return reconstruction;
-}
-
 Reconstruction triangulate_points(
         Reconstruction reconstruction,
         const py::object database_path_,
@@ -273,9 +143,10 @@ Reconstruction triangulate_points(
 
     py::gil_scoped_release release;
     IncrementalMapperOptions mapper_options;
-    return RunPointTriangulator(
+    RunPointTriangulatorImpl(
         reconstruction, database_path, image_path, output_path,
         mapper_options, clear_points);
+    return reconstruction;
 }
 
 // Copied from colmap/exe/sfm.cc
