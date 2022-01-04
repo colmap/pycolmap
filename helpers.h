@@ -1,3 +1,5 @@
+// Author: Philipp Lindenberger (Phil26AT)
+
 #pragma once
 
 #include <pybind11/embed.h>

@@ -1,3 +1,5 @@
+""" Author: Mihai-Dusmanu (mihaidusmanu) """
+
 import os
 import re
 import sys

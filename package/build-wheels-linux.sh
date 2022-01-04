@@ -5,6 +5,8 @@
 # and http://ceres-solver.org/installation.html (Ceres)
 # However, the OS is centOS 7, instead of Ubuntu.
 
+# Author: John Lambert (johnwlambert)
+
 uname -a
 echo "Current CentOS Version:"
 cat /etc/centos-release
