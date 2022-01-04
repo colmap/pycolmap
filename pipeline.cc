@@ -1,3 +1,5 @@
+// Author: Paul-Edouard Sarlin (skydes)
+
 #include "colmap/base/reconstruction.h"
 #include "colmap/base/image_reader.h"
 #include "colmap/base/camera_models.h"

@@ -277,3 +277,5 @@ keypoints, scores, descriptors = pycolmap.extract_sift(img)
 - [ ] Add documentation
 - [ ] Add more detailed examples
 - [ ] Add unit tests for reconstruction bindings
+
+Created and maintained by [Mihai Dusmanu](https://github.com/mihaidusmanu/), [Philipp Lindenberger](https://github.com/Phil26AT), [John Lambert](https://github.com/johnwlambert), [Paul-Edouard Sarlin](https://github.com/Skydes), and other contributors.

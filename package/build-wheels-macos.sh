@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# Author: John Lambert (johnwlambert)
+
 set -x -e
 
 function retry {
