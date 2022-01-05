@@ -1,3 +1,5 @@
+// Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
+
 #include <iostream>
 #include <fstream>
 
