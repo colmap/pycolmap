@@ -193,7 +193,7 @@ answer = pycolmap.homography_matrix_estimation(points2D1, points2D2)
 # Returns: dictionary of estimation outputs
 ```
 
- The options are defined in [`estimators/absolute_pose.cc`](estimators/two_view_geometry.cc#L102-L117) and control how each model is selected. The return dictionary contains the relative pose, inlier mask, as well as the type of camera configuration, such as degenerate or planar. This type is an instance of the enum `pycolmap.TwoViewGeometry` whose values are explained in [`colmap/src/estimators/two_view_geometry.h`](https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L47-L67).
+ The options are defined in [`estimators/two_view_geometry.cc`](estimators/two_view_geometry.cc#L102-L117) and control how each model is selected. The return dictionary contains the relative pose, inlier mask, as well as the type of camera configuration, such as degenerate or planar. This type is an instance of the enum `pycolmap.TwoViewGeometry` whose values are explained in [`colmap/src/estimators/two_view_geometry.h`](https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L47-L67).
 
 ### Camera argument
 
