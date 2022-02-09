@@ -34,7 +34,8 @@ py::dict absolute_pose_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-    //
+    py::gil_scoped_release release;
+
     // Absolute pose estimation.
     Eigen::Vector4d qvec;
     Eigen::Vector3d tvec;
@@ -61,6 +62,7 @@ py::dict absolute_pose_estimation(
     }
 
     // Success output dictionary.
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["qvec"] = qvec;
@@ -120,6 +122,7 @@ py::dict pose_refinement(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
+    py::gil_scoped_release release;
 
     // Absolute pose estimation.
     Eigen::Vector4d qvec_refined = qvec;
@@ -145,6 +148,7 @@ py::dict pose_refinement(
     }
 
     // Success output dictionary.
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["qvec"] = qvec_refined;
