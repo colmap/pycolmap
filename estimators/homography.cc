@@ -31,6 +31,7 @@ py::dict homography_matrix_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
+    py::gil_scoped_release release;
 
     // Estimate planar or panoramic model.
     LORANSAC<
@@ -61,6 +62,7 @@ py::dict homography_matrix_estimation(
     }
 
     // Success output dictionary.
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["H"] = H;

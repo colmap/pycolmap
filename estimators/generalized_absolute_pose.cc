@@ -288,6 +288,7 @@ py::dict rig_absolute_pose_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
+    py::gil_scoped_release release;
 
     std::vector<GP3PEstimator::X_t> points2D_rig;
     std::vector<Eigen::Vector3d> points3D_all;
@@ -361,6 +362,7 @@ py::dict rig_absolute_pose_estimation(
         }
     }
 
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["qvec"] = qvec;

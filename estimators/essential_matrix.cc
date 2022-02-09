@@ -36,6 +36,7 @@ py::dict essential_matrix_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
+    py::gil_scoped_release release;
 
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D1;
@@ -102,6 +103,7 @@ py::dict essential_matrix_estimation(
     }
 
     // Success output dictionary.
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["E"] = E;

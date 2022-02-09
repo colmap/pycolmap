@@ -31,7 +31,7 @@ py::dict fundamental_matrix_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
-
+    py::gil_scoped_release release;
 
     LORANSAC<
         FundamentalMatrixSevenPointEstimator,
@@ -61,6 +61,7 @@ py::dict fundamental_matrix_estimation(
     }
 
     // Success output dictionary.
+    py::gil_scoped_acquire acquire;
     py::dict success_dict;
     success_dict["success"] = true;
     success_dict["F"] = F;

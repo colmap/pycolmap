@@ -36,6 +36,7 @@ py::dict two_view_geometry_estimation(
     // Failure output dictionary.
     py::dict failure_dict;
     failure_dict["success"] = false;
+    py::gil_scoped_release release;
 
     FeatureMatches matches;
     matches.reserve(points2D1.size());
@@ -49,15 +50,9 @@ py::dict two_view_geometry_estimation(
     two_view_geometry.EstimateCalibrated(
             camera1, points2D1, camera2, points2D2, matches, options);
 
-    // Success output dictionary.
-    py::dict success_dict;
-
     if (!two_view_geometry.EstimateRelativePose(camera1, points2D1, camera2, points2D2)) {
         return failure_dict;
-    } else {
-        success_dict["success"] = true;
     }
-
     const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
 
     // Convert vector<char> to vector<int>.
@@ -66,9 +61,12 @@ py::dict two_view_geometry_estimation(
         inliers[m.point2D_idx1] = true;
     }
 
-    // Recover data.
+    // Success output dictionary.
     // See https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L48
     // for a definition of the different configuration types.
+    py::gil_scoped_acquire acquire;
+    py::dict success_dict;
+    success_dict["success"] = true;
     success_dict["configuration_type"] = two_view_geometry.config;
     success_dict["qvec"] = two_view_geometry.qvec;
     success_dict["tvec"] = two_view_geometry.tvec;
