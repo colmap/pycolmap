@@ -20,6 +20,7 @@ namespace py = pybind11;
 #include "helpers.h"
 
 #include "reconstruction/reconstruction.cc"
+#include "reconstruction/correspondence_graph.cc"
 
 void init_reconstruction(py::module &);
 void init_transforms(py::module &);
@@ -76,6 +77,9 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Reconstruction bindings
     init_reconstruction(m);
+
+    // Correspondence graph bindings
+    init_correspondence_graph(m);
 
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
