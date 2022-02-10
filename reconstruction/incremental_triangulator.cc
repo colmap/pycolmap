@@ -37,6 +37,15 @@ void init_incremental_triangulator(py::module& m) {
 
     py::class_<IncrementalTriangulator, std::shared_ptr<IncrementalTriangulator>>(m, "IncrementalTriangulator")
         .def(py::init<CorrespondenceGraph*, Reconstruction*>())
+        .def("triangulate_image", &IncrementalTriangulator::TriangulateImage)
+        .def("complete_image", &IncrementalTriangulator::CompleteImage)
+        .def("complete_all_tracks", &IncrementalTriangulator::CompleteAllTracks)
+        .def("merge_all_tracks", &IncrementalTriangulator::MergeAllTracks)
+        .def("retriangulate", &IncrementalTriangulator::Retriangulate)
+        .def("add_modified_point3D", &IncrementalTriangulator::AddModifiedPoint3D)
+        .def("clear_modified_points3D", &IncrementalTriangulator::ClearModifiedPoints3D)
+        // Missing bindings: CompleteTracks, MergeTracks, GetModifiedPoints3D
+        // Private bindings: Find, Create, Continue, Merge, Complete, HasCameraBogusParams
         .def("__copy__", [](const IncrementalTriangulator& self) { return IncrementalTriangulator(self); })
         .def("__deepcopy__", [](const IncrementalTriangulator& self, py::dict) { return IncrementalTriangulator(self); })
         .def("__repr__", [](const IncrementalTriangulator& self) {
