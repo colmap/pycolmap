@@ -21,6 +21,7 @@ namespace py = pybind11;
 
 #include "reconstruction/reconstruction.cc"
 #include "reconstruction/correspondence_graph.cc"
+#include "reconstruction/incremental_triangulator.cc"
 
 void init_reconstruction(py::module &);
 void init_transforms(py::module &);
@@ -80,6 +81,9 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Correspondence graph bindings
     init_correspondence_graph(m);
+
+    // Incremental triangulator bindings
+    init_incremental_triangulator(m);
 
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
