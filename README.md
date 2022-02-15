@@ -22,7 +22,7 @@ git clone --recursive git@github.com:mihaidusmanu/pycolmap.git
 And finally build PyCOLMAP:
 ```bash
 cd pycolmap
-pip install pycolmap
+pip install .
 ```
 
 ### Windows
