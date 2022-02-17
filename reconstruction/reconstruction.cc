@@ -170,7 +170,8 @@ void init_reconstruction(py::module& m) {
             "Add new image. If Image.IsRegistered()==true, either throw "
             "if check_not_registered, or register image also in reconstr.")
         .def("add_point3D", &Reconstruction::AddPoint3D,
-             "Add new 3D object, and return its unique ID.")
+             "Add new 3D object, and return its unique ID.",
+             py::arg("xyz"), py::arg("track"), py::arg("color") = Eigen::Vector3ub::Zero())
         .def("add_observation", &Reconstruction::AddObservation,
              "Add observation to existing 3D point.")
         .def("merge_points3D", &Reconstruction::MergePoints3D,

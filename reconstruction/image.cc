@@ -84,7 +84,7 @@ void init_image(py::module& m) {
              py::arg("name") = "", py::arg("points2D") = std::vector<Point2D>(),
              py::arg("tvec") = Eigen::Vector3d(0.0, 0.0, 0.0),
              py::arg("qvec") = Eigen::Vector4d(1.0, 0.0, 0.0, 0.0),
-             py::arg("camera_id_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
+             py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
         .def_property("image_id", &Image::ImageId, &Image::SetImageId,
                       "Unique identifier of image.")
         .def_property(

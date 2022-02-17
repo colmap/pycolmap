@@ -109,8 +109,11 @@ void init_camera(py::module& m) {
         .def("params_info", &Camera::ParamsInfo,
              "Get human-readable information about the parameter vector ordering.")
         .def("num_params", &Camera::NumParams, "Number of raw camera parameters.")
-        .def_property("params", overload_cast_<>()(&Camera::Params), &Camera::SetParams,
-                      "Camera parameters.")
+        .def_property(
+            "params",
+            [](Camera& self) {return Eigen::Map<Eigen::VectorXd>(self.ParamsData(), self.NumParams());},
+            &Camera::SetParams,
+            "Camera parameters.")
         .def("params_to_string", &Camera::ParamsToString,
              "Concatenate parameters as comma-separated list.")
         .def("set_params_from_string", &Camera::SetParamsFromString,
