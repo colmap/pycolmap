@@ -130,6 +130,12 @@ void init_reconstruction(py::module& m) {
         .def("num_reg_images", &Reconstruction::NumRegImages)
         .def("num_points3D", &Reconstruction::NumPoints3D)
         .def("num_image_pairs", &Reconstruction::NumImagePairs)
+        .def("camera_mutable", py::overload_cast<colmap::point3D_t>(&Reconstruction::Point3D),
+             py::return_value_policy::reference)
+        .def("image_mutable", py::overload_cast<colmap::point3D_t>(&Reconstruction::Point3D),
+             py::return_value_policy::reference)
+        .def("point3D_mutable", py::overload_cast<colmap::point3D_t>(&Reconstruction::Point3D),
+             py::return_value_policy::reference)
         .def_property_readonly("images", &Reconstruction::Images,
                                py::return_value_policy::reference)
         .def_property_readonly("image_pairs", &Reconstruction::ImagePairs)
