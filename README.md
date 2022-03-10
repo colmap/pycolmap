@@ -63,7 +63,6 @@ for camera_id, camera in reconstruction.cameras.items():
     print(camera_id, camera)
 
 reconstruction.write("path/to/new/reconstruction/")
-reconstruction.export_PLY("path/to/new/reconstruction/reconstruction.ply")
 ```
 
 The object API mirrors the COLMAP C++ library. The bindings support many other operations, for example:
@@ -80,6 +79,33 @@ uv = camera.world_to_image(image.project(point3D.xyz))
 tfm = reconstruction1.align_poses(reconstruction2)  # transforms reconstruction1 in-place
 print(tfm.rotation, tfm.translation)
 ```
+
+
+`pycolmap` also allows exporting models to TXT/NVM//CAM/Bundler/VRML/PLY (also supports `pathlib.Path` inputs).
+`skip_distortion == True` enables exporting more camera models, with the caveat of
+averaging the focal length parameters.
+
+```python
+# Exports reconstruction to COLMAP text format.
+reconstruction.write_text("path/to/new/reconstruction/")
+
+# Exports in NVM format http://ccwu.me/vsfm/doc.html#nvm.
+reconstruction.export_NVM("rec.nvm", skip_distortion=False)
+
+# Creates a <img_name>.cam file for each image with pose/intrinsics information.
+reconstruction.export_CAM("image_dir/", skip_distortion=False)
+
+# Exports in Bundler format https://www.cs.cornell.edu/~snavely/bundler/.
+reconstruction.export_bundler("rec.bundler.out", "rec.list.txt", skip_distortion=False)
+
+# exports 3D points to PLY format.
+reconstruction.export_PLY("rec.ply")
+
+# Exports in VRML format https://en.wikipedia.org/wiki/VRML.
+reconstruction.export_VRML("rec.images.wrl", "rec.points3D.wrl",
+                           image_scale=1.0, image_rgb=[1.0, 0.0, 0.0])
+```
+
 
 ## Estimators
 
