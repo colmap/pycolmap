@@ -69,7 +69,7 @@ yum install -y \
 
 yum install -y \
     --nogpgcheck \
-    --repofrompath=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/ \
+    --repofrompath=springdale,http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/ \
     CGAL-devel
 
 cd $CURRDIR
