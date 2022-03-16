@@ -28,7 +28,7 @@ brew update
 brew upgrade
 brew install wget python cmake || true
 # TODO: try without brew install of boost, but use version below
-brew install git cmake boost eigen freeimage glog gflags suite-sparse ceres-solver glew cgal
+brew install git cmake boost eigen freeimage metis glog gflags suite-sparse ceres-solver glew cgal
 
 brew install llvm libomp
 
