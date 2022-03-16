@@ -103,12 +103,12 @@ echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
 echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 
 # ------ Build FreeImage from source and install ------
-cd $CURRDIR
-wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
-unzip FreeImage3180.zip
-cd FreeImage
-make
-make install
+#cd $CURRDIR
+#wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
+#unzip FreeImage3180.zip
+#cd FreeImage
+#make
+#make install
 
 # ------ Build COLMAP ------
 cd $CURRDIR
