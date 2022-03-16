@@ -67,6 +67,8 @@ yum install -y \
     gflags-devel \
     glew-devel
 
+yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
+
 yum install -y \
     --nogpgcheck \
     --repofrompath=springdale,http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/ \
@@ -89,8 +91,6 @@ ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
-yum install -y suitesparse-devel atlas-devel
-
 git clone https://ceres-solver.googlesource.com/ceres-solver
 cd ceres-solver
 git checkout $(git describe --tags) # Checkout the latest release
