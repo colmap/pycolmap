@@ -60,7 +60,7 @@ cd $CURRDIR
 yum install -y \
     git \
     cmake \
-    gcc gcc-c++ make \  # equivalent to build-essential
+    gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
     glog-devel \
@@ -85,7 +85,7 @@ ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
-yum install suitesparse-devel atlas-devel
+yum install -y suitesparse-devel atlas-devel
 
 git clone https://ceres-solver.googlesource.com/ceres-solver
 cd ceres-solver
