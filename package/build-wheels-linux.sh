@@ -60,7 +60,6 @@ cd $CURRDIR
 yum install \
     git \
     cmake \
-    build-essential \
     libboost-program-options-dev \
     libboost-filesystem-dev \
     libboost-graph-dev \
@@ -73,8 +72,10 @@ yum install \
     libgoogle-glog-dev \
     libgflags-dev \
     libglew-dev \
-    libcgal-dev
-
+    libcgal-dev \
+    gcc \
+    gcc-c++ \
+    make 
 
 # Note: `yum install gflags` will not work, since the version is too old (2.1)
 # Note: `yum install glog` will also not work, since the version is too old
