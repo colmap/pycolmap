@@ -120,7 +120,7 @@ py::dict rig_absolute_pose_estimation(
         const std::vector<Eigen::Vector3d> rig_tvecs,
         RANSACOptions ransac_options,
         AbsolutePoseRefinementOptions refinement_options,
-        bool return_covariance
+        const bool return_covariance
 ) {
     SetPRNGSeed(0);
 
@@ -234,7 +234,8 @@ py::dict rig_absolute_pose_estimation(
         const double min_inlier_ratio,
         const int min_num_trials,
         const int max_num_trials,
-        const double confidence
+        const double confidence,
+        const bool return_covariance
 ) {
 
     RANSACOptions ransac_options;
@@ -248,12 +249,10 @@ py::dict rig_absolute_pose_estimation(
     refinement_options.refine_focal_length = false;
     refinement_options.refine_extra_params = false;
     refinement_options.print_summary = false;
-    const bool kReturnCovariance = false;
 
     return rig_absolute_pose_estimation(
         points2D, points3D, cameras, rig_qvecs, rig_tvecs,
-        ransac_options, refinement_options,
-        kReturnCovariance);
+        ransac_options, refinement_options, return_covariance);
 }
 
 void bind_generalized_absolute_pose_estimation(py::module& m) {
@@ -286,7 +285,7 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
                                  const std::vector<Eigen::Vector4d>,
                                  const std::vector<Eigen::Vector3d>,
                                  const double, const double,
-                                 const int, const int, const double
+                                 const int, const int, const double, const bool
                                  )>(&rig_absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"),
         py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
@@ -295,5 +294,6 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         py::arg("min_num_trials") = est_options.min_num_trials,
         py::arg("max_num_trials") = est_options.max_num_trials,
         py::arg("confidence") = est_options.confidence,
+        py::arg("return_covariance") = false,
         "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 }
