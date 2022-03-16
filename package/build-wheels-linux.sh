@@ -55,7 +55,7 @@ mkdir -p boost && \
 # Boost should now be visible under /usr/local
 ls -ltrh /usr/local
 
-# ------ Install dependencies from the default Ubuntu repositories ------
+# ------ Install dependencies from the default repositories ------
 cd $CURRDIR
 yum install -y \
     git \
@@ -65,7 +65,11 @@ yum install -y \
     metis-devel \
     glog-devel \
     gflags-devel \
-    glew-devel \
+    glew-devel
+
+yum install -y \
+    --nogpgcheck \
+    --repofrompath=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/ \
     CGAL-devel
 
 cd $CURRDIR
