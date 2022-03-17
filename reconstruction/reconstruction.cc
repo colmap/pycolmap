@@ -280,44 +280,86 @@ void init_reconstruction(py::module& m) {
         .def("compute_mean_observations_per_reg_image",
              &Reconstruction::ComputeMeanObservationsPerRegImage)
         .def("compute_mean_reprojection_error", &Reconstruction::ComputeMeanReprojectionError)
-        .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
+        // .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
         .def("import_PLY", overload_cast_<const std::string&>()(&Reconstruction::ImportPLY),
              "Import from PLY format. Note that these import functions are\n"
              "only intended for visualization of data and usable for reconstruction.")
-        .def("export_NVM", &Reconstruction::ExportNVM,
-             "Export reconstruction in NVM format.\n"
-             "WARNING: Can raise fatal error if the file path cannot be opened.")
-        .def("export_bundler", &Reconstruction::ExportBundler,
+        .def("export_NVM",
+            [](const Reconstruction& self, const py::object nvm_path, bool skip_distortion) {
+                std::string path = py::str(nvm_path).cast<std::string>();
+                THROW_CHECK_HAS_FILE_EXTENSION(path, ".nvm");
+                THROW_CHECK_FILE_OPEN(path);
+                self.ExportNVM(path, skip_distortion);
+            }, py::arg("output_path"), py::arg("skip_distortion") = false,
+             "Export reconstruction in NVM format (.nvm).\n\n"
+             "Only supports SIMPLE_RADIAL camera models when exporting\n"
+             "distortion parameters. When skip_distortion == True it supports all camera\n"
+             "models with the caveat that it's using the mean focal length which will be\n"
+             "inaccurate for camera models with two focal lengths and distortion.")
+        .def("export_CAM",
+            [](const Reconstruction& self, const py::object cam_dir, bool skip_distortion) {
+                std::string dir = py::str(cam_dir).cast<std::string>();
+                THROW_CHECK_DIR_EXISTS(dir);
+                self.ExportCam(dir, skip_distortion);
+            }, py::arg("output_dir"), py::arg("skip_distortion") = false,
+             "Exports in CAM format which is a simple text file that contains pose\n"
+             "information and camera intrinsics for each image and exports one file per\n"
+             "image; it does not include information on the 3D points. The format is as\n"
+             "follows (2 lines of text with space separated numbers):\n"
+             "<Tvec; 3 values> <Rotation matrix in row-major format; 9 values>\n"
+             "<focal_length> <k1> <k2> 1.0 <principal point X> <principal point Y>\n"
+             "Note that focal length is relative to the image max(width, height),\n"
+             "and principal points x and y are relative to width and height respectively.\n\n"
+             "Only supports SIMPLE_RADIAL and RADIAL camera models when exporting\n"
+             "distortion parameters. When skip_distortion == True it supports all camera\n"
+             "models with the caveat that it's using the mean focal length which will be\n"
+             "inaccurate for camera models with two focal lengths and distortion.")
+        .def("export_bundler",
+            [](const Reconstruction& self,
+               const py::object bundler_path, const py::object bundler_list_path,
+               bool skip_distortion) {
+                std::string path = py::str(bundler_path).cast<std::string>();
+                std::string list_path = py::str(bundler_list_path).cast<std::string>();
+                THROW_CHECK_HAS_FILE_EXTENSION(path, ".out");
+                THROW_CHECK_HAS_FILE_EXTENSION(list_path, ".txt");
+                THROW_CHECK_FILE_OPEN(path);
+                THROW_CHECK_FILE_OPEN(list_path);
+                self.ExportBundler(path, list_path, skip_distortion);
+            }, py::arg("output_path"), py::arg("list_path"),
+               py::arg("skip_distortion") = false,
              "Export reconstruction in Bundler format.\n"
-             "WARNING: Can raise fatal error if the file paths cannot be opened.")
+             "Supports SIMPLE_PINHOLE, PINHOLE, SIMPLE_RADIAL and RADIAL camera models\n"
+             "when exporting distortion parameters. When skip_distortion == True it\n"
+             "supports all camera models with the caveat that it's using the mean focal\n"
+             "length which will be inaccurate for camera models with two focal lengths\n"
+             "and distortion.")
         .def(
             "export_PLY",
-            [](const Reconstruction& self, const std::string& path) {
-                std::ofstream file(path, std::ios::trunc);
-                THROW_CUSTOM_CHECK_MSG(file.is_open(), std::invalid_argument,
-                                       (std::string(": Could not open ") + path).c_str());
-                file.close();
+            [](const Reconstruction& self, const py::object ply_path) {
+                std::string path = py::str(ply_path).cast<std::string>();
+                THROW_CHECK_HAS_FILE_EXTENSION(path, ".ply");
+                THROW_CHECK_FILE_OPEN(path);
                 self.ExportPLY(path);
-            },
-            "Export reconstruction in PLY format.")
+            }, py::arg("output_path"),
+            "Export 3D points to PLY format (.ply).")
         .def(
             "export_VRML",
-            [](const Reconstruction& self, const std::string& images_path,
-               const std::string& points3D_path, const double image_scale,
+            [](const Reconstruction& self, const py::object images_path,
+               const py::object points3D_path, const double image_scale,
                const Eigen::Vector3d& image_rgb) {
-                std::ofstream image_file(images_path, std::ios::trunc);
-                THROW_CUSTOM_CHECK_MSG(image_file.is_open(), std::invalid_argument,
-                                       (std::string(": Could not open ") + images_path).c_str());
-                image_file.close();
-
-                std::ofstream p3D_file(points3D_path, std::ios::trunc);
-                THROW_CUSTOM_CHECK_MSG(p3D_file.is_open(), std::invalid_argument,
-                                       (std::string(": Could not open ") + points3D_path).c_str());
-                p3D_file.close();
-
-                self.ExportVRML(images_path, points3D_path, image_scale, image_rgb);
+                std::string img_path = py::str(images_path).cast<std::string>();
+                std::string p3D_path = py::str(points3D_path).cast<std::string>();
+                THROW_CHECK_FILE_OPEN(img_path);
+                THROW_CHECK_FILE_OPEN(p3D_path);
+                THROW_CHECK_HAS_FILE_EXTENSION(img_path, ".wrl");
+                THROW_CHECK_HAS_FILE_EXTENSION(p3D_path, ".wrl");
+                self.ExportVRML(img_path, p3D_path, image_scale, image_rgb);
             },
-            "Export reconstruction in VRML format.")
+            py::arg("images_path"),
+            py::arg("points3D_path"),
+            py::arg("image_scale") = 1.0,
+            py::arg("image_rgb") = Eigen::Vector3d(1,0,0),
+            "Export reconstruction in VRML format (.wrl).")
         .def("extract_colors_for_image", &Reconstruction::ExtractColorsForImage,
              "Extract colors for 3D points of given image. Colors will be extracted\n"
              "only for 3D points which are completely black.\n\n"

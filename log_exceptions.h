@@ -115,3 +115,12 @@ void __ThrowCheckOpImpl(const char* file, const int line, const bool result, con
 
 #define THROW_CHECK_DIR_EXISTS(path) \
     THROW_CHECK_MSG(ExistsDir(path), std::string("Directory ") + path + " does not exist.");
+
+#define THROW_CHECK_FILE_OPEN(path) \
+    THROW_CHECK_MSG(std::ofstream(path, std::ios::trunc).is_open(), \
+    std::string(": Could not open ") + path + \
+    ". Is the path a directory or does the parent dir not exist?");
+
+#define THROW_CHECK_HAS_FILE_EXTENSION(path, ext) \
+    THROW_CHECK_MSG(HasFileExtension(path,ext), \
+    std::string("Path ") + path + " does not match file extension " + ext + ".");
