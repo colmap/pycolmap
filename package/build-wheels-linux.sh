@@ -93,7 +93,7 @@ ls -ltrh "$EIGEN_DIR/cmake/"
 cd $CURRDIR
 git clone https://ceres-solver.googlesource.com/ceres-solver
 cd ceres-solver
-git checkout 2.1.0rc1
+git checkout $(git describe --tags) # Checkout the latest release
 mkdir build
 cd build
 cmake .. -DBUILD_TESTING=OFF \
