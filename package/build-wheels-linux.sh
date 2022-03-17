@@ -40,7 +40,7 @@ echo "Num. processes to use for building: ${nproc}"
 
 # ------ Install boost (build it staticly) ------
 cd $CURRDIR
-yum install -y wget libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
+yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
 
 # Download and install Boost-1.65.1
 # colmap needs only program_options filesystem graph system unit_test_framework
@@ -55,30 +55,24 @@ mkdir -p boost && \
 # Boost should now be visible under /usr/local
 ls -ltrh /usr/local
 
-# ------ Install dependencies from the default Ubuntu repositories ------
+# ------ Install dependencies from the default repositories ------
 cd $CURRDIR
-yum install \
+yum install -y \
     git \
     cmake \
-    build-essential \
-    libboost-program-options-dev \
-    libboost-filesystem-dev \
-    libboost-graph-dev \
-    libboost-system-dev \
-    libboost-test-dev \
-    libeigen3-dev \
-    libsuitesparse-dev \
-    libfreeimage-dev \
-    libgoogle-glog-dev \
-    libgflags-dev \
-    libglew-dev \
-    libcgal-dev
+    gcc gcc-c++ make \
+    freeimage-devel \
+    metis-devel \
+    glog-devel \
+    gflags-devel \
+    glew-devel
 
+yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
 
-# Note: `yum install gflags` will not work, since the version is too old (2.1)
-# Note: `yum install glog` will also not work, since the version is too old
-# Cloning and building https://github.com/google/glog.git will also not work, due to linker issues.
-yum -y install gflags-devel glog-devel
+# Disable CGAL since it pulls many dependencies and increases the wheel size
+#yum install -y yum-utils
+#yum-config-manager --add-repo=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/
+#yum install -y --nogpgcheck CGAL-devel
 
 cd $CURRDIR
 # Using Eigen 3.3, not Eigen 3.4
@@ -97,10 +91,6 @@ ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
-yum install libeigen3-dev # was not in COLMAP instructions
-yum install libatlas-base-dev libsuitesparse-dev
-yum install libgoogle-glog-dev libgflags-dev # was not in COLMAP instructions
-
 git clone https://ceres-solver.googlesource.com/ceres-solver
 cd ceres-solver
 git checkout $(git describe --tags) # Checkout the latest release
@@ -116,38 +106,13 @@ echo "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}"
 echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
 echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 
-# ------ Fix broken dependencies ------
-cd $CURRDIR
-# try new boost install
-yum install libboost-all-dev
-yum install git
-yum install cmake
-yum install build-essential
-yum install libboost-program-options-dev
-yum install libboost-filesystem-dev
-yum install libboost-graph-dev
-yum install libboost-system-dev
-yum install libboost-test-dev
-yum install libeigen3-dev
-yum install libsuitesparse-dev
-# yum install libfreeimage-dev
-yum install libgoogle-glog-dev
-yum install libgflags-dev
-yum install libglew-dev
-yum install libcgal-dev
-
-yum -y install freeimage
-
 # ------ Build FreeImage from source and install ------
-cd $CURRDIR
-wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
-unzip FreeImage3180.zip
-cd FreeImage
-make
-make install
-
-# Install GLEW
-yum -y install glew-devel
+#cd $CURRDIR
+#wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
+#unzip FreeImage3180.zip
+#cd FreeImage
+#make
+#make install
 
 # ------ Build COLMAP ------
 cd $CURRDIR
