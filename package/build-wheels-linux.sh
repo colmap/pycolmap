@@ -64,14 +64,14 @@ yum install -y \
     freeimage-devel \
     metis-devel \
     glog-devel \
-    gflags-devel \
-    glew-devel
+    gflags-devel
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
 
-yum install -y yum-utils
-yum-config-manager --add-repo=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/
-yum install -y --nogpgcheck CGAL-devel
+# Disable CGAL since it pulls many dependencies and increases the wheel size
+#yum install -y yum-utils
+#yum-config-manager --add-repo=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/
+#yum install -y --nogpgcheck CGAL-devel
 
 cd $CURRDIR
 # Using Eigen 3.3, not Eigen 3.4
