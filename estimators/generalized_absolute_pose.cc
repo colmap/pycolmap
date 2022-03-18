@@ -13,10 +13,6 @@
 #include "colmap/estimators/pose.h"
 #include "colmap/estimators/generalized_absolute_pose.h"
 
-#include "colmap/base/camera_models.h"
-#include "colmap/optim/bundle_adjustment.h"
-#include "colmap/base/cost_functions.h"
-
 using namespace colmap;
 
 #include <pybind11/pybind11.h>
@@ -47,156 +43,6 @@ const bool lowerVector3d(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2) {
 
 const bool equalVector3d(const Eigen::Vector3d& v1, const Eigen::Vector3d& v2) {
   return ((v1 - v2).norm() < TOL);
-}
-
-bool RefineGeneralizedAbsolutePose(
-                        const AbsolutePoseRefinementOptions& options,
-                        const std::vector<char>& inlier_mask,
-                        const std::vector<Eigen::Vector2d>& points2D,
-                        const std::vector<Eigen::Vector3d>& points3D,
-                        const std::vector<size_t>& camera_idxs,
-                        const std::vector<Eigen::Vector4d>& rig_qvecs,
-                        const std::vector<Eigen::Vector3d>& rig_tvecs,
-                        Eigen::Vector4d* qvec, Eigen::Vector3d* tvec,
-                        std::vector<Camera>* cameras) {
-  THROW_CHECK_EQ(points2D.size(), inlier_mask.size());
-  THROW_CHECK_EQ(points2D.size(), points3D.size());
-  THROW_CHECK_EQ(points2D.size(), camera_idxs.size());
-  THROW_CHECK_EQ(rig_qvecs.size(), rig_tvecs.size());
-  THROW_CHECK_EQ(rig_qvecs.size(), cameras->size());
-  THROW_CHECK_GE(*std::min_element(camera_idxs.begin(), camera_idxs.end()), 0);
-  THROW_CHECK_LT(*std::max_element(camera_idxs.begin(), camera_idxs.end()), cameras->size());
-  options.Check();
-
-  ceres::LossFunction* loss_function =
-      new ceres::CauchyLoss(options.loss_function_scale);
-
-  std::vector<double*> cameras_params_data;
-  for (size_t i = 0; i < cameras->size(); i++) {
-    cameras_params_data.push_back(cameras->at(i).ParamsData());
-  }
-  std::vector<size_t> camera_counts(cameras->size(), 0);
-  double* qvec_data = qvec->data();
-  double* tvec_data = tvec->data();
-
-  std::vector<Eigen::Vector3d> points3D_copy = points3D;
-  std::vector<Eigen::Vector4d> rig_qvecs_copy = rig_qvecs;
-  std::vector<Eigen::Vector3d> rig_tvecs_copy = rig_tvecs;
-
-  ceres::Problem problem;
-
-  for (size_t i = 0; i < points2D.size(); ++i) {
-    // Skip outlier observations
-    if (!inlier_mask[i]) {
-      continue;
-    }
-    size_t camera_idx = camera_idxs[i];
-    camera_counts[camera_idx] += 1;
-
-    ceres::CostFunction* cost_function = nullptr;
-    switch (cameras->at(camera_idx).ModelId()) {
-#define CAMERA_MODEL_CASE(CameraModel)                                  \
-  case CameraModel::kModelId:                                           \
-    cost_function =                                                     \
-        RigBundleAdjustmentCostFunction<CameraModel>::Create(points2D[i]); \
-    break;
-
-      CAMERA_MODEL_SWITCH_CASES
-
-#undef CAMERA_MODEL_CASE
-    }
-
-    problem.AddResidualBlock(cost_function, loss_function,
-                             qvec_data, tvec_data,
-                             rig_qvecs_copy[camera_idx].data(),
-                             rig_tvecs_copy[camera_idx].data(),
-                             points3D_copy[i].data(),
-                             cameras_params_data[camera_idx]);
-    problem.SetParameterBlockConstant(points3D_copy[i].data());
-  }
-
-  if (problem.NumResiduals() > 0) {
-    // Quaternion parameterization.
-    *qvec = NormalizeQuaternion(*qvec);
-    ceres::LocalParameterization* quaternion_parameterization =
-        new ceres::QuaternionParameterization;
-    problem.SetParameterization(qvec_data, quaternion_parameterization);
-
-    // Camera parameterization.
-    for (size_t i = 0; i < cameras->size(); i++) {
-      if (camera_counts[i] == 0)
-        continue;
-      Camera& camera = cameras->at(i);
-
-      // We don't optimize the rig parameters (it's likely very unconstrainted)
-      problem.SetParameterBlockConstant(rig_qvecs_copy[i].data());
-      problem.SetParameterBlockConstant(rig_tvecs_copy[i].data());
-
-      if (!options.refine_focal_length && !options.refine_extra_params) {
-        problem.SetParameterBlockConstant(camera.ParamsData());
-      } else {
-        // Always set the principal point as fixed.
-        std::vector<int> camera_params_const;
-        const std::vector<size_t>& principal_point_idxs =
-            camera.PrincipalPointIdxs();
-        camera_params_const.insert(camera_params_const.end(),
-                                   principal_point_idxs.begin(),
-                                   principal_point_idxs.end());
-
-        if (!options.refine_focal_length) {
-          const std::vector<size_t>& focal_length_idxs =
-              camera.FocalLengthIdxs();
-          camera_params_const.insert(camera_params_const.end(),
-                                     focal_length_idxs.begin(),
-                                     focal_length_idxs.end());
-        }
-
-        if (!options.refine_extra_params) {
-          const std::vector<size_t>& extra_params_idxs =
-              camera.ExtraParamsIdxs();
-          camera_params_const.insert(camera_params_const.end(),
-                                     extra_params_idxs.begin(),
-                                     extra_params_idxs.end());
-        }
-
-        if (camera_params_const.size() == camera.NumParams()) {
-          problem.SetParameterBlockConstant(camera.ParamsData());
-        } else {
-          ceres::SubsetParameterization* camera_params_parameterization =
-              new ceres::SubsetParameterization(
-                  static_cast<int>(camera.NumParams()), camera_params_const);
-          problem.SetParameterization(camera.ParamsData(),
-                                      camera_params_parameterization);
-        }
-      }
-    }
-  }
-
-  ceres::Solver::Options solver_options;
-  solver_options.gradient_tolerance = options.gradient_tolerance;
-  solver_options.max_num_iterations = options.max_num_iterations;
-  solver_options.linear_solver_type = ceres::DENSE_QR;
-  //solver_options.minimizer_progress_to_stdout = true;  // fixme
-
-  // The overhead of creating threads is too large.
-  solver_options.num_threads = 1;
-#if CERES_VERSION_MAJOR < 2
-  solver_options.num_linear_solver_threads = 1;
-#endif  // CERES_VERSION_MAJOR
-
-  ceres::Solver::Summary summary;
-  ceres::Solve(solver_options, &problem, &summary);
-
-  if (solver_options.minimizer_progress_to_stdout) {
-    std::cout << std::endl;
-  }
-
-  if (options.print_summary) {
-    PrintHeading2("Pose refinement report");
-    PrintSolverSummary(summary);
-  }
-
-  return summary.IsSolutionUsable();
 }
 
 // Measure the support of a model by counting the number of unique inliers (e.g.,
@@ -273,7 +119,8 @@ py::dict rig_absolute_pose_estimation(
         const std::vector<Eigen::Vector4d> rig_qvecs,
         const std::vector<Eigen::Vector3d> rig_tvecs,
         RANSACOptions ransac_options,
-        AbsolutePoseRefinementOptions refinement_options
+        AbsolutePoseRefinementOptions refinement_options,
+        const bool return_covariance
 ) {
     SetPRNGSeed(0);
 
@@ -344,11 +191,13 @@ py::dict rig_absolute_pose_estimation(
     Eigen::Vector4d qvec = RotationMatrixToQuaternion(report.model.leftCols<3>());
 
     // Absolute pose refinement.
+    Eigen::Matrix<double, 6, 6> covariance;
     if (!RefineGeneralizedAbsolutePose(
           refinement_options, report.inlier_mask,
           points2D_all, points3D_all, camera_idxs,
           rig_qvecs, rig_tvecs, &qvec, &tvec,
-          const_cast<std::vector<Camera>*>(&cameras))) {
+          const_cast<std::vector<Camera>*>(&cameras),
+          return_covariance ? &covariance : nullptr)) {
         return failure_dict;
     }
 
@@ -369,6 +218,8 @@ py::dict rig_absolute_pose_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = report.support.num_unique_inliers;
     success_dict["inliers"] = inliers;
+    if (return_covariance)
+        success_dict["covariance"] = covariance;
 
     return success_dict;
 }
@@ -383,7 +234,8 @@ py::dict rig_absolute_pose_estimation(
         const double min_inlier_ratio,
         const int min_num_trials,
         const int max_num_trials,
-        const double confidence
+        const double confidence,
+        const bool return_covariance
 ) {
 
     RANSACOptions ransac_options;
@@ -400,7 +252,7 @@ py::dict rig_absolute_pose_estimation(
 
     return rig_absolute_pose_estimation(
         points2D, points3D, cameras, rig_qvecs, rig_tvecs,
-        ransac_options, refinement_options);
+        ransac_options, refinement_options, return_covariance);
 }
 
 void bind_generalized_absolute_pose_estimation(py::module& m) {
@@ -415,12 +267,14 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
                                  const std::vector<Eigen::Vector4d>,
                                  const std::vector<Eigen::Vector3d>,
                                  const RANSACOptions,
-                                 const AbsolutePoseRefinementOptions
+                                 const AbsolutePoseRefinementOptions,
+                                 bool
                                  )>(&rig_absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"),
         py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
         py::arg("estimation_options") = est_options,
         py::arg("refinement_options") = ref_options,
+        py::arg("return_covariance") = false,
         "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 
     m.def(
@@ -431,7 +285,7 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
                                  const std::vector<Eigen::Vector4d>,
                                  const std::vector<Eigen::Vector3d>,
                                  const double, const double,
-                                 const int, const int, const double
+                                 const int, const int, const double, const bool
                                  )>(&rig_absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"),
         py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
@@ -440,5 +294,6 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         py::arg("min_num_trials") = est_options.min_num_trials,
         py::arg("max_num_trials") = est_options.max_num_trials,
         py::arg("confidence") = est_options.confidence,
+        py::arg("return_covariance") = false,
         "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 }

@@ -24,7 +24,8 @@ py::dict absolute_pose_estimation(
         const std::vector<Eigen::Vector3d> points3D,
         Camera& camera,
         const AbsolutePoseEstimationOptions estimation_options,
-        const AbsolutePoseRefinementOptions refinement_options
+        const AbsolutePoseRefinementOptions refinement_options,
+        const bool return_covariance
 ) {
     SetPRNGSeed(0);
 
@@ -47,7 +48,9 @@ py::dict absolute_pose_estimation(
     }
 
     // Absolute pose refinement.
-    if (!RefineAbsolutePose(refinement_options, inlier_mask, points2D, points3D, &qvec, &tvec, &camera)) {
+    Eigen::Matrix<double, 6, 6> covariance;
+    if (!RefineAbsolutePose(refinement_options, inlier_mask, points2D, points3D, &qvec, &tvec, &camera,
+                            return_covariance ? &covariance : nullptr)) {
         return failure_dict;
     }
 
@@ -69,6 +72,8 @@ py::dict absolute_pose_estimation(
     success_dict["tvec"] = tvec;
     success_dict["num_inliers"] = num_inliers;
     success_dict["inliers"] = inliers;
+    if (return_covariance)
+        success_dict["covariance"] = covariance;
 
     return success_dict;
 }
@@ -81,7 +86,8 @@ py::dict absolute_pose_estimation(
         const double min_inlier_ratio,
         const int min_num_trials,
         const int max_num_trials,
-        const double confidence
+        const double confidence,
+        const bool return_covariance
 ) {
     // Absolute pose estimation parameters.
     AbsolutePoseEstimationOptions abs_pose_options;
@@ -100,7 +106,7 @@ py::dict absolute_pose_estimation(
 
     return absolute_pose_estimation(
             points2D, points3D, camera,
-            abs_pose_options, abs_pose_refinement_options);
+            abs_pose_options, abs_pose_refinement_options, return_covariance);
 }
 
 
@@ -201,11 +207,13 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
                                  const std::vector<Eigen::Vector3d>,
                                  Camera&,
                                  const AbsolutePoseEstimationOptions,
-                                 const AbsolutePoseRefinementOptions
+                                 const AbsolutePoseRefinementOptions,
+                                 bool
                                  )>(&absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
         py::arg("estimation_options") = est_options,
         py::arg("refinement_options") = ref_options,
+        py::arg("return_covariance") = false,
         "Absolute pose estimation with non-linear refinement.");
 
     m.def(
@@ -214,7 +222,7 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
                                  const std::vector<Eigen::Vector3d>,
                                  Camera&,
                                  const double, const double,
-                                 const int, const int, const double
+                                 const int, const int, const double, const bool
                                  )>(&absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
         py::arg("max_error_px") = est_options.ransac_options.max_error,
@@ -222,6 +230,7 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
         py::arg("min_num_trials") = est_options.ransac_options.min_num_trials,
         py::arg("max_num_trials") = est_options.ransac_options.max_num_trials,
         py::arg("confidence") = est_options.ransac_options.confidence,
+        py::arg("return_covariance") = false,
         "Absolute pose estimation with non-linear refinement.");
 
     m.def(
