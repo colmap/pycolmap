@@ -176,3 +176,53 @@ inline void make_dataclass(py::class_<T> cls) {
         return dict;
     });
 }
+
+
+// Catch python keyboard interrupts
+
+/* 
+// single
+if (PyInterrupt().Raised()) {
+    // stop the execution and raise an exception
+    throw py::error_already_set();
+}
+
+// loop
+PyInterrupt py_interrupt = PyInterrupt(2.0)
+for (...) {
+    if (py_interrupt.Raised()) {
+        // stop the execution and raise an exception
+        throw py::error_already_set();
+    }
+    // Do your workload here
+}
+
+
+*/
+struct PyInterrupt {
+  using clock = std::chrono::steady_clock;
+  using sec = std::chrono::duration<double>;
+  PyInterrupt(double gap = -1.0);
+
+  inline bool Raised();
+
+ private:
+  std::mutex mutex_;
+  bool found = false;
+  colmap::Timer timer_;
+  clock::time_point start;
+  double gap_;
+};
+
+PyInterrupt::PyInterrupt(double gap) : gap_(gap), start(clock::now()) {}
+
+bool PyInterrupt::Raised() {
+  const sec duration = clock::now() - start;
+  if (!found && duration.count() > gap_) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    py::gil_scoped_acquire acq;
+    found = (PyErr_CheckSignals() != 0);
+    start = clock::now();
+  }
+  return found;
+}

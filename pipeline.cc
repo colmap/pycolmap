@@ -54,7 +54,12 @@ void import_images(
     Database database(options.database_path);
     ImageReader image_reader(options, &database);
 
+    PyInterrupt py_interrupt(2.0);
+
     while (image_reader.NextIndex() < image_reader.NumImages()) {
+        if (py_interrupt.Raised()) {
+            throw py::error_already_set();
+        }
         Camera camera;
         Image image;
         Bitmap bitmap;
@@ -192,6 +197,14 @@ std::map<size_t, Reconstruction> incremental_mapping(
                 reconstruction.Write(reconstruction_path);
                 reconstructions[prev_num_reconstructions] = reconstruction;
                 prev_num_reconstructions = reconstruction_manager.Size();
+            }
+    });
+
+    PyInterrupt py_interrupt(1.0); // Check for interrupts every 2 seconds
+    mapper.AddCallback(
+        IncrementalMapperController::NEXT_IMAGE_REG_CALLBACK, [&]() {
+            if (py_interrupt.Raised()) {
+                throw py::error_already_set();
             }
     });
 
