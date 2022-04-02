@@ -17,6 +17,7 @@ namespace py = pybind11;
 #include "transformations.cc"
 #include "sift.cc"
 #include "pipeline.cc"
+#include "mvs.cc"
 #include "helpers.h"
 
 #include "reconstruction/reconstruction.cc"
@@ -93,6 +94,8 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Main reconstruction steps
     init_pipeline(m);
+
+    init_mvs(m);
 
     py::add_ostream_redirect(m, "ostream");
 }

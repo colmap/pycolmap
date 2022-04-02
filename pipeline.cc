@@ -4,6 +4,7 @@
 #include "colmap/base/image_reader.h"
 #include "colmap/base/camera_models.h"
 #include "colmap/util/misc.h"
+#include "colmap/feature/extraction.h"
 #include "colmap/feature/sift.h"
 #include "colmap/feature/matching.h"
 #include "colmap/controllers/incremental_mapper.h"
@@ -22,6 +23,133 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 #include "helpers.h"
+
+
+bool VerifyCameraParams(const std::string& camera_model,
+                        const std::string& params) {
+  if (!ExistsCameraModelWithName(camera_model)) {
+    std::cerr << "ERROR: Camera model does not exist" << std::endl;
+    return false;
+  }
+
+  const std::vector<double> camera_params = CSVToVector<double>(params);
+  const int camera_model_id = CameraModelNameToId(camera_model);
+
+  if (camera_params.size() > 0 &&
+      !CameraModelVerifyParams(camera_model_id, camera_params)) {
+    std::cerr << "ERROR: Invalid camera parameters" << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool VerifySiftGPUParams(const bool use_gpu) {
+#ifndef CUDA_ENABLED
+  if (use_gpu) {
+    std::cerr << "ERROR: Cannot use Sift GPU without CUDA or OpenGL support; "
+                 "set SiftExtraction.use_gpu or SiftMatching.use_gpu to false."
+              << std::endl;
+    return false;
+  }
+#endif
+  return true;
+}
+
+
+void extract_features(std::string image_path, std::string database_path,
+                      std::string image_list_path,
+                      std::string camera_model, bool use_gpu, bool verbose) {
+  #ifndef CUDA_ENABLED
+    THROW_EXCEPTION(std::runtime_error, 
+                    "ERROR: Dense stereo reconstruction requires CUDA, which is not "
+                    "available on your system.")
+    return;
+  #endif   // CUDA_ENABLED
+
+  std::string descriptor_normalization = "l1_root";
+  int camera_mode = -1;
+
+  ImageReaderOptions reader_options;
+  SiftExtractionOptions sift_extraction;
+  sift_extraction.use_gpu = use_gpu;
+
+  reader_options.database_path = database_path;
+  reader_options.image_path = image_path;
+  reader_options.camera_model = camera_model;
+
+  if (camera_mode >= 0) {
+    UpdateImageReaderOptionsFromCameraMode(reader_options,
+                                           (CameraMode)camera_mode);
+  }
+
+  StringToLower(&descriptor_normalization);
+  if (descriptor_normalization == "l1_root") {
+    sift_extraction.normalization =
+      SiftExtractionOptions::Normalization::L1_ROOT;
+  } else if (descriptor_normalization == "l2") {
+    sift_extraction.normalization =
+      SiftExtractionOptions::Normalization::L2;
+  } else {
+    std::cerr << "ERROR: Invalid `descriptor_normalization`"
+              << std::endl;
+    return;
+  }
+
+  if (!image_list_path.empty()) {
+    reader_options.image_list = ReadTextFileLines(image_list_path);
+    if (reader_options.image_list.empty()) {
+      std::cerr << "No Image found." << std::endl;
+      return;
+    }
+  }
+
+  THROW_CHECK(ExistsCameraModelWithName(reader_options.camera_model));
+
+  THROW_CHECK(VerifyCameraParams(reader_options.camera_model,
+                                 reader_options.camera_params));
+
+  std::stringstream oss;
+  std::streambuf* oldcerr = nullptr;
+  std::streambuf* oldcout = nullptr;
+  if (!verbose) {
+    oldcout = std::cout.rdbuf( oss.rdbuf() );
+  }
+
+  SiftFeatureExtractor feature_extractor(reader_options,
+                                         sift_extraction);
+
+  feature_extractor.Start();
+  feature_extractor.Wait();
+
+  if (!verbose) {
+    std::cout.rdbuf(oldcout);
+  }
+}
+
+    
+void match_exhaustive(std::string database_path, bool use_gpu, bool verbose) {
+  ExhaustiveMatchingOptions exhaustive_matching;
+  SiftMatchingOptions sift_matching;
+  sift_matching.use_gpu = use_gpu;
+
+  ExhaustiveFeatureMatcher feature_matcher(exhaustive_matching,
+                                           sift_matching,
+                                           database_path);
+
+  std::stringstream oss;
+  std::streambuf* oldcerr = nullptr;
+  std::streambuf* oldcout = nullptr;
+  if (!verbose) {
+    oldcout = std::cout.rdbuf( oss.rdbuf() );
+  }
+
+  feature_matcher.Start();
+  feature_matcher.Wait();
+
+  if (!verbose) {
+    std::cout.rdbuf(oldcout);
+  }
+}
 
 
 void import_images(
@@ -352,4 +480,9 @@ void init_pipeline(py::module& m) {
           &infer_camera_from_image,
           py::arg("image_path"),
           "Guess the camera parameters from the EXIF metadata");
+    
+    
+    m.def("extract_features", &extract_features);
+    m.def("match_exhaustive", &match_exhaustive);
+    m.def("import_matches", &import_matches);
 }
