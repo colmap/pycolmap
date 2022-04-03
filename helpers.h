@@ -102,6 +102,8 @@ inline void make_dataclass(py::class_<T> cls) {
                     <<py::str(ex.value()).cast<std::string>()<<std::endl;
                     throw;
                 } else {
+                    std::cerr<<"Internal Error: "
+                    <<py::str(ex.value()).cast<std::string>()<<std::endl;
                     throw;
                 }
             }
@@ -225,4 +227,22 @@ bool PyInterrupt::Raised() {
     start = clock::now();
   }
   return found;
+}
+
+enum class Device {
+    AUTO = -1,
+    CPU = 0,
+    CUDA = 1
+};
+
+bool IsGPU(Device device) {
+    if (device == Device::AUTO) {
+        #ifdef CUDA_ENABLED
+        return true;
+        #else
+        return false;
+        #endif
+    } else {
+        return static_cast<bool>(device);
+    }
 }

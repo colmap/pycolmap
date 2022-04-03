@@ -35,6 +35,14 @@ PYBIND11_MODULE(pycolmap, m) {
     m.attr("__version__") = py::str("dev");
 #endif
 
+    auto PyDevice = py::enum_<Device>(m, "Device")
+        .value("auto", Device::AUTO)
+        .value("cpu", Device::CPU)
+        .value("cuda", Device::CUDA);
+    AddStringToEnumConstructor(PyDevice);
+
+    m.attr("has_cuda") = IsGPU(Device::AUTO);
+
     // Estimators
     auto PyRANSACOptions = py::class_<RANSACOptions>(m, "RANSACOptions")
         .def(py::init<>([]() {
