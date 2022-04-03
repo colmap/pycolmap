@@ -28,49 +28,16 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "helpers.h"
 
-void import_matches(std::string database_path, std::string match_list_path,
-                    std::string match_type, bool use_gpu, bool verbose) {
-  SiftMatchingOptions sift_matching;
-  sift_matching.use_gpu = use_gpu;
-
-  std::unique_ptr<Thread> feature_matcher;
-  if (match_type == "pairs") {
-    ImagePairsMatchingOptions matcher_options;
-    matcher_options.match_list_path = match_list_path;
-    feature_matcher.reset(new ImagePairsFeatureMatcher(
-        matcher_options, sift_matching, database_path));
-  } else if (match_type == "raw" || match_type == "inliers") {
-    FeaturePairsMatchingOptions matcher_options;
-    matcher_options.match_list_path = match_list_path;
-    matcher_options.verify_matches = match_type == "raw";
-    feature_matcher.reset(new FeaturePairsFeatureMatcher(
-        matcher_options, sift_matching, database_path));
-  } else {
-    std::cerr << "ERROR: Invalid `match_type`";
-    return;
-  }
-
-  std::stringstream oss;
-  std::streambuf* oldcerr = nullptr;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    // oldcerr = std::cerr.rdbuf( oss.rdbuf() );
-    oldcout = std::cout.rdbuf( oss.rdbuf() );
-  }
-
-  feature_matcher->Start();
-  feature_matcher->Wait();
-
-  if (!verbose) {
-    // std::cerr.rdbuf(oldcerr);
-    std::cout.rdbuf(oldcout);
-  }
-}
-
 
 // bsub -W 03:59 -n 128 -R "rusage[mem=3000, ngpus_excl_p=1]" python -m pixsfm.eval.TT.run --scenes Ignatius --config mvs --overwrite
 void patch_match_stereo(std::string workspace_path, std::string workspace_format,
                         bool geom_consistency, bool verbose) {
+  #ifndef CUDA_ENABLED
+    THROW_EXCEPTION(std::runtime_error,
+                    "ERROR: Dense stereo reconstruction requires CUDA, which is not "
+                    "available on your system.")
+    return;
+  #endif   // CUDA_ENABLED
   std::string pmvs_option_name = "option-all";
   std::string config_path = "";
 
@@ -143,7 +110,6 @@ int stereo_fusion(std::string workspace_path, std::string output_path,
     }
   }
 
-//  bsub -W 03:59 -n 128 -R "rusage[mem=3000, ngpus_excl_p=1]" python -m pixsfm.eval.TT.run --scenes Ignatius --config mvs --overwrite
   mvs::StereoFusion fuser(options, workspace_path,
                           workspace_format, pmvs_option_name, input_type);
 
