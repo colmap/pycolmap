@@ -33,13 +33,12 @@ void match_features(py::object database_path_,
                     bool verbose) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
-
   try {
     py::cast(matching_options).attr("check").attr("__call__")();
   } catch (py::error_already_set& ex) {
-    if (!ex.matches(PyExc_AttributeError) &&
-        !ex.matches(PyExc_SystemError)) {
-      throw;
+    // Allow pass if no check function defined.
+    if (!ex.matches(PyExc_AttributeError)) {
+      throw ex;
     }
   }
 
@@ -58,7 +57,7 @@ void match_features(py::object database_path_,
   }
 
   feature_matcher.Start();
-  feature_matcher.Wait();
+  PyWait(&feature_matcher);
 
   if (!verbose) {
     std::cout.rdbuf(oldcout);
@@ -100,7 +99,7 @@ void verify_matches(
     ImagePairsFeatureMatcher feature_matcher(
         matcher_options, options, database_path);
     feature_matcher.Start();
-    feature_matcher.Wait();
+    PyWait(&feature_matcher);
 }
 
 
@@ -148,6 +147,13 @@ void init_match_features(py::module& m) {
     make_dataclass(PySiftMatchingOptions);
     auto sift_matching_options = PySiftMatchingOptions().cast<SMOpts>();
 
+    using EMOpts = ExhaustiveMatchingOptions;
+    auto PyExhaustiveMatchingOptions =
+        py::class_<ExhaustiveMatchingOptions>(m, "ExhaustiveMatchingOptions")
+          .def(py::init<>())
+          .def_readwrite("block_size", &EMOpts::block_size);
+    make_dataclass(PyExhaustiveMatchingOptions);
+    auto exhaustive_options = PyExhaustiveMatchingOptions().cast<EMOpts>();
 
     using SeqMOpts = SequentialMatchingOptions;
     auto PySequentialMatchingOptions =
@@ -227,6 +233,15 @@ void init_match_features(py::module& m) {
           py::arg("device") = Device::AUTO,
           py::arg("verbose") = true,
           "Exhaustive feature matching");
+
+    m.def("match_exhaustive",
+          &match_features<ExhaustiveFeatureMatcher, EMOpts>,
+          py::arg("database_path"),
+          py::arg("sift_options") = sift_matching_options,
+          py::arg("matching_options") = exhaustive_options,
+          py::arg("device") = Device::AUTO,
+          py::arg("verbose") = true,
+          "Sequential feature matching");
 
     m.def("match_sequential",
           &match_features<SequentialFeatureMatcher, SeqMOpts>,

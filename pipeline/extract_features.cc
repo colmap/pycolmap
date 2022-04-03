@@ -89,7 +89,7 @@ void extract_features(const py::object database_path_,
                                          sift_options);
 
   feature_extractor.Start();
-  feature_extractor.Wait();
+  PyWait(&feature_extractor);
 
   if (!verbose) {
     std::cout.rdbuf(oldcout);

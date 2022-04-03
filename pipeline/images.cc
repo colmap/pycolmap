@@ -10,6 +10,7 @@
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
+#include "colmap/base/undistortion.h"
 
 using namespace colmap;
 
@@ -110,6 +111,79 @@ Camera infer_camera_from_image(const py::object image_path_) {
     return camera;
 }
 
+
+void undistort_images(py::object output_path_,
+                      py::object input_path_,
+                      py::object image_path_,
+                      std::vector<std::string> image_list,
+                      std::string output_type,
+                      CopyType copy_type,
+                      int num_patch_match_src_images,
+                      UndistortCameraOptions undistort_camera_options,
+                      bool verbose) {
+  std::string output_path = py::str(output_path_).cast<std::string>();
+  std::string input_path = py::str(input_path_).cast<std::string>();
+  THROW_CHECK_DIR_EXISTS(input_path);
+  std::string image_path = py::str(image_path_).cast<std::string>();
+  THROW_CHECK_DIR_EXISTS(image_path);
+
+  CreateDirIfNotExists(output_path);
+  if (verbose) {
+    PrintHeading1("Reading reconstruction");
+  }
+  Reconstruction reconstruction;
+  reconstruction.Read(input_path);
+  if (verbose) {
+    std::cout << StringPrintf(" => Reconstruction with %d images and %d points",
+                              reconstruction.NumImages(),
+                              reconstruction.NumPoints3D())
+              << std::endl;
+  }
+
+  std::vector<image_t> image_ids;
+  for (const auto& image_name : image_list) {
+    const Image* image = reconstruction.FindImageWithName(image_name);
+    if (image != nullptr) {
+    image_ids.push_back(image->ImageId());
+    } else {
+    std::cout << "WARN: Cannot find image " << image_name << std::endl;
+    }
+  }
+
+  std::unique_ptr<Thread> undistorter;
+  if (output_type == "COLMAP") {
+    undistorter.reset(new COLMAPUndistorter(
+        undistort_camera_options, reconstruction, image_path,
+        output_path, num_patch_match_src_images, copy_type, image_ids));
+  } else if (output_type == "PMVS") {
+    undistorter.reset(new PMVSUndistorter(undistort_camera_options,
+                                          reconstruction, image_path,
+                                          output_path));
+  } else if (output_type == "CMP-MVS") {
+    undistorter.reset(new CMPMVSUndistorter(undistort_camera_options,
+                                            reconstruction, image_path,
+                                            output_path));
+  } else {
+    THROW_EXCEPTION(std::invalid_argument,
+                    std::string("Invalid `output_type` - supported values are ")
+                    +"{'COLMAP', 'PMVS', 'CMP-MVS'}.");
+  }
+
+  std::stringstream oss;
+  std::streambuf* oldcout = nullptr;
+  if (!verbose) {
+    oldcout = std::cout.rdbuf( oss.rdbuf() );
+  }
+
+  py::gil_scoped_release release;
+  undistorter->Start();
+  PyWait(undistorter.get());
+
+  if (!verbose) {
+    std::cout.rdbuf(oldcout);
+  }
+}
+
 void init_images(py::module& m) {
     /* OPTIONS */
     auto PyCameraMode = py::enum_<CameraMode>(m, "CameraMode")
@@ -140,6 +214,31 @@ void init_images(py::module& m) {
     make_dataclass(PyImageReaderOptions);
     auto reader_options = PyImageReaderOptions().cast<IROpts>();
 
+    auto PyCopyType = py::enum_<CopyType>(m, "CopyType")
+        .value("copy", CopyType::COPY)
+        .value("soft-link", CopyType::SOFT_LINK)
+        .value("hard-link", CopyType::HARD_LINK);
+    AddStringToEnumConstructor(PyCopyType);
+
+    using UDOpts = UndistortCameraOptions;
+    auto PyUndistortCameraOptions =
+        py::class_<UDOpts>(m, "UndistortCameraOptions")
+          .def(py::init<>())
+          .def_readwrite("blank_pixels", &UDOpts::blank_pixels,
+                         "The amount of blank pixels in the undistorted image in the range [0, 1].")
+          .def_readwrite("min_scale", &UDOpts::min_scale,
+                         "Minimum scale change of camera used to satisfy the blank pixel constraint.")
+          .def_readwrite("max_scale", &UDOpts::max_scale,
+                         "Maximum scale change of camera used to satisfy the blank pixel constraint.")
+          .def_readwrite("max_image_size", &UDOpts::max_image_size,
+                         "Maximum image size in terms of width or height of the undistorted camera.")
+          .def_readwrite("roi_min_x", &UDOpts::roi_min_x)
+          .def_readwrite("roi_min_y", &UDOpts::roi_min_y)
+          .def_readwrite("roi_max_x", &UDOpts::roi_max_x)
+          .def_readwrite("roi_max_y", &UDOpts::roi_max_y);
+    make_dataclass(PyUndistortCameraOptions);
+    auto undistort_options = PyUndistortCameraOptions().cast<UDOpts>();
+
     m.def("import_images",
           &import_images,
           py::arg("database_path"),
@@ -153,4 +252,17 @@ void init_images(py::module& m) {
           &infer_camera_from_image,
           py::arg("image_path"),
           "Guess the camera parameters from the EXIF metadata");
+
+    m.def("undistort_images",
+          &undistort_images,
+          py::arg("output_path"),
+          py::arg("input_path"),
+          py::arg("image_path"),
+          py::arg("image_list") = std::vector<std::string>(),
+          py::arg("output_type") = "COLMAP",
+          py::arg("copy_policy") = CopyType::COPY,
+          py::arg("num_patch_match_src_images") = 20,
+          py::arg("undistort_options") = undistort_options,
+          py::arg("verbose") = false,
+          "Undistort images");
 }

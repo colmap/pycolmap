@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <colmap/util/threading.h>
+
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
@@ -182,7 +184,7 @@ inline void make_dataclass(py::class_<T> cls) {
 
 // Catch python keyboard interrupts
 
-/* 
+/*
 // single
 if (PyInterrupt().Raised()) {
     // stop the execution and raise an exception
@@ -227,4 +229,20 @@ bool PyInterrupt::Raised() {
     start = clock::now();
   }
   return found;
+}
+
+
+// Instead of thread.Wait() call this to allow interrupts through python
+void PyWait(Thread* thread, double gap=2.0) {
+    PyInterrupt py_interrupt(gap);
+    while(thread->IsRunning()) {
+        if (py_interrupt.Raised()) {
+            std::cerr<<"Stopping thread..."<<std::endl;
+            thread->Stop();
+            thread->Wait();
+            throw py::error_already_set();
+        }
+    }
+    // after finishing join the thread to avoid abort
+    thread->Wait();
 }
