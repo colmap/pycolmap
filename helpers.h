@@ -228,21 +228,3 @@ bool PyInterrupt::Raised() {
   }
   return found;
 }
-
-enum class Device {
-    AUTO = -1,
-    CPU = 0,
-    CUDA = 1
-};
-
-bool IsGPU(Device device) {
-    if (device == Device::AUTO) {
-        #ifdef CUDA_ENABLED
-        return true;
-        #else
-        return false;
-        #endif
-    } else {
-        return static_cast<bool>(device);
-    }
-}

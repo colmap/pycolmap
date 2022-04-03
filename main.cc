@@ -16,9 +16,11 @@ namespace py = pybind11;
 #include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
-#include "pipeline.cc"
 #include "mvs.cc"
 #include "helpers.h"
+#include "utils.h"
+
+#include "pipeline/sfm.cc"
 
 #include "reconstruction/reconstruction.cc"
 #include "reconstruction/correspondence_graph.cc"
@@ -101,7 +103,7 @@ PYBIND11_MODULE(pycolmap, m) {
     init_transforms(m);
 
     // Main reconstruction steps
-    init_pipeline(m);
+    init_sfm(m);
 
     init_mvs(m);
 
