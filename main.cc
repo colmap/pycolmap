@@ -16,11 +16,11 @@ namespace py = pybind11;
 #include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
-#include "mvs.cc"
 #include "helpers.h"
 #include "utils.h"
 
 #include "pipeline/sfm.cc"
+#include "pipeline/mvs.cc"
 
 #include "reconstruction/reconstruction.cc"
 #include "reconstruction/correspondence_graph.cc"
