@@ -16,8 +16,11 @@ namespace py = pybind11;
 #include "homography_decomposition.cc"
 #include "transformations.cc"
 #include "sift.cc"
-#include "pipeline.cc"
 #include "helpers.h"
+#include "utils.h"
+
+#include "pipeline/sfm.cc"
+#include "pipeline/mvs.cc"
 
 #include "reconstruction/reconstruction.cc"
 #include "reconstruction/correspondence_graph.cc"
@@ -33,6 +36,14 @@ PYBIND11_MODULE(pycolmap, m) {
 #else
     m.attr("__version__") = py::str("dev");
 #endif
+
+    auto PyDevice = py::enum_<Device>(m, "Device")
+        .value("auto", Device::AUTO)
+        .value("cpu", Device::CPU)
+        .value("cuda", Device::CUDA);
+    AddStringToEnumConstructor(PyDevice);
+
+    m.attr("has_cuda") = IsGPU(Device::AUTO);
 
     // Estimators
     auto PyRANSACOptions = py::class_<RANSACOptions>(m, "RANSACOptions")
@@ -69,13 +80,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2"),
           "Analytical Homography Decomposition.");
 
-    // SIFT.
-    m.def("extract_sift", &extract_sift,
-          py::arg("image"),
-          py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
-          py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
-          "Extract SIFT features.");
-
     // Reconstruction bindings
     init_reconstruction(m);
 
@@ -92,7 +96,11 @@ PYBIND11_MODULE(pycolmap, m) {
     init_transforms(m);
 
     // Main reconstruction steps
-    init_pipeline(m);
+    init_sfm(m);
+    init_mvs(m);
+
+    // SIFT feature detector and descriptor
+    init_sift(m);
 
     py::add_ostream_redirect(m, "ostream");
 }

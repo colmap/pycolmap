@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <colmap/util/threading.h>
+
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
@@ -102,6 +104,8 @@ inline void make_dataclass(py::class_<T> cls) {
                     <<py::str(ex.value()).cast<std::string>()<<std::endl;
                     throw;
                 } else {
+                    std::cerr<<"Internal Error: "
+                    <<py::str(ex.value()).cast<std::string>()<<std::endl;
                     throw;
                 }
             }
@@ -175,4 +179,70 @@ inline void make_dataclass(py::class_<T> cls) {
         }
         return dict;
     });
+}
+
+
+// Catch python keyboard interrupts
+
+/*
+// single
+if (PyInterrupt().Raised()) {
+    // stop the execution and raise an exception
+    throw py::error_already_set();
+}
+
+// loop
+PyInterrupt py_interrupt = PyInterrupt(2.0)
+for (...) {
+    if (py_interrupt.Raised()) {
+        // stop the execution and raise an exception
+        throw py::error_already_set();
+    }
+    // Do your workload here
+}
+
+
+*/
+struct PyInterrupt {
+  using clock = std::chrono::steady_clock;
+  using sec = std::chrono::duration<double>;
+  PyInterrupt(double gap = -1.0);
+
+  inline bool Raised();
+
+ private:
+  std::mutex mutex_;
+  bool found = false;
+  colmap::Timer timer_;
+  clock::time_point start;
+  double gap_;
+};
+
+PyInterrupt::PyInterrupt(double gap) : gap_(gap), start(clock::now()) {}
+
+bool PyInterrupt::Raised() {
+  const sec duration = clock::now() - start;
+  if (!found && duration.count() > gap_) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    py::gil_scoped_acquire acq;
+    found = (PyErr_CheckSignals() != 0);
+    start = clock::now();
+  }
+  return found;
+}
+
+
+// Instead of thread.Wait() call this to allow interrupts through python
+void PyWait(Thread* thread, double gap=2.0) {
+    PyInterrupt py_interrupt(gap);
+    while(thread->IsRunning()) {
+        if (py_interrupt.Raised()) {
+            std::cerr<<"Stopping thread..."<<std::endl;
+            thread->Stop();
+            thread->Wait();
+            throw py::error_already_set();
+        }
+    }
+    // after finishing join the thread to avoid abort
+    thread->Wait();
 }

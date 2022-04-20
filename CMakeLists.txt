@@ -13,6 +13,13 @@ endif()
 
 add_subdirectory(pybind11)
 
+
+if (${COLMAP_CUDA_ENABLED})
+    message("Compiling bindings with CUDA support.")
+    add_definitions(-DCUDA_ENABLED)
+else()
+    message("Compiling bindings without CUDA support.")
+endif()
 pybind11_add_module(pycolmap main.cc)
 target_link_libraries(pycolmap PRIVATE ${COLMAP_LIBRARIES})
 if(MSVC)

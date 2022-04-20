@@ -1,141 +1,34 @@
 // Author: Paul-Edouard Sarlin (skydes)
 
-#include "colmap/base/reconstruction.h"
-#include "colmap/base/image_reader.h"
-#include "colmap/base/camera_models.h"
-#include "colmap/util/misc.h"
-#include "colmap/feature/sift.h"
-#include "colmap/feature/matching.h"
-#include "colmap/controllers/incremental_mapper.h"
-#include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
+#include "colmap/base/camera_models.h"
+#include "colmap/base/reconstruction.h"
+#include "colmap/controllers/incremental_mapper.h"
+#include "colmap/util/misc.h"
 
 using namespace colmap;
 
+#include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <pybind11/iostream.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-#include "log_exceptions.h"
 #include "helpers.h"
+#include "log_exceptions.h"
 
+#include "pipeline/extract_features.cc"
+#include "pipeline/images.cc"
+#include "pipeline/match_features.cc"
 
-void import_images(
-        const py::object database_path_,
-        const py::object image_path_,
-        const CameraMode camera_mode,
-        const std::string camera_model,
-        const std::vector<std::string> image_list
-) {
-    std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CHECK_FILE_EXISTS(database_path);
-    std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CHECK_DIR_EXISTS(image_path);
-
-    ImageReaderOptions options;
-    options.database_path = database_path;
-    options.image_path = image_path;
-    options.image_list = image_list;
-    UpdateImageReaderOptionsFromCameraMode(options, camera_mode);
-    if (!camera_model.empty()) {
-        options.camera_model = camera_model;
-    }
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsCameraModelWithName(options.camera_model),
-        std::invalid_argument,
-        (std::string("Invalid camera model: ")+ options.camera_model).c_str()
-    );
-
-
-    Database database(options.database_path);
-    ImageReader image_reader(options, &database);
-
-    while (image_reader.NextIndex() < image_reader.NumImages()) {
-        Camera camera;
-        Image image;
-        Bitmap bitmap;
-        if (image_reader.Next(&camera, &image, &bitmap, nullptr) !=
-            ImageReader::Status::SUCCESS) {
-            continue;
-        }
-        DatabaseTransaction database_transaction(&database);
-        if (image.ImageId() == kInvalidImageId) {
-            image.SetImageId(database.WriteImage(image));
-        }
-    }
-}
-
-Camera infer_camera_from_image(const py::object image_path_) {
-    std::string image_path = py::str(image_path_).cast<std::string>();
-    THROW_CHECK_FILE_EXISTS(image_path);
-
-    Bitmap bitmap;
-    THROW_CUSTOM_CHECK_MSG(
-        bitmap.Read(image_path, false),
-        std::invalid_argument,
-        (std::string("Cannot read image file: ") + image_path).c_str()
-    );
-
-    ImageReaderOptions options;
-    Camera camera;
-    camera.SetCameraId(kInvalidCameraId);
-    camera.SetModelIdFromName(options.camera_model);
-    double focal_length = 0.0;
-    if (bitmap.ExifFocalLength(&focal_length)) {
-        camera.SetPriorFocalLength(true);
-    } else {
-        focal_length = options.default_focal_length_factor *
-                       std::max(bitmap.Width(), bitmap.Height());
-        camera.SetPriorFocalLength(false);
-    }
-    camera.InitializeWithId(camera.ModelId(), focal_length,
-                            bitmap.Width(), bitmap.Height());
-    THROW_CUSTOM_CHECK_MSG(
-        camera.VerifyParams(),
-        std::invalid_argument,
-        (std::string("Invalid camera params: ") + camera.ParamsToString()).c_str()
-    );
-
-    return camera;
-}
-
-void verify_matches(
-        const py::object database_path_,
-        const py::object pairs_path_,
-        const int max_num_trials,
-        const float min_inlier_ratio
-) {
-    std::string database_path = py::str(database_path_).cast<std::string>();
-    THROW_CHECK_FILE_EXISTS(database_path);
-    std::string pairs_path = py::str(pairs_path_).cast<std::string>();
-    THROW_CHECK_FILE_EXISTS(pairs_path);
-    py::gil_scoped_release release;  // verification is multi-threaded
-
-    SiftMatchingOptions options;
-    options.use_gpu = false;
-    options.max_num_trials = max_num_trials;
-    options.min_inlier_ratio = min_inlier_ratio;
-
-    ImagePairsMatchingOptions matcher_options;
-    matcher_options.match_list_path = pairs_path;
-
-    ImagePairsFeatureMatcher feature_matcher(
-        matcher_options, options, database_path);
-    feature_matcher.Start();
-    feature_matcher.Wait();
-}
-
-Reconstruction triangulate_points(
-        Reconstruction reconstruction,
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const bool clear_points,
-        const IncrementalMapperOptions& options) {
+Reconstruction triangulate_points(Reconstruction reconstruction,
+                                  const py::object database_path_,
+                                  const py::object image_path_,
+                                  const py::object output_path_,
+                                  const bool clear_points,
+                                  const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -144,22 +37,21 @@ Reconstruction triangulate_points(
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
-    RunPointTriangulatorImpl(
-        reconstruction,
-        database_path,
-        image_path,
-        output_path,
-        options,
-        clear_points);
+    RunPointTriangulatorImpl(reconstruction,
+                             database_path,
+                             image_path,
+                             output_path,
+                             options,
+                             clear_points);
     return reconstruction;
 }
 
 // Copied from colmap/exe/sfm.cc
 std::map<size_t, Reconstruction> incremental_mapping(
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const IncrementalMapperOptions& options) {
+    const py::object database_path_,
+    const py::object image_path_,
+    const py::object output_path_,
+    const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -191,7 +83,15 @@ std::map<size_t, Reconstruction> incremental_mapping(
                 reconstructions[prev_num_reconstructions] = reconstruction;
                 prev_num_reconstructions = reconstruction_manager.Size();
             }
-    });
+        });
+
+    PyInterrupt py_interrupt(1.0);  // Check for interrupts every 2 seconds
+    mapper.AddCallback(IncrementalMapperController::NEXT_IMAGE_REG_CALLBACK,
+                       [&]() {
+                           if (py_interrupt.Raised()) {
+                               throw py::error_already_set();
+                           }
+                       });
 
     mapper.Start();
     mapper.Wait();
@@ -199,11 +99,11 @@ std::map<size_t, Reconstruction> incremental_mapping(
 }
 
 std::map<size_t, Reconstruction> incremental_mapping(
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const int num_threads,
-        const int min_num_matches) {
+    const py::object database_path_,
+    const py::object image_path_,
+    const py::object output_path_,
+    const int num_threads,
+    const int min_num_matches) {
     IncrementalMapperOptions options;
     options.num_threads = num_threads;
     options.min_num_matches = min_num_matches;
@@ -211,30 +111,10 @@ std::map<size_t, Reconstruction> incremental_mapping(
         database_path_, image_path_, output_path_, options);
 }
 
-void init_pipeline(py::module& m) {
-    auto PyCameraMode = py::enum_<CameraMode>(m, "CameraMode")
-        .value("AUTO", CameraMode::AUTO)
-        .value("SINGLE", CameraMode::SINGLE)
-        .value("PER_FOLDER", CameraMode::PER_FOLDER)
-        .value("PER_IMAGE", CameraMode::PER_IMAGE);
-    AddStringToEnumConstructor(PyCameraMode);
-
-    m.def("import_images",
-          &import_images,
-          py::arg("database_path"),
-          py::arg("image_path"),
-          py::arg("camera_mode") = CameraMode::AUTO,
-          py::arg("camera_model") = std::string(),
-          py::arg("image_list") = std::vector<std::string>(),
-          "Import images into a database");
-
-    m.def("verify_matches",
-          &verify_matches,
-          py::arg("database_path"),
-          py::arg("pairs_path"),
-          py::arg("max_num_trials") = SiftMatchingOptions().max_num_trials,
-          py::arg("min_inlier_ratio") = SiftMatchingOptions().min_inlier_ratio,
-          "Run geometric verification of the matches");
+void init_sfm(py::module& m) {
+    init_images(m);
+    init_extract_features(m);
+    init_match_features(m);
 
     using Opts = IncrementalMapperOptions;
     auto PyIncrementalMapperOptions =
@@ -334,9 +214,4 @@ void init_pipeline(py::module& m) {
           py::arg("num_threads") = mapper_options.num_threads,
           py::arg("min_num_matches") = mapper_options.min_num_matches,
           "Triangulate 3D points from known poses");
-
-    m.def("infer_camera_from_image",
-          &infer_camera_from_image,
-          py::arg("image_path"),
-          "Guess the camera parameters from the EXIF metadata");
 }
