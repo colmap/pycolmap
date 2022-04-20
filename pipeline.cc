@@ -134,8 +134,8 @@ Reconstruction triangulate_points(
         const py::object database_path_,
         const py::object image_path_,
         const py::object output_path_,
-        const bool clear_points
-) {
+        const bool clear_points,
+        const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -144,10 +144,13 @@ Reconstruction triangulate_points(
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
-    IncrementalMapperOptions mapper_options;
     RunPointTriangulatorImpl(
-        reconstruction, database_path, image_path, output_path,
-        mapper_options, clear_points);
+        reconstruction,
+        database_path,
+        image_path,
+        output_path,
+        options,
+        clear_points);
     return reconstruction;
 }
 
@@ -156,9 +159,7 @@ std::map<size_t, Reconstruction> incremental_mapping(
         const py::object database_path_,
         const py::object image_path_,
         const py::object output_path_,
-        const int num_threads,
-        const int min_num_matches
-) {
+        const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -167,12 +168,9 @@ std::map<size_t, Reconstruction> incremental_mapping(
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
-    IncrementalMapperOptions options;
-    options.num_threads = num_threads;
-    options.min_num_matches = min_num_matches;
     ReconstructionManager reconstruction_manager;
-    IncrementalMapperController mapper(&options, image_path, database_path,
-                                       &reconstruction_manager);
+    IncrementalMapperController mapper(
+        &options, image_path, database_path, &reconstruction_manager);
 
     // In case a new reconstruction is started, write results of individual sub-
     // models to as their reconstruction finishes instead of writing all results
@@ -200,6 +198,18 @@ std::map<size_t, Reconstruction> incremental_mapping(
     return reconstructions;
 }
 
+std::map<size_t, Reconstruction> incremental_mapping(
+        const py::object database_path_,
+        const py::object image_path_,
+        const py::object output_path_,
+        const int num_threads,
+        const int min_num_matches) {
+    IncrementalMapperOptions options;
+    options.num_threads = num_threads;
+    options.min_num_matches = min_num_matches;
+    return incremental_mapping(
+        database_path_, image_path_, output_path_, options);
+}
 
 void init_pipeline(py::module& m) {
     auto PyCameraMode = py::enum_<CameraMode>(m, "CameraMode")
@@ -226,6 +236,69 @@ void init_pipeline(py::module& m) {
           py::arg("min_inlier_ratio") = SiftMatchingOptions().min_inlier_ratio,
           "Run geometric verification of the matches");
 
+    using Opts = IncrementalMapperOptions;
+    auto PyIncrementalMapperOptions =
+        py::class_<Opts>(m, "IncrementalMapperOptions")
+            .def(py::init<>())
+            .def_readwrite("min_num_matches", &Opts::min_num_matches)
+            .def_readwrite("ignore_watermarks", &Opts::ignore_watermarks)
+            .def_readwrite("multiple_models", &Opts::multiple_models)
+            .def_readwrite("max_num_models", &Opts::max_num_models)
+            .def_readwrite("max_model_overlap", &Opts::max_model_overlap)
+            .def_readwrite("min_model_size", &Opts::min_model_size)
+            .def_readwrite("init_image_id1", &Opts::init_image_id1)
+            .def_readwrite("init_image_id2", &Opts::init_image_id2)
+            .def_readwrite("init_num_trials", &Opts::init_num_trials)
+            .def_readwrite("extract_colors", &Opts::extract_colors)
+            .def_readwrite("num_threads", &Opts::num_threads)
+            .def_readwrite("min_focal_length_ratio",
+                           &Opts::min_focal_length_ratio)
+            .def_readwrite("max_focal_length_ratio",
+                           &Opts::max_focal_length_ratio)
+            .def_readwrite("max_extra_param", &Opts::max_extra_param)
+            .def_readwrite("ba_refine_focal_length",
+                           &Opts::ba_refine_focal_length)
+            .def_readwrite("ba_refine_principal_point",
+                           &Opts::ba_refine_principal_point)
+            .def_readwrite("ba_refine_extra_params",
+                           &Opts::ba_refine_extra_params)
+            .def_readwrite("ba_min_num_residuals_for_multi_threading",
+                           &Opts::ba_min_num_residuals_for_multi_threading)
+            .def_readwrite("ba_local_num_images", &Opts::ba_local_num_images)
+            .def_readwrite("ba_local_function_tolerance",
+                           &Opts::ba_local_function_tolerance)
+            .def_readwrite("ba_local_max_num_iterations",
+                           &Opts::ba_local_max_num_iterations)
+            .def_readwrite("ba_global_use_pba", &Opts::ba_global_use_pba)
+            .def_readwrite("ba_global_pba_gpu_index",
+                           &Opts::ba_global_pba_gpu_index)
+            .def_readwrite("ba_global_images_ratio",
+                           &Opts::ba_global_images_ratio)
+            .def_readwrite("ba_global_points_ratio",
+                           &Opts::ba_global_points_ratio)
+            .def_readwrite("ba_global_images_freq",
+                           &Opts::ba_global_images_freq)
+            .def_readwrite("ba_global_points_freq",
+                           &Opts::ba_global_points_freq)
+            .def_readwrite("ba_global_function_tolerance",
+                           &Opts::ba_global_function_tolerance)
+            .def_readwrite("ba_global_max_num_iterations",
+                           &Opts::ba_global_max_num_iterations)
+            .def_readwrite("ba_local_max_refinements",
+                           &Opts::ba_local_max_refinements)
+            .def_readwrite("ba_local_max_refinement_change",
+                           &Opts::ba_local_max_refinement_change)
+            .def_readwrite("ba_global_max_refinements",
+                           &Opts::ba_global_max_refinements)
+            .def_readwrite("ba_global_max_refinement_change",
+                           &Opts::ba_global_max_refinement_change)
+            .def_readwrite("snapshot_path", &Opts::snapshot_path)
+            .def_readwrite("snapshot_images_freq", &Opts::snapshot_images_freq)
+            .def_readwrite("image_names", &Opts::image_names)
+            .def_readwrite("fix_existing_images", &Opts::fix_existing_images);
+    make_dataclass(PyIncrementalMapperOptions);
+    auto mapper_options = PyIncrementalMapperOptions().cast<Opts>();
+
     m.def("triangulate_points",
           &triangulate_points,
           py::arg("reconstruction"),
@@ -233,15 +306,33 @@ void init_pipeline(py::module& m) {
           py::arg("image_path"),
           py::arg("output_path"),
           py::arg("clear_points") = true,
+          py::arg("options") = mapper_options,
           "Triangulate 3D points from known camera poses");
 
     m.def("incremental_mapping",
-          &incremental_mapping,
+          static_cast<std::map<size_t, Reconstruction> (*)(
+              const py::object,
+              const py::object,
+              const py::object,
+              const IncrementalMapperOptions&)>(&incremental_mapping),
           py::arg("database_path"),
           py::arg("image_path"),
           py::arg("output_path"),
-          py::arg("num_threads") = IncrementalMapperOptions().num_threads,
-          py::arg("min_num_matches") = IncrementalMapperOptions().min_num_matches,
+          py::arg("options") = mapper_options,
+          "Triangulate 3D points from known poses");
+
+    m.def("incremental_mapping",
+          static_cast<std::map<size_t, Reconstruction> (*)(const py::object,
+                                                           const py::object,
+                                                           const py::object,
+                                                           const int,
+                                                           const int)>(
+              &incremental_mapping),
+          py::arg("database_path"),
+          py::arg("image_path"),
+          py::arg("output_path"),
+          py::arg("num_threads") = mapper_options.num_threads,
+          py::arg("min_num_matches") = mapper_options.min_num_matches,
           "Triangulate 3D points from known poses");
 
     m.def("infer_camera_from_image",
