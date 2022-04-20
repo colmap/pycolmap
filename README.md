@@ -258,15 +258,37 @@ camera_dict = {
 
 ## Reconstruction pipeline
 
-We provide bindings for multiple step of the standard reconstruction pipeline. They are defined in `pipeline.cc` and include:
+We provide bindings for multiple step of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
 
+- extracting and matching SIFT features
 - importing an image folder into a COLMAP database
 - inferring the camera parameters from the EXIF metadata of an image file
 - running two-view geometric verification of matches on a COLMAP database
 - triangulating points into an existing COLMAP model
 - running incremental reconstruction from a COLMAP database
+- dense reconstruction with multi-view stereo
 
-For an example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
+Dense reconstruction from a folder of images can be performed with:
+```python
+output_path: pathlib.Path
+image_dir: pathlib.Path
+
+output_path.mkdir()
+mvs_path = output_path / "mvs"
+database_path = output_path / "database.db"
+
+pycolmap.extract_features(database_path, image_dir)
+pycolmap.match_exhaustive(database_path)
+maps = pycolmap.incremental_mapping(database_path, image_dir, output_path)
+maps[0].write(output_path)
+pycolmap.undistort_images(mvs_path, output_path, image_dir)
+pycolmap.patch_match_stereo(mvs_path)
+pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
+```
+
+PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
+
+For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
 
 ## SIFT feature extraction
 
@@ -276,22 +298,18 @@ import pycolmap
 from PIL import Image, ImageOps
 
 # Input should be grayscale image with range [0, 1].
-with open('image.jpg', 'rb') as f:
-    img = Image.open(f)
-    img = img.convert('RGB')
-    img = ImageOps.grayscale(img)
-    img = np.array(img).astype(np.float) / 255.
+img = Image.open('image.jpg').convert('RGB')
+img = ImageOps.grayscale(img)
+img = np.array(img).astype(np.float) / 255.
+
+# Optional parameters:
+# - options: dict or pycolmap.SiftExtractionOptions
+# - device: default pycolmap.Device.auto uses the GPU if available
+sift = pycolmap.Sift()
 
 # Parameters:
 # - image: HxW float array
-# Named parameters:
-# - num_octaves: int (4)
-# - octave_resolution: int (3)
-# - first_octave: int (0)
-# - edge_thresh: float (10)
-# - peak_thresh: float (0.01)
-# - upright: bool (False)
-keypoints, scores, descriptors = pycolmap.extract_sift(img)
+keypoints, scores, descriptors = sift.extract(img)
 # Returns:
 # - keypoints: Nx4 array; format: x (j), y (i), sigma, angle
 # - scores: N array; DoG scores
