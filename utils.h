@@ -1,24 +1,20 @@
 #pragma once
 
+#include <iostream>
 #include <regex>
 #include <string>
-#include <iostream>
 
 #include "log_exceptions.h"
 
-enum class Device {
-    AUTO = -1,
-    CPU = 0,
-    CUDA = 1
-};
+enum class Device { AUTO = -1, CPU = 0, CUDA = 1 };
 
 bool IsGPU(Device device) {
     if (device == Device::AUTO) {
-        #ifdef CUDA_ENABLED
+#ifdef CUDA_ENABLED
         return true;
-        #else
+#else
         return false;
-        #endif
+#endif
     } else {
         return static_cast<bool>(device);
     }
@@ -26,10 +22,10 @@ bool IsGPU(Device device) {
 
 void VerifySiftGPUParams(const bool use_gpu) {
 #ifndef CUDA_ENABLED
-  if (use_gpu) {
-    THROW_EXCEPTION(std::invalid_argument,
-                    "Cannot use Sift GPU without CUDA support; "
-                    "set device='auto' or device='cpu'.")
-  }
+    if (use_gpu) {
+        THROW_EXCEPTION(std::invalid_argument,
+                        "Cannot use Sift GPU without CUDA support; "
+                        "set device='auto' or device='cpu'.")
+    }
 #endif
 }

@@ -1,35 +1,34 @@
 // Author: Paul-Edouard Sarlin (skydes)
 
-#include "colmap/base/reconstruction.h"
-#include "colmap/base/camera_models.h"
-#include "colmap/util/misc.h"
-#include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/sfm.h"
+#include "colmap/base/camera_models.h"
+#include "colmap/base/reconstruction.h"
+#include "colmap/controllers/incremental_mapper.h"
+#include "colmap/util/misc.h"
 
 using namespace colmap;
 
+#include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <pybind11/iostream.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-#include "log_exceptions.h"
 #include "helpers.h"
+#include "log_exceptions.h"
 
-#include "pipeline/images.cc"
 #include "pipeline/extract_features.cc"
+#include "pipeline/images.cc"
 #include "pipeline/match_features.cc"
 
-Reconstruction triangulate_points(
-        Reconstruction reconstruction,
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const bool clear_points,
-        const IncrementalMapperOptions& options) {
+Reconstruction triangulate_points(Reconstruction reconstruction,
+                                  const py::object database_path_,
+                                  const py::object image_path_,
+                                  const py::object output_path_,
+                                  const bool clear_points,
+                                  const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -38,22 +37,21 @@ Reconstruction triangulate_points(
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
-    RunPointTriangulatorImpl(
-        reconstruction,
-        database_path,
-        image_path,
-        output_path,
-        options,
-        clear_points);
+    RunPointTriangulatorImpl(reconstruction,
+                             database_path,
+                             image_path,
+                             output_path,
+                             options,
+                             clear_points);
     return reconstruction;
 }
 
 // Copied from colmap/exe/sfm.cc
 std::map<size_t, Reconstruction> incremental_mapping(
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const IncrementalMapperOptions& options) {
+    const py::object database_path_,
+    const py::object image_path_,
+    const py::object output_path_,
+    const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -85,15 +83,15 @@ std::map<size_t, Reconstruction> incremental_mapping(
                 reconstructions[prev_num_reconstructions] = reconstruction;
                 prev_num_reconstructions = reconstruction_manager.Size();
             }
-    });
+        });
 
-    PyInterrupt py_interrupt(1.0); // Check for interrupts every 2 seconds
-    mapper.AddCallback(
-        IncrementalMapperController::NEXT_IMAGE_REG_CALLBACK, [&]() {
-            if (py_interrupt.Raised()) {
-                throw py::error_already_set();
-            }
-    });
+    PyInterrupt py_interrupt(1.0);  // Check for interrupts every 2 seconds
+    mapper.AddCallback(IncrementalMapperController::NEXT_IMAGE_REG_CALLBACK,
+                       [&]() {
+                           if (py_interrupt.Raised()) {
+                               throw py::error_already_set();
+                           }
+                       });
 
     mapper.Start();
     mapper.Wait();
@@ -101,11 +99,11 @@ std::map<size_t, Reconstruction> incremental_mapping(
 }
 
 std::map<size_t, Reconstruction> incremental_mapping(
-        const py::object database_path_,
-        const py::object image_path_,
-        const py::object output_path_,
-        const int num_threads,
-        const int min_num_matches) {
+    const py::object database_path_,
+    const py::object image_path_,
+    const py::object output_path_,
+    const int num_threads,
+    const int min_num_matches) {
     IncrementalMapperOptions options;
     options.num_threads = num_threads;
     options.min_num_matches = min_num_matches;
