@@ -80,13 +80,6 @@ PYBIND11_MODULE(pycolmap, m) {
           py::arg("points2"),
           "Analytical Homography Decomposition.");
 
-    // SIFT.
-    m.def("extract_sift", &extract_sift,
-          py::arg("image"),
-          py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
-          py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
-          "Extract SIFT features.");
-
     // Reconstruction bindings
     init_reconstruction(m);
 
@@ -104,27 +97,10 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Main reconstruction steps
     init_sfm(m);
-
     init_mvs(m);
 
-    // For backwards consistency
-    py::dict sift_options;
-    sift_options["peak_threshold"] = 0.01;
-    sift_options["first_octave"] = 0;
-    sift_options["max_image_size"] = 7000;
-
-    py::class_<Sift>(m, "Sift")
-        .def(py::init<SiftExtractionOptions, Device>(),
-             py::arg("options") = sift_options,
-             py::arg("device") = Device::AUTO)
-        .def("extract", &Sift::Extract<float>,
-             py::arg("image"),
-             py::arg("do_normalize") = false)
-        .def("extract", &Sift::Extract<uint8_t>,
-             py::arg("image").noconvert(),
-             py::arg("do_normalize") = false)
-        .def_property_readonly("options", &Sift::Options)
-        .def_property_readonly("device", &Sift::GetDevice);
+    // SIFT feature detector and descriptor
+    init_sift(m);
 
     py::add_ostream_redirect(m, "ostream");
 }

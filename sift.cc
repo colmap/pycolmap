@@ -253,3 +253,30 @@ sift_output_t extract_sift(
     Sift sift(options, Device::CPU);
     return sift.Extract(image.cast<Eigen::Ref<const pyimage_t<float>>>(), false);
 }
+
+void init_sift(py::module& m) {
+    m.def("extract_sift", &extract_sift,
+          py::arg("image"),
+          py::arg("num_octaves") = 4, py::arg("octave_resolution") = 3, py::arg("first_octave") = 0,
+          py::arg("edge_thresh") = 10.0, py::arg("peak_thresh") = 0.01, py::arg("upright") = false,
+          "Extract SIFT features.");
+
+    // For backwards consistency
+    py::dict sift_options;
+    sift_options["peak_threshold"] = 0.01;
+    sift_options["first_octave"] = 0;
+    sift_options["max_image_size"] = 7000;
+
+    py::class_<Sift>(m, "Sift")
+        .def(py::init<SiftExtractionOptions, Device>(),
+             py::arg("options") = sift_options,
+             py::arg("device") = Device::AUTO)
+        .def("extract", &Sift::Extract<float>,
+             py::arg("image"),
+             py::arg("do_normalize") = false)
+        .def("extract", &Sift::Extract<uint8_t>,
+             py::arg("image").noconvert(),
+             py::arg("do_normalize") = false)
+        .def_property_readonly("options", &Sift::Options)
+        .def_property_readonly("device", &Sift::GetDevice);
+}
