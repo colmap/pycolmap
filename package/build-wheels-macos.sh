@@ -24,9 +24,11 @@ function retry {
   return 0
 }
 
+declare -a PYTHON_VERSION=( $1 )
+
 brew update
 brew upgrade
-brew install wget python cmake || true
+brew install wget cmake $PYTHON_VERSION
 # TODO: try without brew install of boost, but use version below
 brew install cmake boost eigen freeimage metis glog gflags suite-sparse ceres-solver glew cgal
 
@@ -35,6 +37,13 @@ brew install llvm libomp
 brew info gcc
 brew upgrade gcc
 brew info gcc
+
+# Get the python version numbers only by splitting the string
+PYBIN="/usr/local/opt/$PYTHON_VERSION/bin"
+ls -ltr /usr/local/opt/python*
+ls -ltr $PYBIN
+export PATH=$PYBIN:/usr/local/bin:$PATH
+echo "Python bin path: $PYBIN"
 
 CURRDIR=$(pwd)
 ls -ltrh $CURRDIR
@@ -57,8 +66,6 @@ mkdir -p $CURRDIR/wheelhouse
 PYTHON_LIBRARY=$(cd $(dirname $0); pwd)/libpython-not-needed-symbols-exported-by-interpreter
 touch ${PYTHON_LIBRARY}
 
-declare -a PYTHON_VERS=( $1 )
-
 git clone https://github.com/colmap/colmap.git
 
 for compiler in cc c++ gcc g++ clang clang++
@@ -66,13 +73,6 @@ do
     which $compiler
     $compiler --version
 done
-
-# Get the python version numbers only by splitting the string
-PYBIN="/usr/local/opt/$PYTHON_VERS/bin"
-PYTHONVER="$(basename $(dirname $PYBIN))"
-export PATH=$PYBIN:/usr/local/bin:$PATH
-echo "Python bin path: $PYBIN"
-echo "Python version: $PYTHONVER"
 
 # Install `delocate` -- OSX equivalent of `auditwheel`
 # see https://pypi.org/project/delocate/ for more details
