@@ -29,13 +29,13 @@ void import_images(const py::object database_path_,
                    const py::object image_path_,
                    const CameraMode camera_mode,
                    const std::string camera_model,
+                   ImageReaderOptions options,
                    const std::vector<std::string> image_list) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(image_path);
 
-    ImageReaderOptions options;
     options.database_path = database_path;
     options.image_path = image_path;
     options.image_list = image_list;
@@ -258,6 +258,7 @@ void init_images(py::module& m) {
           py::arg("image_path"),
           py::arg("camera_mode") = CameraMode::AUTO,
           py::arg("camera_model") = std::string(),
+          py::arg("reader_options") = ImageReaderOptions(),
           py::arg("image_list") = std::vector<std::string>(),
           "Import images into a database");
 
