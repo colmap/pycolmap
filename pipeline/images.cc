@@ -28,21 +28,18 @@ using namespace pybind11::literals;
 void import_images(const py::object database_path_,
                    const py::object image_path_,
                    const CameraMode camera_mode,
-                   const std::string camera_model,
-                   const std::vector<std::string> image_list) {
+                   const std::vector<std::string> image_list,
+                   const ImageReaderOptions options_) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(image_path);
 
-    ImageReaderOptions options;
+    ImageReaderOptions options(options_);
     options.database_path = database_path;
     options.image_path = image_path;
     options.image_list = image_list;
     UpdateImageReaderOptionsFromCameraMode(options, camera_mode);
-    if (!camera_model.empty()) {
-        options.camera_model = camera_model;
-    }
     THROW_CUSTOM_CHECK_MSG(
         ExistsCameraModelWithName(options.camera_model),
         std::invalid_argument,
@@ -71,7 +68,21 @@ void import_images(const py::object database_path_,
     }
 }
 
-Camera infer_camera_from_image(const py::object image_path_) {
+void import_images(const py::object database_path_,
+                   const py::object image_path_,
+                   const CameraMode camera_mode,
+                   const std::string camera_model,
+                   const std::vector<std::string> image_list) {
+    ImageReaderOptions options;
+    if (!camera_model.empty()) {
+        options.camera_model = camera_model;
+    }
+    return import_images(
+        database_path_, image_path_, camera_mode, image_list, options);
+}
+
+Camera infer_camera_from_image(const py::object image_path_,
+                               const ImageReaderOptions options) {
     std::string image_path = py::str(image_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(image_path);
 
@@ -81,7 +92,6 @@ Camera infer_camera_from_image(const py::object image_path_) {
         std::invalid_argument,
         (std::string("Cannot read image file: ") + image_path).c_str());
 
-    ImageReaderOptions options;
     Camera camera;
     camera.SetCameraId(kInvalidCameraId);
     camera.SetModelIdFromName(options.camera_model);
@@ -193,6 +203,9 @@ void init_images(py::module& m) {
     auto PyImageReaderOptions =
         py::class_<IROpts>(m, "ImageReaderOptions")
             .def(py::init<>())
+            .def_readwrite("camera_model",
+                           &IROpts::camera_model,
+                           "Name of the camera model.")
             .def_readwrite("existing_camera_id",
                            &IROpts::existing_camera_id,
                            "Whether to explicitly use an existing camera for "
@@ -252,18 +265,40 @@ void init_images(py::module& m) {
     make_dataclass(PyUndistortCameraOptions);
     auto undistort_options = PyUndistortCameraOptions().cast<UDOpts>();
 
-    m.def("import_images",
-          &import_images,
-          py::arg("database_path"),
-          py::arg("image_path"),
-          py::arg("camera_mode") = CameraMode::AUTO,
-          py::arg("camera_model") = std::string(),
-          py::arg("image_list") = std::vector<std::string>(),
-          "Import images into a database");
+    m.def(
+        "import_images",
+        static_cast<void (*)(const py::object,
+                             const py::object,
+                             const CameraMode,
+                             const std::vector<std::string>,
+                             const ImageReaderOptions
+                             )>(&import_images),
+        py::arg("database_path"),
+        py::arg("image_path"),
+        py::arg("camera_mode") = CameraMode::AUTO,
+        py::arg("image_list") = std::vector<std::string>(),
+        py::arg("options") = reader_options,
+        "Import images into a database");
+
+    m.def(
+        "import_images",
+        static_cast<void (*)(const py::object,
+                             const py::object,
+                             const CameraMode,
+                             const std::string,
+                             const std::vector<std::string>
+                             )>(&import_images),
+        py::arg("database_path"),
+        py::arg("image_path"),
+        py::arg("camera_mode") = CameraMode::AUTO,
+        py::arg("camera_model") = std::string(),
+        py::arg("image_list") = std::vector<std::string>(),
+        "Import images into a database");
 
     m.def("infer_camera_from_image",
           &infer_camera_from_image,
           py::arg("image_path"),
+          py::arg("options") = reader_options,
           "Guess the camera parameters from the EXIF metadata");
 
     m.def("undistort_images",
