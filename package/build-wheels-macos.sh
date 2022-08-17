@@ -40,8 +40,10 @@ brew info gcc
 
 # Get the python version numbers only by splitting the string
 PYBIN="/usr/local/opt/$PYTHON_VERSION/bin"
+INTERPRETER="$PYBIN/python3"
 ls -ltr /usr/local/opt/python*
 ls -ltr $PYBIN
+ls -ltr $INTERPRETER
 export PATH=$PYBIN:/usr/local/bin:$PATH
 echo "Python bin path: $PYBIN"
 
@@ -77,7 +79,7 @@ done
 # Install `delocate` -- OSX equivalent of `auditwheel`
 # see https://pypi.org/project/delocate/ for more details
 cd $CURRDIR
-"${PYBIN}/pip3" install delocate==0.10.0
+$INTERPRETER -m pip install delocate==0.10.0
 
 ls -ltrh /usr/local
 ls -ltrh /usr/local/opt
@@ -107,7 +109,7 @@ cd $CURRDIR
 cat setup.py
 # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
 # see https://github.com/quantumlib/qsim/issues/242 for more details
-CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib "${PYBIN}/python3" setup.py bdist_wheel
+CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER setup.py bdist_wheel
 cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
 
 # Bundle external shared libraries into the wheels
