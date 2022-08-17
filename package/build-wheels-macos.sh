@@ -39,8 +39,8 @@ brew upgrade gcc
 brew info gcc
 
 # Get the python version numbers only by splitting the string
-PYBIN="/usr/local/opt/$PYTHON_VERSION/bin"
-INTERPRETER="$PYBIN/python3"
+PYBIN="/usr/local/opt/$PYTHON_VERSION/libexec/bin"
+INTERPRETER="$PYBIN/python"
 ls -ltr /usr/local/opt/python*
 ls -ltr $PYBIN
 ls -ltr $INTERPRETER
