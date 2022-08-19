@@ -5,6 +5,7 @@ import re
 import sys
 import platform
 import subprocess
+from pathlib import Path
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -77,13 +78,16 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 
+long_description = (Path(__file__).parent / 'README.md').read_text()
+
 setup(
     name='pycolmap',
     version='0.4.0',
     author='Mihai Dusmanu',
     author_email='mihai.dusmanu@inf.ethz.ch',
     description='COLMAP bindings',
-    long_description='',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     ext_modules=[CMakeExtension('colmap')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
