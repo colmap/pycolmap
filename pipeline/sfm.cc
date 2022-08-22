@@ -50,17 +50,23 @@ Reconstruction triangulate_points(Reconstruction reconstruction,
 std::map<size_t, Reconstruction> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
+    const py::object input_path_,
     const py::object output_path_,
     const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(image_path);
+    std::string input_path = py::str(input_path_).cast<std::string>();
     std::string output_path = py::str(output_path_).cast<std::string>();
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
     ReconstructionManager reconstruction_manager;
+    if (input_path != "") {
+        THROW_CHECK_DIR_EXISTS(input_path);
+        reconstruction_manager.Read(input_path);
+    }
     IncrementalMapperController mapper(
         &options, image_path, database_path, &reconstruction_manager);
 
@@ -101,6 +107,7 @@ std::map<size_t, Reconstruction> incremental_mapping(
 std::map<size_t, Reconstruction> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
+    const py::object input_path_,
     const py::object output_path_,
     const int num_threads,
     const int min_num_matches) {
@@ -108,7 +115,7 @@ std::map<size_t, Reconstruction> incremental_mapping(
     options.num_threads = num_threads;
     options.min_num_matches = min_num_matches;
     return incremental_mapping(
-        database_path_, image_path_, output_path_, options);
+        database_path_, image_path_, input_path_, output_path_, options);
 }
 
 void init_sfm(py::module& m) {
@@ -194,9 +201,11 @@ void init_sfm(py::module& m) {
               const py::object,
               const py::object,
               const py::object,
+              const py::object,
               const IncrementalMapperOptions&)>(&incremental_mapping),
           py::arg("database_path"),
           py::arg("image_path"),
+          py::arg("input_path"),
           py::arg("output_path"),
           py::arg("options") = mapper_options,
           "Triangulate 3D points from known poses");
@@ -205,11 +214,13 @@ void init_sfm(py::module& m) {
           static_cast<std::map<size_t, Reconstruction> (*)(const py::object,
                                                            const py::object,
                                                            const py::object,
+                                                           const py::object,
                                                            const int,
                                                            const int)>(
               &incremental_mapping),
           py::arg("database_path"),
           py::arg("image_path"),
+          py::arg("input_path"),
           py::arg("output_path"),
           py::arg("num_threads") = mapper_options.num_threads,
           py::arg("min_num_matches") = mapper_options.min_num_matches,
