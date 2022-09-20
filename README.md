@@ -80,6 +80,24 @@ their respective defaults, e.g.
 
 ```python
 pycolmap.extract_features(database_path, image_dir, sift_options={"max_num_features": 512})
+# equivalent to
+ops = pycolmap.SiftExtractionOptions()
+ops.max_num_features=512
+pycolmap.extract_features(database_path, image_dir, sift_options=ops)
+```
+
+To list available options, use
+
+```python
+help(pycolmap.SiftExtractionOptions)
+```
+
+The default parameters can be looked up with
+
+```python
+print(pycolmap.SiftExtractionOptions().summary())
+# or
+print(pycolmap.SiftExtractionOptions().todict())
 ```
 
 PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
