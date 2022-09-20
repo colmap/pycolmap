@@ -46,7 +46,7 @@ py -m pip install ./
 
 ## Reconstruction pipeline
 
-We provide bindings for multiple steps of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
+PyCOLMAP provides bindings for multiple steps of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
 
 - extracting and matching SIFT features
 - importing an image folder into a COLMAP database
@@ -75,6 +75,8 @@ pycolmap.patch_match_stereo(mvs_path)  # requires compilation with CUDA
 pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
 ```
 
+PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
+
 All of the above steps are easily configurable with python dicts which are recursively merged into
 their respective defaults, e.g.
 
@@ -100,7 +102,6 @@ print(pycolmap.SiftExtractionOptions().summary())
 print(pycolmap.SiftExtractionOptions().todict())
 ```
 
-PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
 
 For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
 
