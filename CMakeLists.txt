@@ -7,8 +7,10 @@ link_directories(${COLMAP_LINK_DIRS})
 
 if (${CERES_VERSION} VERSION_LESS "2.0.0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-else()
+elseif(${CERES_VERSION} VERSION_LESS "2.2.0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
 add_subdirectory(pybind11)
