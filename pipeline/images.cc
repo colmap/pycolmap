@@ -206,6 +206,18 @@ void init_images(py::module& m) {
             .def_readwrite("camera_model",
                            &IROpts::camera_model,
                            "Name of the camera model.")
+            .def_readwrite("mask_path",
+                           &IROpts::mask_path,
+                           "Optional root path to folder which contains image
+                            masks. For a given image, the corresponding mask
+                            must have the same sub-path below this root as the
+                            image has below image_path. The filename must be
+                            equal, aside from the added extension .png. 
+                            For example, for an image image_path/abc/012.jpg,
+                            the mask would be mask_path/abc/012.jpg.png. No 
+                            features will be extracted in regions where the 
+                            mask image is black (pixel intensity value 0 in
+                            grayscale).")
             .def_readwrite("existing_camera_id",
                            &IROpts::existing_camera_id,
                            "Whether to explicitly use an existing camera for "
