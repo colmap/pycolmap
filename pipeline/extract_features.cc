@@ -129,10 +129,6 @@ void init_extract_features(py::module& m) {
                            &SEOpts::max_num_features,
                            "Maximum number of features to detect, keeping "
                            "larger-scale features.")
-            .def_readwrite("max_num_features",
-                           &SEOpts::max_num_features,
-                           "Maximum number of features to detect, keeping "
-                           "larger-scale features.")
             .def_readwrite("first_octave",
                            &SEOpts::first_octave,
                            "First octave in the pyramid, i.e. -1 upsamples the "
