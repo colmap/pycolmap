@@ -21,6 +21,7 @@ namespace py = pybind11;
 
 #include "pipeline/sfm.cc"
 #include "pipeline/mvs.cc"
+#include "pipeline/meshing.cc"
 
 #include "reconstruction/reconstruction.cc"
 #include "reconstruction/correspondence_graph.cc"
@@ -98,6 +99,7 @@ PYBIND11_MODULE(pycolmap, m) {
     // Main reconstruction steps
     init_sfm(m);
     init_mvs(m);
+    init_meshing(m);
 
     // SIFT feature detector and descriptor
     init_sift(m);
