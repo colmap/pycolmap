@@ -42,18 +42,25 @@ static std::map<int, std::unique_ptr<std::mutex>> sift_gpu_mutexes;
 
 class Sift {
    public:
-    Sift(SiftExtractionOptions options, Device device)
-        : options_(options), use_gpu_(IsGPU(device)) {
+    Sift(SiftExtractionOptions extract_options,
+         SiftMatchingOptions match_options,
+         Device device) :
+        extract_options_(extract_options),
+        match_options_(match_options),
+        use_gpu_(IsGPU(device)) {
         VerifySiftGPUParams(use_gpu_);
         if (use_gpu_) {
 #ifdef CUDA_ENABLED
             sift_gpu.reset(new SiftGPU);
-            CreateSiftGPUExtractor(options_, sift_gpu.get());
+            CreateSiftGPUExtractor(extract_options_, sift_gpu.get());
             if (sift_gpu_mutexes.count(sift_gpu->gpu_index) == 0) {
                 sift_gpu_mutexes.emplace(
                     sift_gpu->gpu_index,
                     std::unique_ptr<std::mutex>(new std::mutex()));
             }
+
+            sift_match_gpu.reset(new SiftMatchGPU);
+            CreateSiftGPUMatcher(match_options_, sift_match_gpu.get());
 #endif
         }
     }
@@ -61,8 +68,8 @@ class Sift {
     template <typename dtype>
     sift_output_t Extract(Eigen::Ref<const pyimage_t<dtype>> image,
                           bool do_normalize) {
-        THROW_CHECK_LE(image.rows(), options_.max_image_size);
-        THROW_CHECK_LE(image.cols(), options_.max_image_size);
+        THROW_CHECK_LE(image.rows(), extract_options_.max_image_size);
+        THROW_CHECK_LE(image.cols(), extract_options_.max_image_size);
 
         descriptors_t descriptors;
         keypoints_t keypoints;
@@ -79,10 +86,10 @@ class Sift {
         }
         if (do_normalize) {
             // Save and normalize the descriptors.
-            if (options_.normalization ==
+            if (extract_options_.normalization ==
                 SiftExtractionOptions::Normalization::L2) {
                 descriptors = L2NormalizeFeatureDescriptors(descriptors);
-            } else if (options_.normalization ==
+            } else if (extract_options_.normalization ==
                        SiftExtractionOptions::Normalization::L1_ROOT) {
                 descriptors = L1RootNormalizeFeatureDescriptors(descriptors);
             }
@@ -90,18 +97,43 @@ class Sift {
 
         return std::make_tuple(keypoints, scores, descriptors);
     }
-    const SiftExtractionOptions& Options() const { return options_; };
+    const SiftExtractionOptions& Options() const { return extract_options_; };
     Device GetDevice() const {
         return (use_gpu_) ? Device::CUDA : Device::CPU;
     };
+
+    FeatureMatches Match(
+        descriptors_t descriptors1,
+        descriptors_t descriptors2) {
+        FeatureMatches matches;
+        FeatureDescriptors desc1_uint8 = FeatureDescriptorsToUnsignedByte(descriptors1);
+        FeatureDescriptors desc2_uint8 = FeatureDescriptorsToUnsignedByte(descriptors2);
+        if (use_gpu_) {
+#ifdef CUDA_ENABLED
+            MatchSiftFeaturesGPU(
+                match_options_,
+                &desc1_uint8,
+                &desc2_uint8,
+                sift_match_gpu.get(),
+                &matches);
+#endif
+        } else {
+            MatchSiftFeaturesCPUFLANN(
+                match_options_,
+                desc1_uint8,
+                desc2_uint8,
+                &matches);
+        }
+        return matches;
+    }
 
    private:
 #ifdef CUDA_ENABLED
     template <typename dtype>
     sift_output_t ExtractGPU(const pyimage_t<dtype>& image /* [h, w] */) {
-        THROW_CHECK_LE(options_.max_image_size, sift_gpu->GetMaxDimension());
-        THROW_CHECK(!options_.estimate_affine_shape);
-        THROW_CHECK(!options_.domain_size_pooling);
+        THROW_CHECK_LE(extract_options_.max_image_size, sift_gpu->GetMaxDimension());
+        THROW_CHECK(!extract_options_.estimate_affine_shape);
+        THROW_CHECK(!extract_options_.domain_size_pooling);
 
         std::unique_lock<std::mutex> lock(
             *sift_gpu_mutexes[sift_gpu->gpu_index]);
@@ -157,11 +189,11 @@ class Sift {
         // Create a new instance of SIFT detector & descriptor.
         VlSiftFilt* sift = vl_sift_new(image.cols(),
                                        image.rows(),
-                                       options_.num_octaves,
-                                       options_.octave_resolution,
-                                       options_.first_octave);
-        vl_sift_set_edge_thresh(sift, options_.edge_threshold);
-        vl_sift_set_peak_thresh(sift, options_.peak_threshold);
+                                       extract_options_.num_octaves,
+                                       extract_options_.octave_resolution,
+                                       extract_options_.first_octave);
+        vl_sift_set_edge_thresh(sift, extract_options_.edge_threshold);
+        vl_sift_set_peak_thresh(sift, extract_options_.peak_threshold);
 
         // Build image pyramid.
         bool is_first_octave = true;
@@ -203,7 +235,7 @@ class Sift {
                 // Extract feature orientations.
                 double angles[4];
                 int num_orientations;
-                if (options_.upright) {
+                if (extract_options_.upright) {
                     num_orientations = 1;
                     angles[0] = 0.0;
                 } else {
@@ -248,7 +280,9 @@ class Sift {
     }
 
     std::unique_ptr<SiftGPU> sift_gpu;
-    SiftExtractionOptions options_;
+    std::unique_ptr<SiftMatchGPU> sift_match_gpu;
+    SiftExtractionOptions extract_options_;
+    SiftMatchingOptions match_options_;
     bool use_gpu_ = false;
 };
 
@@ -260,19 +294,24 @@ sift_output_t extract_sift(const py::array_t<float> image,
                            const float edge_thresh,
                            const float peak_thresh,
                            const bool upright) {
-    SiftExtractionOptions options;
-    options.num_octaves = num_octaves;
-    options.octave_resolution = octave_resolution;
-    options.first_octave = first_octave;
-    options.edge_threshold = edge_thresh;
-    options.peak_threshold = peak_thresh;
-    options.upright = upright;
-    Sift sift(options, Device::CPU);
+    SiftExtractionOptions extract_options;
+    SiftMatchingOptions match_options;
+    extract_options.num_octaves = num_octaves;
+    extract_options.octave_resolution = octave_resolution;
+    extract_options.first_octave = first_octave;
+    extract_options.edge_threshold = edge_thresh;
+    extract_options.peak_threshold = peak_thresh;
+    extract_options.upright = upright;
+    Sift sift(extract_options, match_options, Device::CPU);
     return sift.Extract(image.cast<Eigen::Ref<const pyimage_t<float>>>(),
                         false);
 }
 
 void init_sift(py::module& m) {
+    py::class_<FeatureMatch>(m, "FeatureMatch")
+        .def_readwrite("x1", &FeatureMatch::point2D_idx1)
+        .def_readwrite("x2", &FeatureMatch::point2D_idx2);
+
     m.def("extract_sift",
           &extract_sift,
           py::arg("image"),
@@ -291,8 +330,9 @@ void init_sift(py::module& m) {
     sift_options["max_image_size"] = 7000;
 
     py::class_<Sift>(m, "Sift")
-        .def(py::init<SiftExtractionOptions, Device>(),
-             py::arg("options") = sift_options,
+        .def(py::init<SiftExtractionOptions, SiftMatchingOptions, Device>(),
+             py::arg("extract_options") = sift_options,
+             py::arg("match_options"),
              py::arg("device") = Device::AUTO)
         .def("extract",
              &Sift::Extract<float>,
@@ -302,6 +342,7 @@ void init_sift(py::module& m) {
              &Sift::Extract<uint8_t>,
              py::arg("image").noconvert(),
              py::arg("do_normalize") = false)
-        .def_property_readonly("options", &Sift::Options)
+        .def("match", &Sift::Match)
+        .def_property_readonly("extract_options", &Sift::Options)
         .def_property_readonly("device", &Sift::GetDevice);
 }
