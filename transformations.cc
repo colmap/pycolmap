@@ -144,9 +144,9 @@ void init_transforms(py::module& m) {
           "Rotate world point");
     m.def("concat_quat", &colmap::ConcatenateQuaternions,
           py::arg("qvec1"),
-	      py::arg("qvec2"),
-	      "Concatenate Quaternion rotations such that the rotation of qvec1 is applied"
-	      "before the rotation of qvec2.");
+          py::arg("qvec2"),
+          "Concatenate Quaternion rotations such that the rotation of qvec1 is applied"
+          "before the rotation of qvec2.");
     m.def("invert_qvec", &colmap::InvertQuaternion,
           py::arg("qvec"),
           "Returns inverted qvec");
