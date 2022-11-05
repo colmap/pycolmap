@@ -5,9 +5,9 @@ on:
     branches:
       - master
   pull_request:
-    types: [ assigned, opened, synchronize, reopened ]
+    types: [assigned, opened, synchronize, reopened]
   release:
-    types: [published, edited]
+    types:  [published, edited]
   workflow_dispatch:
 
 jobs:
