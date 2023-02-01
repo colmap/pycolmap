@@ -32,7 +32,7 @@ brew install wget cmake $PYTHON_VERSION
 # TODO: try without brew install of boost, but use version below
 brew install cmake boost eigen freeimage metis glog gflags suite-sparse ceres-solver glew cgal
 
-brew install llvm libomp
+brew install llvm libomp flann
 
 brew info gcc
 brew upgrade gcc
