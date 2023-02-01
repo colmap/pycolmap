@@ -15,7 +15,11 @@ else()
 endif()
 
 add_subdirectory(pybind11)
-set(${FLANN_INCLUDE_DIRS})
+set(
+${FLANN_INCLUDE_DIRS}
+${Boost_INCLUDE_DIRS}
+)
+
 
 
 if (${COLMAP_CUDA_ENABLED})
