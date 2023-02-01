@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(PyCOLMAP)
 
+find_package(FLANN REQUIRED)
 find_package(COLMAP REQUIRED)
 include_directories(${COLMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 link_directories(${COLMAP_LINK_DIRS})
