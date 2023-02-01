@@ -140,7 +140,7 @@ make -j$(nproc) install
 cd /io/
 cat setup.py
 
-PLAT=manylinux_2_24_x86_64
+PLAT=manylinux2014_x86_64
 EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
 
 # Bundle external shared libraries into the wheels
