@@ -42,13 +42,13 @@ echo "Num. processes to use for building: ${nproc}"
 cd $CURRDIR
 yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
 
-# Download and install Boost-1.65.1
+# Download and install Boost_1_81_0
 # colmap needs only program_options filesystem graph system unit_test_framework
 mkdir -p boost && \
     cd boost && \
-    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xzf boost_1_65_1.tar.gz && \
-    cd boost_1_65_1 && \
+    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz && \
+    tar xzf boost_1_81_0.tar.gz && \
+    cd boost_1_81_0 && \
     ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test && \
     ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
 
@@ -140,7 +140,7 @@ make -j$(nproc) install
 cd /io/
 cat setup.py
 
-PLAT=manylinux2014_x86_64
+PLAT=manylinux_2_24_x86_64
 EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
 
 # Bundle external shared libraries into the wheels

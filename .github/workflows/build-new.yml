@@ -28,15 +28,15 @@ jobs:
         # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
         # see https://github.com/varunagrawal/docker-images/blob/master/gtsam-manylinux/Dockerfile for an example
         # container, but it does not have some necesssary boost packages --> varunagrawal/gtsam-manylinux:latest
-        sudo docker run --rm -e PLAT=manylinux2014_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux2014_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
+        sudo docker run --rm -e PLAT=manylinux_2_24_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_24_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
         # cleanup for custom runner
         sudo chown -R $(whoami):$(whoami) .
     - name: Archive wheels
       uses: actions/upload-artifact@v3
       with:
         # we strip the version number from the artifact name
-        name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
-        path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+        name: pycolmap-${{ matrix.pyversion }}-manylinux_2_24_x86_64
+        path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux_2_24_x86_64.whl
 
   mac-build:
     name: Wrapper macOS Build
