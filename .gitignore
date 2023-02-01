@@ -2,3 +2,4 @@
 *.so
 *.egg-info/
 build/
+.idea/

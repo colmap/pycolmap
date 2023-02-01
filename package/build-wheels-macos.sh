@@ -80,6 +80,7 @@ done
 # see https://pypi.org/project/delocate/ for more details
 cd $CURRDIR
 $INTERPRETER -m pip install delocate==0.10.0
+$INTERPRETER -m pip install -U pip setuptools wheel cffi
 
 ls -ltrh /usr/local
 ls -ltrh /usr/local/opt
