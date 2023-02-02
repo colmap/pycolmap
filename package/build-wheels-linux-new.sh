@@ -79,6 +79,7 @@ echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
 echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 
 # ------ Build COLMAP ------
+sudo chmod -R 777 /usr/local/lib/cmake/
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
