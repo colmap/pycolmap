@@ -23,8 +23,6 @@ jobs:
         with:
           submodules: recursive
       - name: Build the Linux wheels
-        with:
-          continue-on-error: true
         run: |
           # must be run in docker, cannot be run as freestanding script for toolchain issues
           # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
@@ -34,6 +32,7 @@ jobs:
           # sudo docker run --rm -e PLAT=manylinux_2_35_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_35_x86_6 /io/package/build-wheels-linux-new.sh ${{ matrix.pyversion }}
           # cleanup for custom runner
           sudo chown -R $(whoami):$(whoami) .
+        continue-on-error: true
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
@@ -54,10 +53,9 @@ jobs:
         with:
           submodules: recursive
       - name: Build the macOS wheels
-        with:
-          continue-on-error: true
         run: |
           ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
+        continue-on-error: true
 
       - name: Archive wheels
         uses: actions/upload-artifact@v3
