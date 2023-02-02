@@ -65,7 +65,8 @@ yum install -y \
     metis-devel \
     glog-devel \
     gflags-devel \
-    glew-devel
+    glew-devel \
+    flann
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
 
