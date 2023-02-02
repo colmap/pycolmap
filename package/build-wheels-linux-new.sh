@@ -27,7 +27,7 @@ echo "Python version: $PYTHONVER"
 
 export PATH=$PYBIN:$PATH
 
-${PYBIN}/pip install auditwheel
+${PYBIN}/pip install auditwheel cmake
 
 PYTHON_EXECUTABLE=${PYBIN}/python
 # We use distutils to get the include directory and the library path directly from the selected interpreter
@@ -38,23 +38,6 @@ PYTHON_LIBRARY=$(${PYTHON_EXECUTABLE} -c "import distutils.sysconfig as sysconfi
 CURRDIR=$(pwd)
 
 echo "Num. processes to use for building: ${nproc}"
-
-# ------ Install boost (build it staticly) ------
-cd $CURRDIR
-apt-get install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
-
-# Download and install Boost-1.65.1
-# colmap needs only program_options filesystem graph system unit_test_framework
-mkdir -p boost && \
-    cd boost && \
-    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xzf boost_1_65_1.tar.gz && \
-    cd boost_1_65_1 && \
-    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test && \
-    ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
-
-# Boost should now be visible under /usr/local
-ls -ltrh /usr/local
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
