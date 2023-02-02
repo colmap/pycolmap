@@ -95,7 +95,7 @@ done
 # Install `delocate` -- OSX equivalent of `auditwheel`
 # see https://pypi.org/project/delocate/ for more details
 cd $CURRDIR
-$INTERPRETER -m pip install delocate==0.10.0
+$INTERPRETER -m pip install -U delocate
 $INTERPRETER -m pip install -U pip setuptools wheel cffi
 
 ls -ltrh /usr/local
