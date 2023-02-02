@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-13 ]
+        os: [ macos-12 ]
         pyversion: [ "python@3.8", "python@3.9", "python@3.10", "python@3.11" ]
     steps:
       - name: Checkout
