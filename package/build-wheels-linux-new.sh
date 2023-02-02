@@ -8,10 +8,10 @@
 # Author: John Lambert (johnwlambert)
 
 uname -a
-echo "Current CentOS Version:"
-cat /etc/centos-release
+echo "Current Debian Version:"
+cat /etc/debian-release
 
-yum -y install wget
+apt-get -y install wget
 
 ls -ltrh /io/
 
@@ -40,7 +40,7 @@ echo "Num. processes to use for building: ${nproc}"
 
 # ------ Install boost (build it staticly) ------
 cd $CURRDIR
-yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
+apt-get install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
 
 # Download and install Boost-1.65.1
 # colmap needs only program_options filesystem graph system unit_test_framework
@@ -57,18 +57,31 @@ ls -ltrh /usr/local
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
-yum install -y \
-    git \
-    cmake \
-    gcc gcc-c++ make \
-    freeimage-devel \
-    metis-devel \
-    glog-devel \
-    gflags-devel \
-    glew-devel \
-    flann
+apt-get update && apt-get install -y \
+        build-essential \
+        ninja-build \
+        libboost-program-options-dev \
+        libboost-filesystem-dev \
+        libboost-graph-dev \
+        libboost-system-dev \
+        libboost-test-dev \
+        libeigen3-dev \
+        libceres-dev \
+        libflann-dev \
+        libfreeimage-dev \
+        libmetis-dev \
+        libgoogle-glog-dev \
+        libgflags-dev \
+        libsqlite3-dev \
+        libglew-dev \
+        qtbase5-dev \
+        libqt5opengl5-dev \
+        libcgal-dev \
+        libcgal-qt5-dev \
+        libgl1-mesa-dri \
+        libunwind-dev \
+        xvfb
 
-yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
 
 # Disable CGAL since it pulls many dependencies and increases the wheel size
 #yum install -y yum-utils
@@ -76,44 +89,10 @@ yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
 #yum install -y --nogpgcheck CGAL-devel
 
 cd $CURRDIR
-# Using Eigen 3.3, not Eigen 3.4
-wget https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-tar -xvzf eigen-3.3.9.tar.gz
-export EIGEN_DIR="$CURRDIR/eigen-3.3.9"
-
-# While Eigen is a header-only library, it still has to be built!
-# Creates Eigen3Config.cmake from Eigen3Config.cmake.in
-cd $EIGEN_DIR
-mkdir build
-cd build
-cmake ..
-
-ls -ltrh "$EIGEN_DIR/cmake/"
-
-# ------ Install CERES solver ------
-cd $CURRDIR
-git clone https://ceres-solver.googlesource.com/ceres-solver
-cd ceres-solver
-git checkout $(git describe --tags) # Checkout the latest release
-mkdir build
-cd build
-cmake .. -DBUILD_TESTING=OFF \
-         -DBUILD_EXAMPLES=OFF \
-         -DEigen3_DIR="$EIGEN_DIR/cmake/"
-make -j$(nproc)
-make install
 
 echo "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}"
 echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
 echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
-
-# ------ Build FreeImage from source and install ------
-#cd $CURRDIR
-#wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
-#unzip FreeImage3180.zip
-#cd FreeImage
-#make
-#make install
 
 # ------ Build COLMAP ------
 cd $CURRDIR
@@ -122,11 +101,9 @@ cd colmap
 git checkout dev
 mkdir build/
 cd build/
-CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DBoost_USE_STATIC_LIBS=ON \
-         -DBOOST_ROOT=/usr/local \
-         -DGUI_ENABLED=OFF \
-         -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
+CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. \
+        -GNinja \
+        -DTESTS_ENABLED=ON \
 
 if [ $ec -ne 0 ]; then
     echo "Error:"
@@ -139,8 +116,7 @@ make -j$(nproc) install
 # ------ Build pycolmap wheel ------
 cd /io/
 cat setup.py
-
-PLAT=manylinux2014_x86_64
+PLAT=manylinux_2_24_x86_64
 EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
 
 # Bundle external shared libraries into the wheels
