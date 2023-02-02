@@ -85,9 +85,10 @@ cd colmap
 git checkout dev
 mkdir build/
 cd build/
-CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. \
-        -GNinja \
-        -DTESTS_ENABLED=ON \
+CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
+         -DBoost_USE_STATIC_LIBS=ON \
+         -DBOOST_ROOT=/usr/local \
+         -DGUI_ENABLED=OFF
 
 if [ $ec -ne 0 ]; then
     echo "Error:"
