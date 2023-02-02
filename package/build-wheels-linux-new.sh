@@ -16,7 +16,6 @@ apt-get -y install wget
 
 ls -ltrh /io/
 
-
 # we cannot simply use `pip` or `python`, since points to old 2.7 version
 PYBIN="/opt/python/$PYTHON_VERSION/bin"
 PYVER_NUM=$($PYBIN/python -c "import sys;print(sys.version.split(\" \")[0])")
@@ -52,28 +51,21 @@ apt-get update && apt-get install -y \
   libboost-filesystem-dev \
   libboost-graph-dev \
   libboost-system-dev \
-  libboost-all-dev \
   libboost-test-dev \
   libeigen3-dev \
-  libceres-dev \
   libflann-dev \
   libfreeimage-dev \
   libmetis-dev \
   libgoogle-glog-dev \
   libgflags-dev \
-  libatlas-base-dev \
-  libsuitesparse-dev \
   libsqlite3-dev \
   libglew-dev \
   qtbase5-dev \
   libqt5opengl5-dev \
-  libqt5opengl5-dev \
   libcgal-dev \
-  libcgal-qt5-dev \
-  libgl1-mesa-dri \
-  libunwind-dev \
-  xvfb \
-  clang
+  libceres-dev \
+  gcc-10 \
+  g++-10
 
 echo '##vso[task.setvariable variable=CC]/usr/bin/clang'
 echo '##vso[task.setvariable variable=CXX]/usr/bin/clang++'
@@ -93,11 +85,9 @@ mkdir build
 cd build
 export EIGEN_DIR="/usr/include/eigen3"
 echo "Eigen dir: $EIGEN_DIR"
-CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DBoost_USE_STATIC_LIBS=ON \
-         -DBOOST_ROOT=/usr/local \
-         -DGUI_ENABLED=OFF \
-         -DEIGEN3_INCLUDE_DIRS="/usr/include/eigen3/Eigen"
+cmake .. -GNinja
+ninja
+ninja install
 
 if [ $ec -ne 0 ]; then
   echo "Error:"
@@ -106,6 +96,9 @@ if [ $ec -ne 0 ]; then
 fi
 set -e -x
 make -j$(nproc) install
+
+export CC=/usr/bin/gcc-10
+export CXX=/usr/bin/g++-10
 
 # ------ Build pycolmap wheel ------
 cd /io/
