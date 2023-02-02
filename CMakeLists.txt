@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.6)
 project(PyCOLMAP)
 
 find_package(COLMAP REQUIRED)
-include_directories(${COLMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
+find_package(FLANN REQUIRED)
+find_package(Ceres REQUIRED)
+include_directories(${COLMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR} ${COLMAP_EXTERNAL_LIBRARIES})
 link_directories(${COLMAP_LINK_DIRS})
 
 if (${CERES_VERSION} VERSION_LESS "2.0.0")
@@ -14,7 +16,6 @@ else()
 endif()
 
 add_subdirectory(pybind11)
-
 
 if (${COLMAP_CUDA_ENABLED})
     message("Compiling bindings with CUDA support.")
