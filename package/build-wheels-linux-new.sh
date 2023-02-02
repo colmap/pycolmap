@@ -11,6 +11,7 @@ uname -a
 echo "Current Debian Version:"
 cat /etc/debian-release
 
+apt-get update
 apt-get -y install wget
 
 ls -ltrh /io/
