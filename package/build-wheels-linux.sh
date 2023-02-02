@@ -126,7 +126,8 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DBoost_USE_STATIC_LIBS=ON \
          -DBOOST_ROOT=/usr/local \
          -DGUI_ENABLED=OFF \
-         -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
+         -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR \
+         -FLANN_DIR=/usr/lib64/cmake/flann \
 
 if [ $ec -ne 0 ]; then
     echo "Error:"
