@@ -105,7 +105,7 @@ echo '##vso[task.setvariable variable=CXX]/usr/bin/g++-10'
 # ------ Build pycolmap wheel ------
 cd /io/
 cat setup.py
-PLAT=manylinux_2_35_x86_64
+PLAT=manylinux_2_24_x86_64
 EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
 
 # Bundle external shared libraries into the wheels
