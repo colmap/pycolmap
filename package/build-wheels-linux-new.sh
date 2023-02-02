@@ -57,7 +57,7 @@ ls -ltrh /usr/local
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
-apt-get update && apt-get install -y \
+sudo apt-get update && sudo apt-get install -y \
         build-essential \
         ninja-build \
         libboost-program-options-dev \
