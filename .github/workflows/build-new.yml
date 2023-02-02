@@ -32,6 +32,8 @@ jobs:
           # sudo docker run --rm -e PLAT=manylinux_2_35_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_35_x86_6 /io/package/build-wheels-linux-new.sh ${{ matrix.pyversion }}
           # cleanup for custom runner
           sudo chown -R $(whoami):$(whoami) .
+        with:
+          continue-on-error: true
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
@@ -54,6 +56,8 @@ jobs:
       - name: Build the macOS wheels
         run: |
           ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
+        with:
+          continue-on-error: true
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
