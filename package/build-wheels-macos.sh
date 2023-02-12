@@ -42,7 +42,6 @@ brew install \
     metis \
     suite-sparse \
     ceres-solver \
-    qt5 \
     glew \
     cgal \
     sqlite3 \

@@ -15,6 +15,7 @@ endif()
 
 add_subdirectory(pybind11)
 
+
 if (${COLMAP_CUDA_ENABLED})
     message("Compiling bindings with CUDA support.")
     add_definitions(-DCUDA_ENABLED)
