@@ -28,12 +28,15 @@ declare -a PYTHON_VERSION=( $1 )
 
 brew update
 brew upgrade
-brew install wget cmake $PYTHON_VERSION
-# TODO: try without brew install of boost, but use version below
+brew install wget cmake
+
+# See https://github.com/actions/setup-python/issues/577
+find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
+brew install --force $PYTHON_VERSION
+
 brew install \
     git \
     cmake \
-    boost \
     eigen \
     freeimage \
     flann \
