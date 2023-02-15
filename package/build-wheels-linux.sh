@@ -67,7 +67,7 @@ yum install -y \
     gflags-devel \
     glew-devel
 
-yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel
+yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
 
 # Disable CGAL since it pulls many dependencies and increases the wheel size
 #yum install -y yum-utils

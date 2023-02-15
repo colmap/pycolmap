@@ -25,14 +25,31 @@ function retry {
 }
 
 declare -a PYTHON_VERSION=( $1 )
+# See https://github.com/actions/setup-python/issues/577
+find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
 
 brew update
 brew upgrade
-brew install wget cmake $PYTHON_VERSION
-# TODO: try without brew install of boost, but use version below
-brew install cmake boost eigen freeimage metis glog gflags suite-sparse ceres-solver glew cgal
+brew install wget cmake
+brew install --force $PYTHON_VERSION
 
-brew install llvm libomp
+brew install \
+    git \
+    cmake \
+    eigen \
+    freeimage \
+    flann \
+    glog \
+    gflags \
+    metis \
+    suite-sparse \
+    ceres-solver \
+    glew \
+    cgal \
+    sqlite3 \
+    libomp \
+    llvm \
+    lz4
 
 brew info gcc
 brew upgrade gcc
@@ -53,9 +70,9 @@ ls -ltrh $CURRDIR
 # Build Boost staticly
 mkdir -p boost_build
 cd boost_build
-retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz
-tar xzf boost_1_73_0.tar.gz
-cd boost_1_73_0
+retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
+tar xzf boost_1_81_0.tar.gz
+cd boost_1_81_0
 ./bootstrap.sh --prefix=$CURRDIR/boost_install --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex clang-darwin
 ./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" runtime-link=static variant=release link=static install
 
@@ -79,7 +96,8 @@ done
 # Install `delocate` -- OSX equivalent of `auditwheel`
 # see https://pypi.org/project/delocate/ for more details
 cd $CURRDIR
-$INTERPRETER -m pip install delocate==0.10.0
+$INTERPRETER -m pip install -U delocate
+$INTERPRETER -m pip install -U pip setuptools wheel cffi
 
 ls -ltrh /usr/local
 ls -ltrh /usr/local/opt
