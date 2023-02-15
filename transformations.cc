@@ -142,6 +142,11 @@ void init_transforms(py::module& m) {
           py::arg("qvec"),
           py::arg("xyz"),
           "Rotate world point");
+    m.def("concat_quat", &colmap::ConcatenateQuaternions,
+          py::arg("qvec1"),
+          py::arg("qvec2"),
+          "Concatenate Quaternion rotations such that the rotation of qvec1 is applied"
+          "before the rotation of qvec2.");
     m.def("invert_qvec", &colmap::InvertQuaternion,
           py::arg("qvec"),
           "Returns inverted qvec");
@@ -169,6 +174,18 @@ void init_transforms(py::module& m) {
         },
         py::arg("qvec1"), py::arg("tvec1"), py::arg("qvec2"), py::arg("tvec2"));
 
+    m.def("concatenate_poses", [](const Eigen::Vector4d& qvec1,
+                         const Eigen::Vector3d& tvec1,
+                         const Eigen::Vector4d& qvec2,
+                         const Eigen::Vector3d& tvec2) {
+            Eigen::Vector4d qvec12;
+            Eigen::Vector3d tvec12;
+            colmap::ConcatenatePoses(
+                qvec1, tvec1, qvec2, tvec2, &qvec12, &tvec12);
+            return std::make_pair(qvec12, tvec12);
+        },
+        py::arg("qvec1"), py::arg("tvec1"), py::arg("qvec2"), py::arg("tvec2"));
+        
     m.def("world_to_image", [](int model_id,
         Eigen::Ref<Eigen::VectorXd> camera_params,
         Eigen::Ref<Eigen::Vector2d> uv,

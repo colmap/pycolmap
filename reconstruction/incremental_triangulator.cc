@@ -44,7 +44,9 @@ void init_incremental_triangulator(py::module& m) {
         .def("retriangulate", &IncrementalTriangulator::Retriangulate)
         .def("add_modified_point3D", &IncrementalTriangulator::AddModifiedPoint3D)
         .def("clear_modified_points3D", &IncrementalTriangulator::ClearModifiedPoints3D)
-        // Missing bindings: CompleteTracks, MergeTracks, GetModifiedPoints3D
+        .def("merge_tracks", &IncrementalTriangulator::MergeTracks)
+        .def("complete_tracks", &IncrementalTriangulator::CompleteTracks)
+        // Missing bindings: GetModifiedPoints3D
         // Private bindings: Find, Create, Continue, Merge, Complete, HasCameraBogusParams
         .def("__copy__", [](const IncrementalTriangulator& self) { return IncrementalTriangulator(self); })
         .def("__deepcopy__", [](const IncrementalTriangulator& self, py::dict) { return IncrementalTriangulator(self); })
