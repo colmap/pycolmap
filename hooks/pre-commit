@@ -3,6 +3,6 @@
 for FILE in $(git diff --cached --name-only); do
     if [[ $FILE =~ \.(cc|h)$ ]]; then
         clang-format --style=file:.clang-format -i $FILE
+        git add $FILE
     fi
 done
-git add ./
