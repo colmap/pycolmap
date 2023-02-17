@@ -7,6 +7,7 @@
 #include "colmap/feature/extraction.h"
 #include "colmap/feature/matching.h"
 #include "colmap/feature/sift.h"
+
 #include "colmap/util/misc.h"
 
 #include "colmap/base/reconstruction.h"
