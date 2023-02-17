@@ -1,7 +1,6 @@
 #!/bin/bash
 
 for FILE in $(git diff --cached --name-only); do
-    echo $FILE
     if [[ $FILE =~ \.(cc|h)$ ]]; then
         clang-format --style=file:.clang-format -i $FILE
     fi

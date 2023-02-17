@@ -92,7 +92,8 @@ PYBIND11_MODULE(pycolmap, m) {
   py::implicitly_convertible<py::dict, colmap::Camera>();
 
   // Transformation Bindings
-  init_transforms(m);
+  init_transforms(
+    m);
 
   // Main reconstruction steps
   init_sfm(m);  
