@@ -12,6 +12,8 @@
 #include <regex>
 #include <string>
 
+using namespace colmap;
+
 namespace py = pybind11;
 
 template <typename T>
