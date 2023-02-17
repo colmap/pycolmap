@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for FILE in ./*; do
+for FILE in $(git diff --cached --name-only); do
     if [[ $FILE == *.h ]] || [[ $FILE == *.cc ]]; then
         clang-format --style=file:.clang-format -i $FILE
     fi
