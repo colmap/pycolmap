@@ -5,3 +5,4 @@ for FILE in $(git diff --cached --name-only); do
         clang-format --style=file:.clang-format -i $FILE
     fi
 done
+git add ./
