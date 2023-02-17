@@ -86,14 +86,15 @@ void init_meshing(py::module& m) {
     m.def("poisson_meshing",
           [](py::object input_path_,
              py::object output_path_,
-             PoissonMOpts options) -> bool{
+             PoissonMOpts options) -> void {
             std::string input_path = py::str(input_path_).cast<std::string>();
-            THROW_CHECK_DIR_EXISTS(input_path);
+            THROW_CHECK_HAS_FILE_EXTENSION(input_path, ".ply")
+            THROW_CHECK_FILE_EXISTS(input_path);
 
             std::string output_path = py::str(output_path_).cast<std::string>();
             THROW_CHECK_HAS_FILE_EXTENSION(output_path, ".ply")
             THROW_CHECK_FILE_OPEN(output_path);
-            return PoissonMeshing(options, input_path, output_path);
+            PoissonMeshing(options, input_path, output_path);
           },
           py::arg("input_path"),
           py::arg("output_path"),
@@ -104,7 +105,7 @@ void init_meshing(py::module& m) {
     m.def("sparse_delaunay_meshing",
           [](py::object input_path_,
              py::object output_path_,
-             DMOpts options) -> void{
+             DMOpts options) -> void {
             std::string input_path = py::str(input_path_).cast<std::string>();
             THROW_CHECK_DIR_EXISTS(input_path);
 
@@ -121,7 +122,7 @@ void init_meshing(py::module& m) {
     m.def("dense_delaunay_meshing",
           [](py::object input_path_,
              py::object output_path_,
-             DMOpts options) -> void{
+             DMOpts options) -> void {
             std::string input_path = py::str(input_path_).cast<std::string>();
             THROW_CHECK_DIR_EXISTS(input_path);
 
