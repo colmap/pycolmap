@@ -2,18 +2,17 @@
 
 #pragma once
 
+#include "log_exceptions.h"
 #include <colmap/util/threading.h>
+#include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-#include "log_exceptions.h"
-#include <iostream>
 #include <regex>
 #include <string>
+
+namespace py = pybind11;
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {

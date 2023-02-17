@@ -1,9 +1,3 @@
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-namespace py = pybind11;
-
 #include "estimators/absolute_pose.cc"
 #include "estimators/essential_matrix.cc"
 #include "estimators/fundamental_matrix.cc"
@@ -21,6 +15,11 @@ namespace py = pybind11;
 #include "transformations.cc"
 #include "utils.h"
 #include <colmap/base/pose.h>
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
 
 void init_reconstruction(py::module&);
 void init_transforms(py::module&);

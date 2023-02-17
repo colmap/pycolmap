@@ -9,18 +9,16 @@
 #include "colmap/optim/ransac.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/random.h"
+#include "log_exceptions.h"
 #include <fstream>
 #include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
+using namespace colmap;
 
-#include "log_exceptions.h"
+namespace py = pybind11;
 
 const double TOL = 1e-5;
 

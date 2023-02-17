@@ -3,12 +3,11 @@
 #include "colmap/base/homography_matrix.h"
 #include <fstream>
 #include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+using namespace colmap;
 
 namespace py = pybind11;
 

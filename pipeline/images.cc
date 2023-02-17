@@ -11,19 +11,17 @@
 #include "colmap/feature/matching.h"
 #include "colmap/feature/sift.h"
 #include "colmap/util/misc.h"
-
-using namespace colmap;
-
+#include "helpers.h"
+#include "log_exceptions.h"
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
-
-#include "helpers.h"
-#include "log_exceptions.h"
 
 void import_images(const py::object database_path_,
                    const py::object image_path_, const CameraMode camera_mode,

@@ -1,18 +1,16 @@
 // Author: Mihai Dusmanu (mihaidusmanu)
 
 #include "colmap/sfm/incremental_triangulator.h"
-
-using namespace colmap;
-
+#include "log_exceptions.h"
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
-
-#include "log_exceptions.h"
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;

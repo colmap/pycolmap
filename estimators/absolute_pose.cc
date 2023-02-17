@@ -3,19 +3,15 @@
 #include "colmap/base/camera.h"
 #include "colmap/estimators/pose.h"
 #include "colmap/util/random.h"
+#include "helpers.h"
+#include "log_exceptions.h"
 #include <fstream>
 #include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
+using namespace colmap;
 namespace py = pybind11;
-
-#include "helpers.h"
-#include "log_exceptions.h"
 
 py::dict absolute_pose_estimation(
     const std::vector<Eigen::Vector2d> points2D,

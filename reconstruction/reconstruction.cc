@@ -6,17 +6,6 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"
 #include "colmap/util/types.h"
-
-using namespace colmap;
-
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
 #include "reconstruction/camera.cc"
 #include "reconstruction/image.cc"
@@ -24,6 +13,15 @@ using namespace pybind11::literals;
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
 #include "reconstruction/utils.cc"
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+using namespace colmap;
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;

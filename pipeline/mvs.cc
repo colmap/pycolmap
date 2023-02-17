@@ -11,19 +11,17 @@
 #include "colmap/mvs/meshing.h"
 #include "colmap/mvs/patch_match.h"
 #include "colmap/util/misc.h"
-
-using namespace colmap;
-
+#include "helpers.h"
+#include "log_exceptions.h"
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
-
-#include "helpers.h"
-#include "log_exceptions.h"
 
 void patch_match_stereo(py::object workspace_path_,
                         std::string workspace_format,

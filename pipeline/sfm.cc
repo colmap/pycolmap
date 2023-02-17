@@ -1,27 +1,24 @@
 // Author: Paul-Edouard Sarlin (skydes)
 
 #include "colmap/exe/sfm.h"
-
 #include "colmap/base/camera_models.h"
 #include "colmap/base/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/util/misc.h"
-
-using namespace colmap;
-
-#include <pybind11/iostream.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl_bind.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "pipeline/extract_features.cc"
 #include "pipeline/images.cc"
 #include "pipeline/match_features.cc"
+#include <pybind11/iostream.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+using namespace colmap;
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 Reconstruction triangulate_points(Reconstruction reconstruction,
                                   const py::object database_path_,

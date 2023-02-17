@@ -10,20 +10,18 @@
 #include "colmap/feature/matching.h"
 #include "colmap/feature/sift.h"
 #include "colmap/util/misc.h"
-
-using namespace colmap;
-
+#include "helpers.h"
+#include "log_exceptions.h"
+#include "utils.h"
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
-
-#include "helpers.h"
-#include "log_exceptions.h"
-#include "utils.h"
 
 template <typename Matcher, typename Opts>
 void match_features(py::object database_path_, SiftMatchingOptions sift_options,

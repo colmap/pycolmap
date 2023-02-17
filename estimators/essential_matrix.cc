@@ -6,18 +6,16 @@
 #include "colmap/estimators/essential_matrix.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/random.h"
+#include "log_exceptions.h"
 #include <fstream>
 #include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
+using namespace colmap;
 
-#include "log_exceptions.h"
+namespace py = pybind11;
 
 py::dict essential_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,

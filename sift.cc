@@ -1,11 +1,8 @@
 // Author: Mihai-Dusmanu (mihaidusmanu)
 
+#include <Eigen/Core>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-#include <Eigen/Core>
 
 extern "C" {
 #include <lib/VLFeat/sift.h>
@@ -18,11 +15,12 @@ extern "C" {
 #include "GL/glew.h"
 #endif
 
-using namespace colmap;
-
 #include "helpers.h"
 #include "utils.h"
 #include <iostream>
+
+namespace py = pybind11;
+using namespace colmap;
 
 #define kdim 4
 #define ddim 128

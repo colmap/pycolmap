@@ -3,17 +3,14 @@
 #include "colmap/base/camera_models.h"
 #include "colmap/base/similarity_transform.h"
 #include "colmap/base/warp.h"
-
-using namespace colmap;
-
+#include "log_exceptions.h"
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
 namespace py = pybind11;
-
-#include "log_exceptions.h"
 
 py::dict image_to_world(const std::vector<Eigen::Vector2d> points2D,
                         const colmap::Camera& camera) {
