@@ -2,8 +2,8 @@
 
 #pragma once
 
+#include "colmap/util/threading.h"
 #include "log_exceptions.h"
-#include <colmap/util/threading.h>
 #include <iostream>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
