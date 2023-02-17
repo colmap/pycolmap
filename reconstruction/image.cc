@@ -49,24 +49,6 @@ void init_image(py::module& m) {
 
     py::class_<colmap::Image, std::shared_ptr<colmap::Image>>(m, "Image")
         .def(py::init<>())
-        .def(py::init([](const std::string& name, const std::vector<Eigen::Vector2d>& keypoints,
-                         const Eigen::Vector3d& tvec, const Eigen::Vector4d& qvec, size_t camera_id,
-                         colmap::image_t image_id) {
-                 std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
-                 image->SetName(name);
-                 image->SetPoints2D(keypoints);
-                 image->SetTvec(tvec);
-                 image->SetQvec(qvec);
-                 if (camera_id != kInvalidCameraId) {
-                     image->SetCameraId(camera_id);
-                 }
-                 image->SetImageId(image_id);
-                 return image;
-             }),
-             py::arg("name") = "", py::arg("keypoints") = std::vector<Eigen::Vector2d>(),
-             py::arg("tvec") = Eigen::Vector3d(0.0, 0.0, 0.0),
-             py::arg("qvec") = Eigen::Vector4d(1.0, 0.0, 0.0, 0.0),
-             py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
         .def(py::init([](const std::string& name, const std::vector<Point2D>& points2D,
                          const Eigen::Vector3d& tvec, const Eigen::Vector4d& qvec, size_t camera_id,
                          colmap::image_t image_id) {
@@ -82,6 +64,24 @@ void init_image(py::module& m) {
                  return image;
              }),
              py::arg("name") = "", py::arg("points2D") = std::vector<Point2D>(),
+             py::arg("tvec") = Eigen::Vector3d(0.0, 0.0, 0.0),
+             py::arg("qvec") = Eigen::Vector4d(1.0, 0.0, 0.0, 0.0),
+             py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
+        .def(py::init([](const std::string& name, const std::vector<Eigen::Vector2d>& keypoints,
+                         const Eigen::Vector3d& tvec, const Eigen::Vector4d& qvec, size_t camera_id,
+                         colmap::image_t image_id) {
+                 std::unique_ptr<Image> image = std::unique_ptr<Image>(new Image());
+                 image->SetName(name);
+                 image->SetPoints2D(keypoints);
+                 image->SetTvec(tvec);
+                 image->SetQvec(qvec);
+                 if (camera_id != kInvalidCameraId) {
+                     image->SetCameraId(camera_id);
+                 }
+                 image->SetImageId(image_id);
+                 return image;
+             }),
+             py::arg("name") = "", py::arg("keypoints") = std::vector<Eigen::Vector2d>(),
              py::arg("tvec") = Eigen::Vector3d(0.0, 0.0, 0.0),
              py::arg("qvec") = Eigen::Vector4d(1.0, 0.0, 0.0, 0.0),
              py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
