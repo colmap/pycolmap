@@ -1,17 +1,16 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
-#include <fstream>
-#include <iostream>
-
+#include "colmap/estimators/generalized_absolute_pose.h"
 #include "colmap/base/camera.h"
 #include "colmap/base/pose.h"
 #include "colmap/base/projection.h"
 #include "colmap/base/similarity_transform.h"
-#include "colmap/estimators/generalized_absolute_pose.h"
 #include "colmap/estimators/pose.h"
 #include "colmap/optim/ransac.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/random.h"
+#include <fstream>
+#include <iostream>
 
 using namespace colmap;
 

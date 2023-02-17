@@ -4,27 +4,23 @@
 
 namespace py = pybind11;
 
-#include <colmap/base/pose.h>
-
 #include "estimators/absolute_pose.cc"
 #include "estimators/essential_matrix.cc"
 #include "estimators/fundamental_matrix.cc"
 #include "estimators/generalized_absolute_pose.cc"
 #include "estimators/homography.cc"
 #include "estimators/two_view_geometry.cc"
-
 #include "helpers.h"
 #include "homography_decomposition.cc"
-#include "sift.cc"
-#include "transformations.cc"
-#include "utils.h"
-
 #include "pipeline/mvs.cc"
 #include "pipeline/sfm.cc"
-
 #include "reconstruction/correspondence_graph.cc"
 #include "reconstruction/incremental_triangulator.cc"
 #include "reconstruction/reconstruction.cc"
+#include "sift.cc"
+#include "transformations.cc"
+#include "utils.h"
+#include <colmap/base/pose.h>
 
 void init_reconstruction(py::module&);
 void init_transforms(py::module&);

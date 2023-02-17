@@ -22,7 +22,6 @@ using namespace colmap;
 
 #include "helpers.h"
 #include "utils.h"
-
 #include <iostream>
 
 #define kdim 4

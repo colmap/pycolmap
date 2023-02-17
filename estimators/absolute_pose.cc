@@ -1,11 +1,10 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
-#include <fstream>
-#include <iostream>
-
 #include "colmap/base/camera.h"
 #include "colmap/estimators/pose.h"
 #include "colmap/util/random.h"
+#include <fstream>
+#include <iostream>
 
 using namespace colmap;
 

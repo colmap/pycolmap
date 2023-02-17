@@ -1,13 +1,11 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 #pragma once
+#include <colmap/util/misc.h>
 #include <exception>
+#include <pybind11/pybind11.h>
 #include <sstream>
 #include <string>
-
-#include <colmap/util/misc.h>
-
-#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 

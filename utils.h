@@ -1,10 +1,9 @@
 #pragma once
 
+#include "log_exceptions.h"
 #include <iostream>
 #include <regex>
 #include <string>
-
-#include "log_exceptions.h"
 
 enum class Device { AUTO = -1, CPU = 0, CUDA = 1 };
 

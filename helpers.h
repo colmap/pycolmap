@@ -3,7 +3,6 @@
 #pragma once
 
 #include <colmap/util/threading.h>
-
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
@@ -11,11 +10,10 @@
 
 namespace py = pybind11;
 
+#include "log_exceptions.h"
 #include <iostream>
 #include <regex>
 #include <string>
-
-#include "log_exceptions.h"
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {

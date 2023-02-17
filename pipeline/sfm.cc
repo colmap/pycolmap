@@ -18,7 +18,6 @@ using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
-
 #include "pipeline/extract_features.cc"
 #include "pipeline/images.cc"
 #include "pipeline/match_features.cc"

@@ -1,14 +1,13 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
-#include <fstream>
-#include <iostream>
-
-#include "colmap/base/camera.h"
 #include "colmap/base/essential_matrix.h"
+#include "colmap/base/camera.h"
 #include "colmap/base/pose.h"
 #include "colmap/estimators/essential_matrix.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/random.h"
+#include <fstream>
+#include <iostream>
 
 using namespace colmap;
 

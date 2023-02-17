@@ -1,9 +1,8 @@
 // Author: Adi Singh (adisingh50)
 
+#include "colmap/base/homography_matrix.h"
 #include <fstream>
 #include <iostream>
-
-#include "colmap/base/homography_matrix.h"
 
 using namespace colmap;
 

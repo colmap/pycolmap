@@ -7,10 +7,6 @@
 #include "colmap/feature/extraction.h"
 #include "colmap/feature/matching.h"
 #include "colmap/feature/sift.h"
-
-#include "colmap/util/misc.h"
-
-#include "colmap/base/reconstruction.h"
 #include "colmap/mvs/fusion.h"
 #include "colmap/mvs/meshing.h"
 #include "colmap/mvs/patch_match.h"
