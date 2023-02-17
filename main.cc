@@ -95,7 +95,7 @@ PYBIND11_MODULE(pycolmap, m) {
   init_transforms(m);
 
   // Main reconstruction steps
-  init_sfm(m);
+  init_sfm(m);  
   init_mvs(m);
 
   // SIFT feature detector and descriptor
