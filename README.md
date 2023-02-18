@@ -275,7 +275,9 @@ pycolmap.patch_match_stereo(mvs_path)
 pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
 ```
 
-PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
+PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support.
+Similarly, PyCOLMAP can run Delauney Triangulation if COLMAP was compiled with CGAL support.
+This requires to build the package from source and is not available with the PyPI wheels.
 
 For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
 
