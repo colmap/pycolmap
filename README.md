@@ -33,6 +33,67 @@ As a temporary workaround, we suggest using [WSL](https://docs.microsoft.com/en-
 
 ##
 
+## Reconstruction pipeline
+
+PyCOLMAP provides bindings for multiple steps of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
+
+- extracting and matching SIFT features
+- importing an image folder into a COLMAP database
+- inferring the camera parameters from the EXIF metadata of an image file
+- running two-view geometric verification of matches on a COLMAP database
+- triangulating points into an existing COLMAP model
+- running incremental reconstruction from a COLMAP database
+- dense reconstruction with multi-view stereo
+
+Sparse & Dense reconstruction from a folder of images can be performed with:
+```python
+output_path: pathlib.Path
+image_dir: pathlib.Path
+
+output_path.mkdir()
+mvs_path = output_path / "mvs"
+database_path = output_path / "database.db"
+
+pycolmap.extract_features(database_path, image_dir)
+pycolmap.match_exhaustive(database_path)
+maps = pycolmap.incremental_mapping(database_path, image_dir, output_path)
+maps[0].write(output_path)
+# dense reconstruction
+pycolmap.undistort_images(mvs_path, output_path, image_dir)
+pycolmap.patch_match_stereo(mvs_path)  # requires compilation with CUDA
+pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
+```
+
+PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support. This requires to build the package from source and is not available with the PyPI wheels.
+
+All of the above steps are easily configurable with python dicts which are recursively merged into
+their respective defaults, e.g.
+
+```python
+pycolmap.extract_features(database_path, image_dir, sift_options={"max_num_features": 512})
+# equivalent to
+ops = pycolmap.SiftExtractionOptions()
+ops.max_num_features = 512
+pycolmap.extract_features(database_path, image_dir, sift_options=ops)
+```
+
+To list available options, use
+
+```python
+help(pycolmap.SiftExtractionOptions)
+```
+
+The default parameters can be looked up with
+
+```python
+print(pycolmap.SiftExtractionOptions().summary())
+# or
+print(pycolmap.SiftExtractionOptions().todict())
+```
+
+
+For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
+
 ## Reconstruction object
 
 We can load and manipulate an existing COLMAP 3D reconstruction:
@@ -62,7 +123,7 @@ The object API mirrors the COLMAP C++ library. The bindings support many other o
 uv = camera.world_to_image(image.project(point3D.xyz))
 ```
 
-- aligning two 3D reconstruction by their camera poses:
+- aligning two 3D reconstructions by their camera poses:
 
 ```python
 tfm = reconstruction1.align_poses(reconstruction2)  # transforms reconstruction1 in-place
