@@ -124,8 +124,8 @@ jobs:
               "license": "BSD-3-Clause",
               "dependencies": [
                 {
-                  "name": "colmap[tests]",
-                  "version==": "3.8"
+                  "name": "colmap",
+                  "version=": "3.8"
                 }
               ]
             }
