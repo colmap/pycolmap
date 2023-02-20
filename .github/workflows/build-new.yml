@@ -80,7 +80,6 @@ jobs:
           #   python: "3.11"
           #   platform_id: win_amd64
     env:
-      CIBW_BUILD: "*-${{ matrix.platform }}"
       CIBW_BEFORE_BUILD_WINDOWS: >-
         curl -L -o COLMAP-3.8.zip https://github.com/colmap/colmap/releases/download/3.8/COLMAP-3.8-windows-no-cuda.zip &&
         unzip COLMAP-3.8.zip
