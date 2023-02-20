@@ -101,7 +101,7 @@ jobs:
         id: vcpkg
         with:
           pkgs: colmap[tests]
-          triplet: ${{ matrix.config.vcpkg_triplet }}
+          triplet: x64-windows-release
           token: ${{ github.token }}
 
       - name: Checkout
@@ -131,6 +131,11 @@ jobs:
       - name: Build windows wheels
         run: python -m cibuildwheel --output-dir wheelhouse
       
+      - name: upload dry-run
+        uses: actions/upload-artifact@v3
+        with:
+          name: vcpkg_dry_run
+          path: vcpkg_dry_run.txt
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
