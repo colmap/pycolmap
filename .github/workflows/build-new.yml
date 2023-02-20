@@ -88,19 +88,44 @@ jobs:
       CIBW_BUILD: cp310-win_amd64
       # CIBW_BEFORE_BUILD_WINDOWS: >-
       #    vcpkg install colmap[tests]:x64-windows
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake 
-      VCPKG_TARGET_TRIPLET: ${{ matrix.config.vcpkg_triplet }}
+      CMAKE_TOOLCHAIN_FILE: '${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake'
+      VCPKG_TARGET_TRIPLET: '${{ matrix.config.vcpkg_triplet }}'
       VCPKG_MANIFEST_MODE: OFF
       # COLMAP_DIR: COLMAP-3.8-windows-no-cuda
       # CIBW_ENVIRONMENT_WINDOWS: >
       #   PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$PATH"
       #   CMAKE_MODULE_PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$CMAKE_MODULE_PATH"
     steps:
-      - name: vcpkg build
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: "3.8"
+
+      - name: create-vc-pkg-json
+        id: create-json
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: vcpkg.json
+          json: >-
+            {
+              "name": "pycolmap",
+              "version-string": "0.3.0",
+              "license": "BSD-3-Clause",
+              "dependencies": [
+                {
+                  "name": "colmap[tests]",
+                  "version==": "3.8"
+                }
+              ]
+            }
+
+      - name: Install COLMAP from source
         uses: johnwason/vcpkg-action@v4
         id: vcpkg
         with:
-          pkgs: colmap[tests]
+          # pkgs: colmap[tests]
+          manifest: vcpkg.json
           triplet: x64-windows-release
           token: ${{ github.token }}
 
@@ -108,12 +133,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      
-      # Used to host cibuildwheel
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: "3.8"
 
       # - name: Use CMake compatible with vcpkg
       #   uses: lukka/get-cmake@latest
@@ -131,17 +150,18 @@ jobs:
       - name: Build windows wheels
         run: python -m cibuildwheel --output-dir wheelhouse
       
-      - name: upload dry-run
-        uses: actions/upload-artifact@v3
-        with:
-          name: vcpkg_dry_run
-          path: vcpkg_dry_run.txt
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
           # we strip the version number from the artifact name
           name: windows-wheels
           path: ./wheelhouse/*.whl
+      
+      - name: upload dry-run
+        uses: actions/upload-artifact@v3
+        with:
+          name: vcpkg_dry_run
+          path: vcpkg_dry_run.txt
 
   #pypi-publish:
   #  name: Publish wheels to PyPI
