@@ -107,6 +107,7 @@ jobs:
         uses: jsdaniell/create-json@v1.2.2
         with:
           name: vcpkg.json
+          dir: build-manifest
           json: >-
             {
               "name": "pycolmap",
@@ -125,7 +126,7 @@ jobs:
         id: vcpkg
         with:
           # pkgs: colmap[tests]
-          manifest: vcpkg.json
+          manifest-dir: build-manifest
           triplet: x64-windows-release
           token: ${{ github.token }}
 
