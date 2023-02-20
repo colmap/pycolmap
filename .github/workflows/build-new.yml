@@ -113,8 +113,7 @@ jobs:
           #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
       
       - name: Install COLMAP from source
-        with:
-          run: vcpkg install colmap[tests]:x64-windows --version 3.8
+        run: vcpkg install colmap[tests]:x64-windows --version 3.8
 
       # - name: create-vc-pkg-json
       #   id: create-json
