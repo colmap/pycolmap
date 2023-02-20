@@ -70,6 +70,7 @@ jobs:
           - os: windows-2019
             python: "3.8"
             platform_id: win_amd64
+            pyversion: cp38-win_amd64
           # - os: windows-latest
           #   python: "3.9"
           #   platform_id: win_amd64
