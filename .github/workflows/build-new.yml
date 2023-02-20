@@ -80,10 +80,15 @@ jobs:
           #   python: "3.11"
           #   platform_id: win_amd64
     env:
+      CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
+      CIBW_BUILD: cp310-win_amd64
       CIBW_BEFORE_BUILD_WINDOWS: >-
         curl -L -o COLMAP-3.8.zip https://github.com/colmap/colmap/releases/download/3.8/COLMAP-3.8-windows-no-cuda.zip &&
         unzip COLMAP-3.8.zip
-      CMAKE_MODULE_PATH: COLMAP-3.8-windows-no-cuda
+      COLMAP_DIR: COLMAP-3.8-windows-no-cuda
+      CIBW_ENVIRONMENT_WINDOWS: >
+        PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$PATH"
+        CMAKE_MODULE_PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$CMAKE_MODULE_PATH"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
