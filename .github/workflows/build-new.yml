@@ -65,19 +65,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        # pyversion: [ "cp38-win_amd64", "cp39-win_amd64", "cp310-win_amd64", "cp311-win_amd64" ]
         include:
           - os: windows-2019
-            python: 38
+            python: "3.8"
             platform_id: win_amd64
-          - os: windows-latest
-            python: 39
-            platform_id: win_amd64
-          - os: windows-latest
-            python: 310
-            platform_id: win_amd64
-          - os: windows-latest
-            python: 311
-            platform_id: win_amd64
+          # - os: windows-latest
+          #   python: "3.9"
+          #   platform_id: win_amd64
+          # - os: windows-latest
+          #   python: "3.10"
+          #   platform_id: win_amd64
+          # - os: windows-latest
+          #   python: "3.11"
+          #   platform_id: win_amd64
     env:
       CIBW_BEFORE_BUILD_WINDOWS: >-
         curl -L -o COLMAP-3.8.zip https://github.com/colmap/colmap/releases/download/3.8/COLMAP-3.8-windows-no-cuda.zip &&
