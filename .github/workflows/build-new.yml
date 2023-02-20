@@ -100,7 +100,7 @@ jobs:
         uses: johnwason/vcpkg-action@v4
         id: vcpkg
         with:
-          pkgs: colmap
+          pkgs: colmap[tests]
           triplet: ${{ matrix.config.vcpkg_triplet }}
           token: ${{ github.token }}
 
