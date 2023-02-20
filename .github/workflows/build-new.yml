@@ -11,73 +11,117 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux-build:
-    name: Wrapper Linux Build
-    runs-on: ubuntu-latest
+  # linux-build:
+  #   name: Wrapper Linux Build
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       pyversion: [ "cp37-cp37m", "cp38-cp38", "cp39-cp39", "cp310-cp310" ]
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #     - name: Build the Linux wheels
+  #       run: |
+  #         # must be run in docker, cannot be run as freestanding script for toolchain issues
+  #         # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
+  #         # see https://github.com/varunagrawal/docker-images/blob/master/gtsam-manylinux/Dockerfile for an example
+  #         # container, but it does not have some necesssary boost packages --> varunagrawal/gtsam-manylinux:latest
+  #         sudo docker run --rm -e PLAT=manylinux2014_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux2014_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
+  #         # sudo docker run --rm -e PLAT=manylinux_2_24_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_24_x86_64 /io/package/build-wheels-linux-new.sh ${{ matrix.pyversion }}
+  #         # cleanup for custom runner
+  #         sudo chown -R $(whoami):$(whoami) .
+  #     - name: Archive wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         # we strip the version number from the artifact name
+  #         name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
+  #         path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+
+  # mac-build:
+  #   name: Wrapper macOS Build
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ macos-11 ]
+  #       pyversion: [ "python@3.7", "python@3.8", "python@3.9", "python@3.10" ]
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #     - name: Build the macOS wheels
+  #       run: |
+  #         ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
+  #     - name: Archive wheels
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: pycolmap-${{ matrix.pyversion }}-${{ matrix.os }}
+  #         path: ./wheelhouse/pycolmap-*.whl
+
+  windows-build:
+    name: Build on Windows
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        pyversion: [ "cp37-cp37m", "cp38-cp38", "cp39-cp39", "cp310-cp310" ]
+        include:
+          - os: windows-2019
+            python: 38
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 39
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 310
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 311
+            platform_id: win_amd64
+    env:
+      CIBW_BEFORE_BUILD_WINDOWS: >-
+        curl -L -o COLMAP-3.8.zip https://github.com/colmap/colmap/releases/download/3.8/COLMAP-3.8-windows-no-cuda.zip &&
+        unzip COLMAP-3.8.zip
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Build the Linux wheels
-        run: |
-          # must be run in docker, cannot be run as freestanding script for toolchain issues
-          # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
-          # see https://github.com/varunagrawal/docker-images/blob/master/gtsam-manylinux/Dockerfile for an example
-          # container, but it does not have some necesssary boost packages --> varunagrawal/gtsam-manylinux:latest
-          sudo docker run --rm -e PLAT=manylinux2014_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux2014_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
-          # sudo docker run --rm -e PLAT=manylinux_2_24_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_24_x86_64 /io/package/build-wheels-linux-new.sh ${{ matrix.pyversion }}
-          # cleanup for custom runner
-          sudo chown -R $(whoami):$(whoami) .
+      
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v3
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.12.0
+      
+      - name: Build windows wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+      
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
           # we strip the version number from the artifact name
-          name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
-          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+          name: windows-wheels
+          path: ./wheelhouse/*.whl
 
-  mac-build:
-    name: Wrapper macOS Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ macos-11 ]
-        pyversion: [ "python@3.7", "python@3.8", "python@3.9", "python@3.10" ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Build the macOS wheels
-        run: |
-          ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
-      - name: Archive wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: pycolmap-${{ matrix.pyversion }}-${{ matrix.os }}
-          path: ./wheelhouse/pycolmap-*.whl
-
-  pypi-publish:
-    name: Publish wheels to PyPI
-    needs: [ linux-build, mac-build ]
-    runs-on: ubuntu-latest
-    # We publish the wheel to pypi when a new tag is pushed,
-    # either by creating a new GitHub release or explictly with `git tag`
-    if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags') }}
-    steps:
-      - name: Download wheels
-        uses: actions/download-artifact@v3
-        with:
-          path: ./artifacts/
-      - name: Move wheels
-        run: mkdir ./wheelhouse && mv ./artifacts/**/*.whl ./wheelhouse/
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip_existing: true
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: ./wheelhouse/
+  #pypi-publish:
+  #  name: Publish wheels to PyPI
+  #  needs: [ linux-build, mac-build ]
+  #  runs-on: ubuntu-latest
+  #  # We publish the wheel to pypi when a new tag is pushed,
+  #  # either by creating a new GitHub release or explictly with `git tag`
+  #  if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags') }}
+  #  steps:
+  #    - name: Download wheels
+  #      uses: actions/download-artifact@v3
+  #      with:
+  #        path: ./artifacts/
+  #    - name: Move wheels
+  #      run: mkdir ./wheelhouse && mv ./artifacts/**/*.whl ./wheelhouse/
+  #    - name: Publish package
+  #      uses: pypa/gh-action-pypi-publish@release/v1
+  #      with:
+  #        skip_existing: true
+  #        user: __token__
+  #        password: ${{ secrets.PYPI_API_TOKEN }}
+  #        packages_dir: ./wheelhouse/
