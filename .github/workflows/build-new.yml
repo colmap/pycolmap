@@ -111,8 +111,8 @@ jobs:
         uses: lukka/run-vcpkg@v10
         with:
           runVcpkgInstall: true
-          vcpkgGitCommitId: '2023.01.09'
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
+          #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.12.0
