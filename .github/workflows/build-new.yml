@@ -125,7 +125,7 @@ jobs:
               "dependencies": [
                 {
                   "name": "colmap",
-                  "version=": "3.8"
+                  "version": "3.8"
                 }
               ]
             }
