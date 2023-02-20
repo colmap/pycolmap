@@ -86,7 +86,7 @@ jobs:
       CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
       CIBW_BUILD: cp310-win_amd64
       CIBW_BEFORE_BUILD_WINDOWS: >-
-         vcpkg install colmap[tests]:x64-windows
+         vcpkg install colmap[tests]:x64-windows -v 3.8
       CMAKE_TOOLCHAIN_FILE: '${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake'
       # COLMAP_DIR: COLMAP-3.8-windows-no-cuda
       # CIBW_ENVIRONMENT_WINDOWS: >
@@ -109,8 +109,9 @@ jobs:
 
       - name: Run vcpkg
         uses: lukka/run-vcpkg@v10
-        # with:
-        #   runVcpkgInstall: true
+        with:
+          runVcpkgInstall: true
+          vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
         #   vcpkgDirectory: '${{ github.workspace }}/vcpkg'
 
       - name: Install cibuildwheel
