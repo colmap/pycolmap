@@ -107,7 +107,7 @@ jobs:
         uses: jsdaniell/create-json@v1.2.2
         with:
           name: vcpkg.json
-          dir: ${{ github.workspace }}
+          dir: .
           json: >-
             {
               "name": "pycolmap",
@@ -126,7 +126,7 @@ jobs:
         id: vcpkg
         with:
           # pkgs: colmap[tests]
-          manifest-dir: ${{ github.workspace }}
+          manifest-dir: .
           triplet: x64-windows-release
           token: ${{ github.token }}
 
