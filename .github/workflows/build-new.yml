@@ -112,27 +112,28 @@ jobs:
           vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
           #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
       
-      - name: Install COLMAP from source
-        run: vcpkg install colmap[tests]:x64-windows --version 3.8
+      - name: Create vcpkg.json
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: vcpkg.json
+          dir: .
+          json: >-
+            {
+              "name": "pycolmap",
+              "version-string": "0.3.0",
+              "license": "BSD-3-Clause",
+              "dependencies": [
+                {
+                  "name": "colmap[tests]",
+                  "version==": "3.8"
+                }
+              ]
+            }
 
-      # - name: create-vc-pkg-json
-      #   id: create-json
-      #   uses: jsdaniell/create-json@v1.2.2
-      #   with:
-      #     name: vcpkg.json
-      #     dir: .
-      #     json: >-
-      #       {
-      #         "name": "pycolmap",
-      #         "version-string": "0.3.0",
-      #         "license": "BSD-3-Clause",
-      #         "dependencies": [
-      #           {
-      #             "name": "colmap[tests]",
-      #             "version==": "3.8"
-      #           }
-      #         ]
-      #       }
+      - name: Install COLMAP from source
+        run: vcpkg install
+
+      
 
       # - name: Install COLMAP from source
       #   uses: johnwason/vcpkg-action@v4
