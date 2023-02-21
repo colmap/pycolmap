@@ -88,7 +88,7 @@ jobs:
       CIBW_BUILD: cp310-win_amd64
       # CIBW_BEFORE_BUILD_WINDOWS: >-
       #    vcpkg install colmap[tests]:x64-windows
-      CMAKE_TOOLCHAIN_FILE: '${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake'
+      # CMAKE_TOOLCHAIN_FILE: '${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake'
       # VCPKG_TARGET_TRIPLET: '${{ matrix.config.vcpkg_triplet }}'
       # VCPKG_MANIFEST_MODE: OFF
       # COLMAP_DIR: COLMAP-3.8-windows-no-cuda
@@ -101,48 +101,60 @@ jobs:
         name: Install Python
         with:
           python-version: "3.8"
+        
+      - name: Get Windows Binaries
+        run: |
+          curl -L -o COLMAP-3.8.zip https://github.com/colmap/colmap/releases/download/3.8/COLMAP-3.8-windows-no-cuda.zip &&
+          unzip COLMAP-3.8.zip
 
-      - name: Use CMake compatible with vcpkg
-        uses: lukka/get-cmake@latest
+      - name: Get Source Headers
+        run: |
+          curl -L -o COLMAP-3.8-src.zip https://github.com/colmap/colmap/archive/refs/tags/3.8.zip &&
+          unzip COLMAP-3.8-src.zip
 
-      - name: create vcpkg dir
-        run: mkdir -p vcpkg
 
-      - name: Create vcpkg.json
-        uses: jsdaniell/create-json@v1.2.2
-        with:
-          name: vcpkg.json
-          dir: vcpkg
-          json: >-
-            {
-              "name": "colmap-dependencies",
-              "dependencies": [
-                "boost-filesystem",
-                "boost-graph",
-                "boost-program-options",
-                "boost-regex",
-                "boost-system",
-                "boost-test",
-                "ceres[lapack,suitesparse]",
-                "cgal",
-                "eigen3",
-                "flann",
-                "freeimage",
-                "metis",
-                "gflags",
-                "glew",
-                "glog",
-                "qt5-base",
-                "sqlite3"
-              ]
-            }
 
-      - name: Install vcpkg
-        uses: lukka/run-vcpkg@v10
-        with:
-          #runVcpkgInstall: true
-          vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+      # - name: Use CMake compatible with vcpkg
+      #   uses: lukka/get-cmake@latest
+
+      # - name: create vcpkg dir
+      #   run: mkdir -p vcpkg
+
+      # - name: Create vcpkg.json
+      #   uses: jsdaniell/create-json@v1.2.2
+      #   with:
+      #     name: vcpkg.json
+      #     dir: vcpkg
+      #     json: >-
+      #       {
+      #         "name": "colmap-dependencies",
+      #         "dependencies": [
+      #           "boost-filesystem",
+      #           "boost-graph",
+      #           "boost-program-options",
+      #           "boost-regex",
+      #           "boost-system",
+      #           "boost-test",
+      #           "ceres[lapack,suitesparse]",
+      #           "cgal",
+      #           "eigen3",
+      #           "flann",
+      #           "freeimage",
+      #           "metis",
+      #           "gflags",
+      #           "glew",
+      #           "glog",
+      #           "qt5-base",
+      #           "sqlite3"
+      #         ]
+      #       }
+
+      # - name: Install vcpkg
+      #   uses: lukka/run-vcpkg@v10
+      #   with:
+      #     #runVcpkgInstall: true
+      #     vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
+      #     # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
       
       # - name: Create vcpkg.json
       #   uses: jsdaniell/create-json@v1.2.2
@@ -162,8 +174,8 @@ jobs:
       #         ]
       #       }
 
-      - name: Install COLMAP from source
-        run: vcpkg install colmap[tests]:x64-windows
+      # - name: Install COLMAP from source
+      #   run: vcpkg install colmap[tests]:x64-windows
 
       
 
@@ -190,15 +202,14 @@ jobs:
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
-          # we strip the version number from the artifact name
           name: windows-wheels
           path: ./wheelhouse/*.whl
       
-      - name: upload dry-run
-        uses: actions/upload-artifact@v3
-        with:
-          name: vcpkg_dry_run
-          path: vcpkg_dry_run.txt
+      # - name: upload dry-run
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: vcpkg_dry_run
+      #     path: vcpkg_dry_run.txt
 
   #pypi-publish:
   #  name: Publish wheels to PyPI
