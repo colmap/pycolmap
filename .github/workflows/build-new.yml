@@ -105,11 +105,41 @@ jobs:
       - name: Use CMake compatible with vcpkg
         uses: lukka/get-cmake@latest
 
-      - name: Run vcpkg
+      - name: Create vcpkg.json
+        uses: jsdaniell/create-json@v1.2.2
+        with:
+          name: vcpkg.json
+          dir: .
+          json: >-
+            {
+              "name": "colmap-dependencies",
+              "dependencies": [
+                "boost-filesystem",
+                "boost-graph",
+                "boost-program-options",
+                "boost-regex",
+                "boost-system",
+                "boost-test",
+                "ceres[lapack,suitesparse]",
+                "cgal",
+                "eigen3",
+                "flann",
+                "freeimage",
+                "metis",
+                "gflags",
+                "glew",
+                "glog",
+                "qt5-base",
+                "sqlite3"
+              ]
+            }
+
+      - name: Install vcpkg
         uses: lukka/run-vcpkg@v10
         with:
           #runVcpkgInstall: true
           vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
+
           #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
       
       # - name: Create vcpkg.json
