@@ -92,9 +92,11 @@ jobs:
       # VCPKG_TARGET_TRIPLET: '${{ matrix.config.vcpkg_triplet }}'
       # VCPKG_MANIFEST_MODE: OFF
       # COLMAP_DIR: COLMAP-3.8-windows-no-cuda
-      # CIBW_ENVIRONMENT_WINDOWS: >
-      #   PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$PATH"
-      #   CMAKE_MODULE_PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$CMAKE_MODULE_PATH"
+      CIBW_ENVIRONMENT_WINDOWS: >
+        PATH="D:\\a\\COLMAP-3.8-windows-no-cuda;$PATH"
+        CMAKE_MODULE_PATH="D:\\a\\colmap-3.8\cmake;$CMAKE_MODULE_PATH"
+        COLMAP_INCLUDE_DIRS="D:\\a\\colmap-3.8\src"
+        COLMAP_LINK_DIRS="D:\\a\\COLMAP-3.8-windows-no-cuda\lib"
     steps:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v4
