@@ -106,13 +106,13 @@ jobs:
         uses: lukka/get-cmake@latest
 
       - name: create vcpkg dir
-        run: mkdir -p "${{ github.workspace }}/vcpkg"
+        run: mkdir -p vcpkg
 
       - name: Create vcpkg.json
         uses: jsdaniell/create-json@v1.2.2
         with:
           name: vcpkg.json
-          dir: ${{ github.workspace }}/vcpkg
+          dir: vcpkg
           json: >-
             {
               "name": "colmap-dependencies",
