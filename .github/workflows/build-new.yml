@@ -109,7 +109,7 @@ jobs:
         uses: jsdaniell/create-json@v1.2.2
         with:
           name: vcpkg.json
-          dir: .
+          dir: '${{ github.workspace }}'
           json: >-
             {
               "name": "colmap-dependencies",
@@ -139,8 +139,7 @@ jobs:
         with:
           #runVcpkgInstall: true
           vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
-
-          #vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgDirectory: '${{ github.workspace }}'
       
       # - name: Create vcpkg.json
       #   uses: jsdaniell/create-json@v1.2.2
