@@ -97,6 +97,10 @@ jobs:
         CMAKE_MODULE_PATH="D:\\a\\colmap-3.8\cmake;$CMAKE_MODULE_PATH"
         COLMAP_INCLUDE_DIRS="D:\\a\\colmap-3.8\src"
         COLMAP_LINK_DIRS="D:\\a\\COLMAP-3.8-windows-no-cuda\lib"
+        COLMAP_CUDA_ENABLED=OFF
+        COLMAP_GUI_ENABLED=ON
+        COLMAP_CGAL_ENABLED=ON
+        CERES_VERSION="2.1.0"
     steps:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v4
