@@ -105,11 +105,14 @@ jobs:
       - name: Use CMake compatible with vcpkg
         uses: lukka/get-cmake@latest
 
+      - name: create vcpkg dir
+        run: mkdir -p "${{ github.workspace }}/vcpkg"
+
       - name: Create vcpkg.json
         uses: jsdaniell/create-json@v1.2.2
         with:
           name: vcpkg.json
-          dir: '${{ github.workspace }}'
+          dir: ${{ github.workspace }}/vcpkg
           json: >-
             {
               "name": "colmap-dependencies",
@@ -139,7 +142,7 @@ jobs:
         with:
           #runVcpkgInstall: true
           vcpkgGitCommitId: a325228200d7f229f3337e612e0077f2a5307090
-          vcpkgDirectory: '${{ github.workspace }}'
+          # vcpkgDirectory: '${{ github.workspace }}'
       
       # - name: Create vcpkg.json
       #   uses: jsdaniell/create-json@v1.2.2
