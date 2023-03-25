@@ -149,9 +149,6 @@ void init_sfm(py::module& m) {
                            &Opts::ba_local_function_tolerance)
             .def_readwrite("ba_local_max_num_iterations",
                            &Opts::ba_local_max_num_iterations)
-            .def_readwrite("ba_global_use_pba", &Opts::ba_global_use_pba)
-            .def_readwrite("ba_global_pba_gpu_index",
-                           &Opts::ba_global_pba_gpu_index)
             .def_readwrite("ba_global_images_ratio",
                            &Opts::ba_global_images_ratio)
             .def_readwrite("ba_global_points_ratio",
