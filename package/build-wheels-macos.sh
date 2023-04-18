@@ -27,6 +27,8 @@ function retry {
 declare -a PYTHON_VERSION=( $1 )
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
+rm /usr/local/bin/go || true
+rm /usr/local/bin/gofmt || true
 
 brew update
 brew upgrade
