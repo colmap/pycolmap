@@ -306,6 +306,42 @@ camera_dict = {
 }
 ```
 
+## Reconstruction pipeline
+
+We provide bindings for multiple step of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
+
+- extracting and matching SIFT features
+- importing an image folder into a COLMAP database
+- inferring the camera parameters from the EXIF metadata of an image file
+- running two-view geometric verification of matches on a COLMAP database
+- triangulating points into an existing COLMAP model
+- running incremental reconstruction from a COLMAP database
+- dense reconstruction with multi-view stereo
+
+Dense reconstruction from a folder of images can be performed with:
+```python
+output_path: pathlib.Path
+image_dir: pathlib.Path
+
+output_path.mkdir()
+mvs_path = output_path / "mvs"
+database_path = output_path / "database.db"
+
+pycolmap.extract_features(database_path, image_dir)
+pycolmap.match_exhaustive(database_path)
+maps = pycolmap.incremental_mapping(database_path, image_dir, output_path)
+maps[0].write(output_path)
+pycolmap.undistort_images(mvs_path, output_path, image_dir)
+pycolmap.patch_match_stereo(mvs_path)
+pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
+```
+
+PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support.
+Similarly, PyCOLMAP can run Delauney Triangulation if COLMAP was compiled with CGAL support.
+This requires to build the package from source and is not available with the PyPI wheels.
+
+For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
+
 ## SIFT feature extraction
 
 ```python
