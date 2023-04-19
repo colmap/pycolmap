@@ -13,7 +13,13 @@ The wheels are automatically built and pushed to [pypi](https://pypi.org/project
 
 ### Building from source
 
-Alternatively, we explain below how to compile PyCOLMAP from source. COLMAP should first be installed as a library following [the instructions](https://colmap.github.io/install.html). We require the latest commit of the COLMAP [`dev` branch](https://github.com/colmap/colmap/tree/dev). Using a previous COLMAP build might not work. Then clone the repository and its submodules:
+Alternatively, we explain below how to compile PyCOLMAP from source.
+
+COLMAP should first be installed as a library following [the official guide](https://colmap.github.io/install.html).
+**We recommend always building PyCOLMAP against the latest commit of the COLMAP [`dev` branch](https://github.com/colmap/colmap/tree/dev) - using a previous COLMAP build might not work.**
+Currently, the earliest supported COLMAP commit is [colmap/colmap@33e2692](https://github.com/colmap/colmap/commit/33e26924f950172751f044a89b964129b3728db8).
+
+Then clone the repository and its submodules:
 
 ```
 git clone --recursive git@github.com:colmap/pycolmap.git
