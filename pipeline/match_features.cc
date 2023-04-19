@@ -274,7 +274,7 @@ void init_match_features(py::module& m) {
             .def("check", [](VTMOpts& self) {
                 THROW_CHECK_MSG(!self.vocab_tree_path.empty(),
                                 "vocab_tree_path required.");
-                THROW_CHECK_FILE_OPEN(self.vocab_tree_path);
+                THROW_CHECK_FILE_EXISTS(self.vocab_tree_path);
             });
     make_dataclass(PyVocabTreeMatchingOptions);
     auto vocabtree_options = PyVocabTreeMatchingOptions().cast<VTMOpts>();
