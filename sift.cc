@@ -99,7 +99,7 @@ class Sift {
 #ifdef CUDA_ENABLED
     template <typename dtype>
     sift_output_t ExtractGPU(const pyimage_t<dtype>& image /* [h, w] */) {
-        THROW_CHECK_EQ(options_.max_image_size, sift_gpu->GetMaxDimension());
+        THROW_CHECK_LE(options_.max_image_size, sift_gpu->GetMaxDimension());
         THROW_CHECK(!options_.estimate_affine_shape);
         THROW_CHECK(!options_.domain_size_pooling);
 
