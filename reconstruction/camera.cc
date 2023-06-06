@@ -19,7 +19,7 @@ using namespace pybind11::literals;
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
-PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera));
+PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::camera_t, colmap::Camera>);
 
 std::string PrintCamera(const colmap::Camera& camera) {
     std::stringstream ss;
@@ -31,7 +31,7 @@ std::string PrintCamera(const colmap::Camera& camera) {
 }
 
 void init_camera(py::module& m) {
-    using CameraMap = EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera);
+    using CameraMap = std::unordered_map<colmap::camera_t, colmap::Camera>;
 
     py::bind_map<CameraMap>(m, "MapCameraIdCamera").def("__repr__", [](const CameraMap& self) {
         std::string repr = "{";

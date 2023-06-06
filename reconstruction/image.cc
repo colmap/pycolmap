@@ -16,7 +16,7 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::image_t, colmap::Image));
+PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::image_t, colmap::Image>);
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
@@ -32,7 +32,7 @@ std::string PrintImage(const colmap::Image& image) {
 }
 
 void init_image(py::module& m) {
-    using ImageMap = EIGEN_STL_UMAP(colmap::image_t, colmap::Image);
+    using ImageMap = std::unordered_map<colmap::image_t, colmap::Image>;
     py::bind_map<ImageMap>(m, "MapImageIdImage").def("__repr__", [](const ImageMap& self) {
         std::string repr = "{";
         bool is_first = true;

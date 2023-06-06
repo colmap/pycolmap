@@ -19,7 +19,7 @@ using namespace pybind11::literals;
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
-PYBIND11_MAKE_OPAQUE(EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D));
+PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::point3D_t, colmap::Point3D>);
 
 std::string PrintPoint3D(const colmap::Point3D& point3D) {
     std::stringstream ss;
@@ -29,7 +29,7 @@ std::string PrintPoint3D(const colmap::Point3D& point3D) {
 }
 
 void init_point3D(py::module& m) {
-    using Point3DMap = EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D);
+    using Point3DMap = std::unordered_map<colmap::point3D_t, colmap::Point3D>;
 
     py::bind_map<Point3DMap>(m, "MapPoint3DIdPoint3D").def("__repr__", [](const Point3DMap& self) {
         std::string repr = "{";
