@@ -68,9 +68,9 @@ bool ExistsReconstruction(const std::string& path) {
 // Reconstruction Bindings
 void init_reconstruction(py::module& m) {
     // STL Containers, required for fast looping over members (avoids copying)
-    using ImageMap = EIGEN_STL_UMAP(colmap::image_t, colmap::Image);
-    using Point3DMap = EIGEN_STL_UMAP(colmap::point3D_t, colmap::Point3D);
-    using CameraMap = EIGEN_STL_UMAP(colmap::camera_t, colmap::Camera);
+    using ImageMap = std::unordered_map<colmap::image_t, colmap::Image>;
+    using Point3DMap = std::unordered_map<colmap::point3D_t, colmap::Point3D>;
+    using CameraMap = std::unordered_map<colmap::camera_t, colmap::Camera>;
 
     init_track(m);
     init_point2D(m);
