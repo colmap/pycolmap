@@ -1,7 +1,7 @@
 // Author: Paul-Edouard Sarlin (skydes)
 
 #include "colmap/exe/sfm.h"
-#include "colmap/base/camera_models.h"
+#include "colmap/camera/models.h"
 #include "colmap/base/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/util/misc.h"
