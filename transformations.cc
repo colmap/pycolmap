@@ -1,6 +1,6 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
-#include "colmap/base/similarity_transform.h"
+#include "colmap/geometry/similarity_transform.h"
 #include "colmap/image/warp.h"
 #include "colmap/camera/models.h"
 

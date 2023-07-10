@@ -4,9 +4,9 @@
 #include <fstream>
 
 #include "colmap/base/camera.h"
-#include "colmap/base/pose.h"
-#include "colmap/base/projection.h"
-#include "colmap/base/similarity_transform.h"
+#include "colmap/geometry/pose.h"
+#include "colmap/geometry/projection.h"
+#include "colmap/geometry/similarity_transform.h"
 #include "colmap/optim/ransac.h"
 #include "colmap/util/random.h"
 #include "colmap/util/misc.h"

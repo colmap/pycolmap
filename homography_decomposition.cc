@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "colmap/base/homography_matrix.h"
+#include "colmap/geometry/homography_matrix.h"
 
 using namespace colmap;
 
