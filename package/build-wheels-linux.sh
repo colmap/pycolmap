@@ -49,7 +49,7 @@ mkdir -p boost && \
     wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
     tar xzf boost_1_65_1.tar.gz && \
     cd boost_1_65_1 && \
-    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test && \
+    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph && \
     ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
 
 # Boost should now be visible under /usr/local
@@ -64,7 +64,6 @@ yum install -y \
     freeimage-devel \
     metis-devel \
     glog-devel \
-    gflags-devel \
     glew-devel
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel

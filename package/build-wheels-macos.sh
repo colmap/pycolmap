@@ -42,7 +42,6 @@ brew install \
     freeimage \
     flann \
     glog \
-    gflags \
     metis \
     suite-sparse \
     ceres-solver \
