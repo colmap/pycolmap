@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-#include <colmap/base/pose.h>
+#include <colmap/geometry/pose.h>
 
 #include "estimators/absolute_pose.cc"
 #include "estimators/generalized_absolute_pose.cc"

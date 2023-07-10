@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "colmap/base/camera.h"
-#include "colmap/base/pose.h"
+#include "colmap/geometry/pose.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/random.h"

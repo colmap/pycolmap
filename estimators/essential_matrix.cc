@@ -4,8 +4,8 @@
 #include <fstream>
 
 #include "colmap/base/camera.h"
-#include "colmap/base/essential_matrix.h"
-#include "colmap/base/pose.h"
+#include "colmap/geometry/essential_matrix.h"
+#include "colmap/geometry/pose.h"
 #include "colmap/estimators/essential_matrix.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/random.h"

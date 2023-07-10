@@ -1,8 +1,8 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 #include "colmap/base/reconstruction.h"
-#include "colmap/base/camera_models.h"
-#include "colmap/base/projection.h"
+#include "colmap/camera/models.h"
+#include "colmap/geometry/projection.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"
 #include "colmap/util/types.h"

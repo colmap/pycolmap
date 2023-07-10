@@ -1,5 +1,5 @@
-#include "colmap/base/camera_models.h"
-#include "colmap/base/image_reader.h"
+#include "colmap/camera/models.h"
+#include "colmap/image/reader.h"
 #include "colmap/base/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/feature.h"
