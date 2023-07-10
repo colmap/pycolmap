@@ -64,6 +64,7 @@ yum install -y \
     freeimage-devel \
     metis-devel \
     glog-devel \
+    gflags-devel \
     glew-devel
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
