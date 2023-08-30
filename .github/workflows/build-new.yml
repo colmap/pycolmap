@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pyversion: [ "cp37-cp37m", "cp38-cp38", "cp39-cp39", "cp310-cp310" ]
+        pyversion: [ "cp38-cp38", "cp39-cp39", "cp310-cp310", "cp311-cp311" ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -44,8 +44,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-11 ]
-        pyversion: [ "python@3.7", "python@3.8", "python@3.9", "python@3.10" ]
+        os: [ macos-11, macos-12 ]
+        pyversion: [ "python@3.8", "python@3.9", "python@3.10", "python@3.11" ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
