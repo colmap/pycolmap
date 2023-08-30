@@ -118,6 +118,7 @@ cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
+wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
