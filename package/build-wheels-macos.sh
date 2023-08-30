@@ -106,7 +106,7 @@ ls -ltrh /usr/local/opt
 
 cd $CURRDIR
 cd colmap
-git checkout dev
+git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF

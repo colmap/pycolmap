@@ -43,7 +43,6 @@ cd $CURRDIR
 yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
 
 # Download and install Boost-1.65.1
-# colmap needs only program_options filesystem graph system unit_test_framework
 mkdir -p boost && \
     cd boost && \
     wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
@@ -118,7 +117,7 @@ echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout dev
+git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
