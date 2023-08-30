@@ -30,6 +30,9 @@ find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
 rm /usr/local/bin/go || true
 rm /usr/local/bin/gofmt || true
 
+# Updating requires Xcode 14.0, which cannot be installed on macOS 11.
+brew remove swiftlint
+
 brew update
 brew upgrade
 brew install wget cmake
