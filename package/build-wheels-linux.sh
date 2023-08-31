@@ -50,7 +50,7 @@ wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOS
 tar xzf ${BOOST_FILENAME}.tar.gz
 cd ${BOOST_FILENAME}
 ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph
-./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared install
+./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=static install
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
