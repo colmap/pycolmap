@@ -100,7 +100,7 @@ cd colmap
 git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF -DBoost_USE_STATIC_LIBS=OFF -DBOOST_ROOT=${BOOST_DIR}
+cmake .. -DGUI_ENABLED=OFF -DBoost_USE_STATIC_LIBS=OFF -DBoost_ROOT=${BOOST_DIR}
 
 NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
 echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
