@@ -112,7 +112,7 @@ echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
+git checkout 8af292cb096b9478703821aa2e84730145b203a1
 rm -f cmake/FindGlog.cmake
 wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/
 mkdir build/
