@@ -49,11 +49,8 @@ export BOOST_FILENAME=boost_1_71_0
 wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
 tar xzf ${BOOST_FILENAME}.tar.gz
 cd ${BOOST_FILENAME}
-./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,unit_test_framework
+./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph
 ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
-
-# Boost should now be visible under /usr/local
-ls -ltrh /usr/local
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
