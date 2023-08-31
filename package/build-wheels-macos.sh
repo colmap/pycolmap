@@ -54,6 +54,7 @@ brew install \
     sqlite3 \
     libomp \
     llvm \
+    boost \
     lz4
 
 brew info gcc
@@ -73,14 +74,14 @@ CURRDIR=$(pwd)
 ls -ltrh $CURRDIR
 
 # Install Boost
-mkdir -p boost
-cd boost
-retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
-tar xzf boost_1_81_0.tar.gz
-cd boost_1_81_0
-BOOST_DIR=$CURRDIR/boost_install
-./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
-./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
+#mkdir -p boost
+#cd boost
+#retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
+#tar xzf boost_1_81_0.tar.gz
+#cd boost_1_81_0
+#BOOST_DIR=$CURRDIR/boost_install
+#./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
+#./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 echo "CURRDIR is: ${CURRDIR}"
 
@@ -100,7 +101,7 @@ cd colmap
 git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF -DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
+cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
 
 NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
 echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
