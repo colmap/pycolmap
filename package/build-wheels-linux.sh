@@ -134,13 +134,13 @@ make -j$(nproc) install
 
 # ------ Build pycolmap wheel ------
 cd /io/
-
-PLAT=manylinux2014_x86_64
-EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
+WHEEL_DIR="wheels/"
+EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/pip" wheel --no-deps -w ${WHEEL_DIR} .
 
 # Bundle external shared libraries into the wheels
-mkdir -p /io/wheelhouse
-for whl in ./dist/*.whl; do
-    auditwheel repair "$whl" -w /io/wheelhouse/ --no-update-tags
+OUT_DIR="/io/wheelhouse"
+mkdir -p ${OUT_DIR}
+for whl in ${WHEEL_DIR}/*.whl; do
+    auditwheel repair "$whl" -w ${OUT_DIR} --plat manylinux2014_x86_64
 done
-ls -ltrh /io/wheelhouse/
+ls -ltrh ${OUT_DIR}
