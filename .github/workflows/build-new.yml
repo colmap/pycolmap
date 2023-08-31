@@ -37,7 +37,7 @@ jobs:
         with:
           # we strip the version number from the artifact name
           name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
-          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-*.whl
 
   mac-build:
     name: Wrapper macOS Build
