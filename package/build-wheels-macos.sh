@@ -129,7 +129,6 @@ make -j $NUM_LOGICAL_CPUS install
 sudo make install
 
 cd $CURRDIR
-cat setup.py
 # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
 # see https://github.com/quantumlib/qsim/issues/242 for more details
 CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER setup.py bdist_wheel

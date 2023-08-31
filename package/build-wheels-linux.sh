@@ -42,14 +42,15 @@ echo "Num. processes to use for building: ${nproc}"
 cd $CURRDIR
 yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
 
-# Download and install Boost-1.65.1
-mkdir -p boost && \
-    cd boost && \
-    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xzf boost_1_65_1.tar.gz && \
-    cd boost_1_65_1 && \
-    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph && \
-    ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
+# Download and install Boost
+mkdir -p boost
+cd boost
+export BOOST_FILENAME=boost_1_71_0
+wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
+tar xzf ${BOOST_FILENAME}.tar.gz
+cd ${BOOST_FILENAME}
+./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,unit_test_framework
+./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
 
 # Boost should now be visible under /usr/local
 ls -ltrh /usr/local
@@ -138,7 +139,6 @@ make -j$(nproc) install
 
 # ------ Build pycolmap wheel ------
 cd /io/
-cat setup.py
 
 PLAT=manylinux2014_x86_64
 EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
