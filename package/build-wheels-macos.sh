@@ -78,8 +78,8 @@ cd boost_build
 retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
 tar xzf boost_1_81_0.tar.gz
 cd boost_1_81_0
-./bootstrap.sh --prefix=$CURRDIR/boost_install --with-libraries=filesystem,system,program_options,graph,test clang-darwin
-./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" runtime-link=static variant=release link=static install
+./bootstrap.sh --prefix=$CURRDIR/boost_install --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
+./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" runtime-link=static variant=release link=static --disable-icu install
 
 echo "CURRDIR is: ${CURRDIR}"
 
