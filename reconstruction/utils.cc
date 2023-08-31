@@ -21,9 +21,9 @@ using namespace pybind11::literals;
 
 template <bool kEstimateScale>
 inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3d>& src,
-                                                const std::vector<Eigen::Vector3d>& dst,
+                                                const std::vector<Eigen::Vector3d>& tgt,
                                                 double max_error, double min_inlier_ratio,
-                                                Eigen::Matrix3x4d* alignment) {
+                                                SimilarityTransform3* tgtFromSrc) {
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error;
     ransac_options.min_inlier_ratio = min_inlier_ratio;
@@ -32,78 +32,76 @@ inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3
              SimilarityTransformEstimator<3, kEstimateScale>>
         ransac(ransac_options);
 
-    const auto report = ransac.Estimate(src, dst);
+    const auto report = ransac.Estimate(src, tgt);
 
     if (report.success) {
-        *alignment = report.model;
+        *tgtFromSrc = SimilarityTransform3(report.model);
     }
     return report.success;
 }
 
-inline SimilarityTransform3 AlignPosesBetweenReconstructions(Reconstruction& self,
-                                                             const Reconstruction& ref,
+inline SimilarityTransform3 AlignPosesBetweenReconstructions(Reconstruction& src,
+                                                             const Reconstruction& tgt,
                                                              const double min_inlier_observations,
                                                              double max_reproj_error) {
     THROW_CHECK_GE(min_inlier_observations, 0.0);
     THROW_CHECK_LE(min_inlier_observations, 1.0);
-    Eigen::Matrix3x4d alignment;
-    bool success = ComputeAlignmentBetweenReconstructions(self, ref, min_inlier_observations,
-                                                          max_reproj_error, &alignment);
+    SimilarityTransform3 tgtFromSrc;
+    bool success = ComputeAlignmentBetweenReconstructions(src, tgt, min_inlier_observations,
+                                                          max_reproj_error, &tgtFromSrc);
     THROW_CHECK(success);
-    SimilarityTransform3 tform(alignment);
-    self.Transform(tform);
-    return tform;
+    src.Transform(tgtFromSrc);
+    return tgtFromSrc;
 }
 
-inline SimilarityTransform3 AlignPointsBetweenReconstructions(Reconstruction& self,
-                                                              const Reconstruction& ref,
+inline SimilarityTransform3 AlignPointsBetweenReconstructions(Reconstruction& src,
+                                                              const Reconstruction& tgt,
                                                               int min_overlap, double max_error,
                                                               double min_inlier_ratio) {
-    std::vector<Eigen::Vector3d> src;
-    std::vector<Eigen::Vector3d> dst;
+    std::vector<Eigen::Vector3d> p_src;
+    std::vector<Eigen::Vector3d> p_tgt;
     // Associate 3D points using point2D_idx
-    for (auto& p3D_p : self.Points3D()) {
-        // Count how often a 3D point in ref is associated to this 3D point
+    for (auto& p3D_p : src.Points3D()) {
+        // Count how often a 3D point in tgt is associated to this 3D point
         std::map<point3D_t, size_t> counts;
         const Track& track = p3D_p.second.Track();
         for (auto& track_el : track.Elements()) {
-            if (!ref.IsImageRegistered(track_el.image_id)) {
+            if (!tgt.IsImageRegistered(track_el.image_id)) {
                 continue;
             }
-            const Point2D& p2D_dst = ref.Image(track_el.image_id).Point2D(track_el.point2D_idx);
-            if (p2D_dst.HasPoint3D()) {
-                if (counts.find(p2D_dst.Point3DId()) != counts.end()) {
-                    counts[p2D_dst.Point3DId()]++;
+            const Point2D& p2D_tgt = tgt.Image(track_el.image_id).Point2D(track_el.point2D_idx);
+            if (p2D_tgt.HasPoint3D()) {
+                if (counts.find(p2D_tgt.Point3DId()) != counts.end()) {
+                    counts[p2D_tgt.Point3DId()]++;
                 } else {
-                    counts[p2D_dst.Point3DId()] = 0;
+                    counts[p2D_tgt.Point3DId()] = 0;
                 }
             }
         }
         if (counts.size() == 0) {
             continue;
         }
-        // The 3D point in ref who is associated the most is selected
+        // The 3D point in tgt who is associated the most is selected
         auto best_p3D = std::max_element(
             counts.begin(), counts.end(),
             [](const std::pair<point3D_t, size_t>& p1, const std::pair<point3D_t, size_t>& p2) {
                 return p1.second < p2.second;
             });
         if (best_p3D->second >= min_overlap) {
-            src.push_back(p3D_p.second.XYZ());
-            dst.push_back(ref.Point3D(best_p3D->first).XYZ());
+            p_src.push_back(p3D_p.second.XYZ());
+            p_tgt.push_back(tgt.Point3D(best_p3D->first).XYZ());
         }
     }
-    THROW_CHECK_EQ(src.size(), dst.size());
-    std::cerr << "Found " << src.size() << " / " << self.NumPoints3D() << " valid correspondences."
+    THROW_CHECK_EQ(p_src.size(), p_tgt.size());
+    std::cerr << "Found " << p_src.size() << " / " << src.NumPoints3D() << " valid correspondences."
               << std::endl;
 
-    Eigen::Matrix3x4d alignment;
-    bool success = ComputeRobustAlignmentBetweenPoints<true>(src, dst, max_error, min_inlier_ratio,
-                                                             &alignment);
+    SimilarityTransform3 tgtFromSrc;
+    bool success = ComputeRobustAlignmentBetweenPoints<true>(p_src, p_tgt, max_error,
+                                                             min_inlier_ratio, &tgtFromSrc);
     THROW_CHECK(success);
-    SimilarityTransform3 tform(alignment);
-    self.Transform(tform);
-    return tform;
+    src.Transform(tgtFromSrc);
+    return tgtFromSrc;
 }
 
 inline SimilarityTransform3 AlignReconstruction(Reconstruction& self,
@@ -192,14 +190,13 @@ void init_reconstruction_utils(py::module& m) {
                 ss.str("");
             };
 
-            Eigen::Matrix3x4d alignment;
+            SimilarityTransform3 tform;
             if (!ComputeAlignmentBetweenReconstructions(reconstruction2, reconstruction1,
                                                         min_inlier_observations, max_reproj_error,
-                                                        &alignment)) {
+                                                        &tform)) {
                 THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
             }
 
-            const SimilarityTransform3 tform(alignment);
             ss << "Computed alignment transform:" << std::endl << tform.Matrix() << std::endl;
             if (verbose) {
                 py::print(ss.str());
@@ -233,12 +230,13 @@ void init_reconstruction_utils(py::module& m) {
                 py::print(ss.str());
                 ss.str("");
             };
+            Eigen::Matrix3x4d alignment = tform.Matrix().topLeftCorner<3, 4>();
             py::dict res("alignment"_a = alignment, "rotation_errors"_a = rotation_errors,
                          "translation_errors"_a = translation_errors,
                          "proj_center_errors"_a = proj_center_errors);
             return res;
         },
-        py::arg("src_reconstruction").noconvert(), py::arg("ref_reconstruction").noconvert(),
+        py::arg("src_reconstruction").noconvert(), py::arg("tgt_reconstruction").noconvert(),
         py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
         py::arg("verbose") = true, py::keep_alive<1, 2>(), py::keep_alive<1, 3>());
 }
