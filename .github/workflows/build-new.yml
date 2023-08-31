@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pyversion: [ "cp37-cp37m", "cp38-cp38", "cp39-cp39", "cp310-cp310" ]
+        pyversion: [ "cp38-cp38", "cp39-cp39", "cp310-cp310"]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -37,15 +37,15 @@ jobs:
         with:
           # we strip the version number from the artifact name
           name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
-          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-*.whl
 
   mac-build:
     name: Wrapper macOS Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-11 ]
-        pyversion: [ "python@3.7", "python@3.8", "python@3.9", "python@3.10" ]
+        os: [ macos-11, macos-12 ]
+        pyversion: [ "python@3.8", "python@3.9", "python@3.10"]
     steps:
       - name: Checkout
         uses: actions/checkout@v3

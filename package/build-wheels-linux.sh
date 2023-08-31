@@ -38,34 +38,30 @@ CURRDIR=$(pwd)
 
 echo "Num. processes to use for building: ${nproc}"
 
-# ------ Install boost (build it staticly) ------
+# ------ Install boost ------
 cd $CURRDIR
-yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
+yum install -y centos-release-scl-rh devtoolset-7-gcc-c++
 
-# Download and install Boost-1.65.1
-# colmap needs only program_options filesystem graph system unit_test_framework
-mkdir -p boost && \
-    cd boost && \
-    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xzf boost_1_65_1.tar.gz && \
-    cd boost_1_65_1 && \
-    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test && \
-    ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
-
-# Boost should now be visible under /usr/local
-ls -ltrh /usr/local
+mkdir -p boost
+cd boost
+export BOOST_FILENAME=boost_1_71_0
+wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
+tar xzf ${BOOST_FILENAME}.tar.gz
+cd ${BOOST_FILENAME}
+./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
+./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
 yum install -y \
     git \
-    cmake \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
     glog-devel \
     gflags-devel \
     glew-devel
+cmake --version
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
 
@@ -86,8 +82,6 @@ cd $EIGEN_DIR
 mkdir build
 cd build
 cmake ..
-
-ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
@@ -118,11 +112,13 @@ echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout dev
+git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
+rm -f cmake/FindGlog.cmake
+wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DBoost_USE_STATIC_LIBS=ON \
+         -DBoost_USE_STATIC_LIBS=OFF \
          -DBOOST_ROOT=/usr/local \
          -DGUI_ENABLED=OFF \
          -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
@@ -137,14 +133,13 @@ make -j$(nproc) install
 
 # ------ Build pycolmap wheel ------
 cd /io/
-cat setup.py
-
-PLAT=manylinux2014_x86_64
-EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
+WHEEL_DIR="wheels/"
+EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/pip" wheel --no-deps -w ${WHEEL_DIR} .
 
 # Bundle external shared libraries into the wheels
-mkdir -p /io/wheelhouse
-for whl in ./dist/*.whl; do
-    auditwheel repair "$whl" -w /io/wheelhouse/ --no-update-tags
+OUT_DIR="/io/wheelhouse"
+mkdir -p ${OUT_DIR}
+for whl in ${WHEEL_DIR}/*.whl; do
+    auditwheel repair "$whl" -w ${OUT_DIR} --plat manylinux2014_x86_64
 done
-ls -ltrh /io/wheelhouse/
+ls -ltrh ${OUT_DIR}

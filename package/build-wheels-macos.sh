@@ -30,6 +30,9 @@ find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
 rm /usr/local/bin/go || true
 rm /usr/local/bin/gofmt || true
 
+# Updating requires Xcode 14.0, which cannot be installed on macOS 11.
+brew remove swiftlint
+
 brew update
 brew upgrade
 brew install wget cmake
@@ -51,6 +54,7 @@ brew install \
     sqlite3 \
     libomp \
     llvm \
+    boost \
     lz4
 
 brew info gcc
@@ -69,14 +73,15 @@ echo "Python bin path: $PYBIN"
 CURRDIR=$(pwd)
 ls -ltrh $CURRDIR
 
-# Build Boost staticly
-mkdir -p boost_build
-cd boost_build
-retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
-tar xzf boost_1_81_0.tar.gz
-cd boost_1_81_0
-./bootstrap.sh --prefix=$CURRDIR/boost_install --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex clang-darwin
-./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" runtime-link=static variant=release link=static install
+# Install Boost
+#mkdir -p boost
+#cd boost
+#retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
+#tar xzf boost_1_81_0.tar.gz
+#cd boost_1_81_0
+#BOOST_DIR=$CURRDIR/boost_install
+#./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
+#./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 echo "CURRDIR is: ${CURRDIR}"
 
@@ -89,53 +94,36 @@ touch ${PYTHON_LIBRARY}
 
 git clone https://github.com/colmap/colmap.git
 
-for compiler in cc c++ gcc g++ clang clang++
-do
-    which $compiler
-    $compiler --version
-done
-
-# Install `delocate` -- OSX equivalent of `auditwheel`
-# see https://pypi.org/project/delocate/ for more details
 cd $CURRDIR
-$INTERPRETER -m pip install -U delocate
-$INTERPRETER -m pip install -U pip setuptools wheel cffi
-
-ls -ltrh /usr/local
-ls -ltrh /usr/local/opt
 
 cd $CURRDIR
 cd colmap
-git checkout dev
+git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF
-
-# examine exit code of last command
-ec=$?
-if [ $ec -ne 0 ]; then
-    echo "Error:"
-    cat ./CMakeCache.txt
-    exit $ec
-fi
-set -e -x
+cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
 
 NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
 echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
 make -j $NUM_LOGICAL_CPUS install
 sudo make install
 
+# Install `delocate` -- OSX equivalent of `auditwheel`
+# see https://pypi.org/project/delocate/ for more details
+$INTERPRETER -m pip install -U delocate
+$INTERPRETER -m pip install -U pip setuptools wheel cffi
+
 cd $CURRDIR
-cat setup.py
 # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
 # see https://github.com/quantumlib/qsim/issues/242 for more details
-CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER setup.py bdist_wheel
-cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
+WHEEL_DIR="${CURRDIR}/wheelhouse_unrepaired/"
+CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER -m pip wheel --no-deps -w ${WHEEL_DIR} .
 
 # Bundle external shared libraries into the wheels
-ls -ltrh $CURRDIR/wheelhouse_unrepaired/
-for whl in $CURRDIR/wheelhouse_unrepaired/*.whl; do
+OUT_DIR="${CURRDIR}/wheelhouse"
+for whl in ${WHEEL_DIR}/*.whl; do
     delocate-listdeps --all "$whl"
-    delocate-wheel -w "$CURRDIR/wheelhouse" -v "$whl"
+    delocate-wheel -w "${OUT_DIR}" -v "$whl"
     rm $whl
 done
+ls -ltrh ${OUT_DIR}
