@@ -63,6 +63,7 @@ yum install -y \
     glog-devel \
     gflags-devel \
     glew-devel
+cmake --version
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
 
