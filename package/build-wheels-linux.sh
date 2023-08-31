@@ -38,11 +38,10 @@ CURRDIR=$(pwd)
 
 echo "Num. processes to use for building: ${nproc}"
 
-# ------ Install boost (build it staticly) ------
+# ------ Install boost ------
 cd $CURRDIR
-yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
+yum install -y centos-release-scl-rh devtoolset-7-gcc-c++
 
-# Download and install Boost
 mkdir -p boost
 cd boost
 export BOOST_FILENAME=boost_1_71_0
