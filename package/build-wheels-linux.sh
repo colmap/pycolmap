@@ -49,7 +49,7 @@ export BOOST_FILENAME=boost_1_71_0
 wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
 tar xzf ${BOOST_FILENAME}.tar.gz
 cd ${BOOST_FILENAME}
-./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test
+./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test
 ./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared install
 
 # ------ Install dependencies from the default repositories ------
