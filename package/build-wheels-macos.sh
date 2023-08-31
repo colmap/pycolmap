@@ -104,9 +104,6 @@ cd $CURRDIR
 $INTERPRETER -m pip install -U delocate
 $INTERPRETER -m pip install -U pip setuptools wheel cffi
 
-ls -ltrh /usr/local
-ls -ltrh /usr/local/opt
-
 cd $CURRDIR
 cd colmap
 git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
@@ -131,13 +128,14 @@ sudo make install
 cd $CURRDIR
 # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
 # see https://github.com/quantumlib/qsim/issues/242 for more details
-CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER setup.py bdist_wheel
-cp ./dist/*.whl $CURRDIR/wheelhouse_unrepaired
+WHEEL_DIR="${CURRDIR}/wheelhouse_unrepaired/"
+CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER -m pip wheel --no-deps -w ${WHEEL_DIR} .
 
 # Bundle external shared libraries into the wheels
-ls -ltrh $CURRDIR/wheelhouse_unrepaired/
-for whl in $CURRDIR/wheelhouse_unrepaired/*.whl; do
+OUT_DIR="${CURRDIR}/wheelhouse"
+for whl in ${WHEEL_DIR}/*.whl; do
     delocate-listdeps --all "$whl"
-    delocate-wheel -w "$CURRDIR/wheelhouse" -v "$whl"
+    delocate-wheel -w "${OUT_DIR}" -v "$whl"
     rm $whl
 done
+ls -ltrh ${OUT_DIR}
