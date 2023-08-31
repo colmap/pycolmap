@@ -56,7 +56,6 @@ cd ${BOOST_FILENAME}
 cd $CURRDIR
 yum install -y \
     git \
-    cmake \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
@@ -84,8 +83,6 @@ cd $EIGEN_DIR
 mkdir build
 cd build
 cmake ..
-
-ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
