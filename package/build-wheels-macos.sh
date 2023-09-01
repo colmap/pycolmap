@@ -85,8 +85,7 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
         python${PYTHON_VERSION} -m pip wheel --no-deps -w ${WHEEL_DIR} .
 done
 
-PYTHON_DEFAULT="python${PYTHON_VERSIONS[-1]}"
-${PYTHON_DEFAULT} -m pip install -U delocate
+python${PYTHON_VERSIONS[0]} -m pip install -U delocate
 
 # Bundle external shared libraries into the wheels
 OUT_DIR="${CURRDIR}/wheelhouse"
