@@ -45,6 +45,7 @@ brew install \
     freeimage \
     flann \
     glog \
+    googletest \
     gflags \
     metis \
     suite-sparse \
