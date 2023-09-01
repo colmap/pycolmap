@@ -1,54 +1,32 @@
 #!/bin/bash
-
-# Installation based off of https://colmap.github.io/install.html (COLMAP)
-# and https://github.com/mihaidusmanu/pycolmap#getting-started (pycolmap)
-# and http://ceres-solver.org/installation.html (Ceres)
-# However, the OS is centOS 7, instead of Ubuntu.
-
-# Author: John Lambert (johnwlambert)
+PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310")
 
 uname -a
 echo "Current CentOS Version:"
 cat /etc/centos-release
 
-yum -y install wget
-
 ls -ltrh /io/
 
-# we cannot simply use `pip` or `python`, since points to old 2.7 version
-PYBIN="/opt/python/$PYTHON_VERSION/bin"
-PYVER_NUM=$($PYBIN/python -c "import sys;print(sys.version.split(\" \")[0])")
-PYTHONVER="$(basename $(dirname $PYBIN))"
-
-echo "Python bin path: $PYBIN"
-echo "Python version number: $PYVER_NUM"
-echo "Python version: $PYTHONVER"
-
-export PATH=$PYBIN:$PATH
-
-${PYBIN}/pip install auditwheel
-
-PYTHON_EXECUTABLE=${PYBIN}/python
-# We use distutils to get the include directory and the library path directly from the selected interpreter
-# We provide these variables to CMake to hint what Python development files we wish to use in the build.
-PYTHON_INCLUDE_DIR=$(${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
-PYTHON_LIBRARY=$(${PYTHON_EXECUTABLE} -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
-
 CURRDIR=$(pwd)
-
 echo "Num. processes to use for building: ${nproc}"
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
 yum install -y \
+    wget \
     git \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
-    glew-devel
-cmake --version
-
-yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
+    glew-devel \
+    suitesparse-devel \
+    atlas-devel \
+    lapack-devel \
+    blas-devel \
+    flann \
+    flann-devel \
+    lz4 \
+    lz4-devel
 
 # ------ Install boost ------
 cd $CURRDIR
@@ -107,10 +85,6 @@ cmake .. -DBUILD_TESTING=OFF \
 make -j$(nproc)
 make install
 
-echo "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}"
-echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
-echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
-
 # ------ Build FreeImage from source and install ------
 #cd $CURRDIR
 #wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
@@ -149,12 +123,18 @@ make -j$(nproc) install
 # ------ Build pycolmap wheel ------
 cd /io/
 WHEEL_DIR="wheels/"
-EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/pip" wheel --no-deps -w ${WHEEL_DIR} .
+for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
+    PYTHON_EXEC="/opt/python/${PYTHON_VERSION}/bin/python"
+    EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" ${PYTHON_EXEC} -m pip wheel --no-deps -w ${WHEEL_DIR} .
+done
+
+PYTHON_DEFAULT="/opt/python/${PYTHON_VERSIONS[-1]}/bin/python"
+${PYTHON_DEFAULT} -m pip install auditwheel
 
 # Bundle external shared libraries into the wheels
 OUT_DIR="/io/wheelhouse"
 mkdir -p ${OUT_DIR}
 for whl in ${WHEEL_DIR}/*.whl; do
-    auditwheel repair "$whl" -w ${OUT_DIR} --plat manylinux2014_x86_64
+    auditwheel repair "$whl" -w ${OUT_DIR} --plat ${PLAT}
 done
 ls -ltrh ${OUT_DIR}

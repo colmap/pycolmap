@@ -1,34 +1,17 @@
 #!/bin/bash
-
-# Author: John Lambert (johnwlambert)
-
 set -x -e
 
-function retry {
-  local retries=$1
-  shift
+PYTHON_VERSIONS=("3.8", "3.9", "3.10")
 
-  local count=0
-  until "$@"; do
-    exit=$?
-    wait=$((2 ** $count))
-    count=$(($count + 1))
-    if [ $count -lt $retries ]; then
-      echo "Retry $count/$retries exited $exit, retrying in $wait seconds..."
-      sleep $wait
-    else
-      echo "Retry $count/$retries exited $exit, no more retries left."
-      return $exit
-    fi
-  done
-  return 0
-}
-
-declare -a PYTHON_VERSION=( $1 )
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
+# See https://github.com/actions/setup-python/issues/577#issuecomment-1500828576
 rm /usr/local/bin/go || true
 rm /usr/local/bin/gofmt || true
+
+CURRDIR=$(pwd)
+NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
+echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
 
 # Updating requires Xcode 14.0, which cannot be installed on macOS 11.
 brew remove swiftlint
@@ -36,7 +19,11 @@ brew remove swiftlint
 brew update
 brew upgrade
 brew install wget cmake
-brew install --force $PYTHON_VERSION
+
+for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
+    brew install --force "python@${PYTHON_VERSION}"
+    python${PYTHON_VERSION} -m pip install -U pip setuptools wheel cffi
+done
 
 brew install \
     git \
@@ -61,42 +48,18 @@ brew info gcc
 brew upgrade gcc
 brew info gcc
 
-# Get the python version numbers only by splitting the string
-PYBIN="/usr/local/opt/$PYTHON_VERSION/libexec/bin"
-INTERPRETER="$PYBIN/python"
-ls -ltr /usr/local/opt/python*
-ls -ltr $PYBIN
-ls -ltr $INTERPRETER
-export PATH=$PYBIN:/usr/local/bin:$PATH
-echo "Python bin path: $PYBIN"
-
-CURRDIR=$(pwd)
-ls -ltrh $CURRDIR
-
 # Install Boost
 #mkdir -p boost
 #cd boost
-#retry 3 wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
+#wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
 #tar xzf boost_1_81_0.tar.gz
 #cd boost_1_81_0
 #BOOST_DIR=$CURRDIR/boost_install
 #./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
 #./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
-echo "CURRDIR is: ${CURRDIR}"
-
 cd $CURRDIR
-mkdir -p $CURRDIR/wheelhouse_unrepaired
-mkdir -p $CURRDIR/wheelhouse
-
-PYTHON_LIBRARY=$(cd $(dirname $0); pwd)/libpython-not-needed-symbols-exported-by-interpreter
-touch ${PYTHON_LIBRARY}
-
 git clone https://github.com/colmap/colmap.git
-
-cd $CURRDIR
-
-cd $CURRDIR
 cd colmap
 git checkout 8af292cb096b9478703821aa2e84730145b203a1
 # patch src/colmap/util/CMakeLists.txt
@@ -105,25 +68,29 @@ sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
-
-NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
-echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
-make -j $NUM_LOGICAL_CPUS install
+make -j ${NUM_LOGICAL_CPUS} install
 sudo make install
 
 # Install `delocate` -- OSX equivalent of `auditwheel`
 # see https://pypi.org/project/delocate/ for more details
-$INTERPRETER -m pip install -U delocate
-$INTERPRETER -m pip install -U pip setuptools wheel cffi
 
 cd $CURRDIR
 # flags must be passed, to avoid the issue: `Unsupported compiler -- pybind11 requires C++11 support!`
 # see https://github.com/quantumlib/qsim/issues/242 for more details
 WHEEL_DIR="${CURRDIR}/wheelhouse_unrepaired/"
-CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/opt/libomp/lib $INTERPRETER -m pip wheel --no-deps -w ${WHEEL_DIR} .
+for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
+    CC=/usr/local/opt/llvm/bin/clang \
+        CXX=/usr/local/opt/llvm/bin/clang++ \
+        LDFLAGS=-L/usr/local/opt/libomp/lib \
+        python${PYTHON_VERSION} -m pip wheel --no-deps -w ${WHEEL_DIR} .
+done
+
+PYTHON_DEFAULT="python${PYTHON_VERSIONS[-1]}"
+${PYTHON_DEFAULT} -m pip install -U delocate
 
 # Bundle external shared libraries into the wheels
 OUT_DIR="${CURRDIR}/wheelhouse"
+mkdir -p ${OUT_DIR}
 for whl in ${WHEEL_DIR}/*.whl; do
     delocate-listdeps --all "$whl"
     delocate-wheel -w "${OUT_DIR}" -v "$whl"
