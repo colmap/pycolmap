@@ -45,7 +45,6 @@ yum install -y \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
-    gflags-devel \
     glew-devel
 cmake --version
 
@@ -62,11 +61,19 @@ cd ${BOOST_FILENAME}
 ./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
 ./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
 
+# ------ Install gflags ------
+cd $CURRDIR
+git clone --branch v2.2.2 --depth 1 https://github.com/gflags/gflags.git
+cd glflags
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+make install
+
 # ------ Install glog ------
 cd $CURRDIR
-git clone https://github.com/google/glog.git
+git clone --branch v0.6.0 --depth 1 https://github.com/google/glog.git
 cd glog
-git checkout v0.6.0
 mkdir build && cd build
 cmake ..
 make -j$(nproc)
