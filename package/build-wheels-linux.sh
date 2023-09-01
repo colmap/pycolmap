@@ -69,6 +69,7 @@ cd glog
 git checkout v0.6.0
 mkdir build && cd build
 cmake ..
+make -j$(nproc)
 make install
 
 # Disable CGAL since it pulls many dependencies and increases the wheel size
