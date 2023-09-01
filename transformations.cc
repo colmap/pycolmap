@@ -10,6 +10,7 @@ using namespace colmap;
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 
 namespace py = pybind11;
 
@@ -109,12 +110,7 @@ void init_transforms(py::module& m) {
         .def_property_readonly("translation", &SimilarityTransform3::Translation)
         .def_property_readonly("scale", &SimilarityTransform3::Scale)
         .def_property_readonly("matrix", &SimilarityTransform3::Matrix)
-        .def("transform_point", [](const SimilarityTransform3& self,
-                                   Eigen::Ref<Eigen::Vector3d> xyz){
-            Eigen::Vector3d cpy(xyz);
-            self.TransformPoint(&cpy);
-            xyz = cpy;
-        })
+        .def(py::self * Eigen::Vector3d())
         .def("transform_pose", [](const SimilarityTransform3& self,
                                   Eigen::Ref<Eigen::Vector4d> qvec,
                                   Eigen::Ref<Eigen::Vector3d> tvec){

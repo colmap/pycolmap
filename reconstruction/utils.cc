@@ -3,6 +3,8 @@
 #include "colmap/camera/models.h"
 #include "colmap/geometry/projection.h"
 #include "colmap/base/reconstruction.h"
+#include "colmap/estimators/similarity_transform.h"
+#include "colmap/optim/loransac.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"
 #include "colmap/util/types.h"
