@@ -1,4 +1,5 @@
 // Author: Philipp Lindenberger (Phil26AT)
+#include <memory>
 
 #include "colmap/base/reconstruction.h"
 #include "colmap/camera/models.h"
@@ -79,7 +80,7 @@ void init_reconstruction(py::module& m) {
     init_camera(m);
     init_reconstruction_utils(m);
 
-    py::class_<Reconstruction>(m, "Reconstruction")
+    py::class_<Reconstruction, std::shared_ptr<Reconstruction>>(m, "Reconstruction")
         .def(py::init<>())
         .def(py::init([](const py::object input_path) {
                  std::string path = py::str(input_path).cast<std::string>();
@@ -219,11 +220,11 @@ void init_reconstruction(py::module& m) {
              "merging the two clouds and their tracks. The coordinate frames of the two\n"
              "reconstructions are aligned using the projection centers of common\n"
              "registered images. Return true if the two reconstructions could be merged.")
-        .def("align_poses", &AlignPosesBetweenReconstructions, py::arg("ref_reconstruction"),
+        .def("align_poses", &AlignPosesBetweenReconstructions, py::arg("tgt_reconstruction"),
              py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
              "Align to reference reconstruction using RANSAC.")
         .def("align_points", &AlignPointsBetweenReconstructions,
-             py::arg("reference_reconstruction"), py::arg("min_overlap") = 3,
+             py::arg("tgt_reconstruction"), py::arg("min_overlap") = 3,
              py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,
              "Align 3D points to reference reconstruction using LORANSAC.\n"
              "Estimates pose by aligning corresponding 3D points.\n"

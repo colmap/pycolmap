@@ -98,7 +98,10 @@ cd $CURRDIR
 
 cd $CURRDIR
 cd colmap
-git checkout 567d29ea7ddd96e1882e90d469e6b188ce16d297
+git checkout 8af292cb096b9478703821aa2e84730145b203a1
+# patch src/colmap/util/CMakeLists.txt
+sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
+# build
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON

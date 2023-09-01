@@ -36,7 +36,7 @@ void init_incremental_triangulator(py::module& m) {
         .def_readwrite("max_extra_param", &IncrementalTriangulator::Options::max_extra_param);
 
     py::class_<IncrementalTriangulator, std::shared_ptr<IncrementalTriangulator>>(m, "IncrementalTriangulator")
-        .def(py::init<CorrespondenceGraph*, Reconstruction*>())
+        .def(py::init<std::shared_ptr<CorrespondenceGraph>, std::shared_ptr<Reconstruction>>())
         .def("triangulate_image", &IncrementalTriangulator::TriangulateImage)
         .def("complete_image", &IncrementalTriangulator::CompleteImage)
         .def("complete_all_tracks", &IncrementalTriangulator::CompleteAllTracks)

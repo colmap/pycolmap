@@ -73,21 +73,21 @@ py::dict world_to_image(
 void init_transforms(py::module& m) {
     m.def("compute_alignment",
         [](const Reconstruction& src_reconstruction,
-            const Reconstruction& ref_reconstruction,
+            const Reconstruction& tgt_reconstruction,
             const double min_inlier_observations,
             const double max_reproj_error) {
             THROW_CHECK_GE(min_inlier_observations, 0.0);
             THROW_CHECK_LE(min_inlier_observations, 1.0);
-            Eigen::Matrix3x4d alignment;
+            SimilarityTransform3 tgtFromSrc;
             bool success =
                 ComputeAlignmentBetweenReconstructions(src_reconstruction,
-                    ref_reconstruction, min_inlier_observations,
-                    max_reproj_error, &alignment);
+                    tgt_reconstruction, min_inlier_observations,
+                    max_reproj_error, &tgtFromSrc);
             THROW_CHECK(success);
-            return alignment;
+            return tgtFromSrc;
         },
         py::arg("src_reconstruction").noconvert(),
-        py::arg("ref_reconstruction").noconvert(),
+        py::arg("tgt_reconstruction").noconvert(),
         py::arg("min_inlier_observations") = 0.3,
         py::arg("max_reproj_error") = 8.0,
         py::keep_alive<1,2>(),
@@ -185,7 +185,7 @@ void init_transforms(py::module& m) {
             return std::make_pair(qvec12, tvec12);
         },
         py::arg("qvec1"), py::arg("tvec1"), py::arg("qvec2"), py::arg("tvec2"));
-        
+
     m.def("world_to_image", [](int model_id,
         Eigen::Ref<Eigen::VectorXd> camera_params,
         Eigen::Ref<Eigen::Vector2d> uv,

@@ -1,4 +1,5 @@
 // Author: Paul-Edouard Sarlin (skydes)
+#include <memory>
 
 #include "colmap/exe/sfm.h"
 #include "colmap/camera/models.h"
@@ -23,12 +24,13 @@ using namespace pybind11::literals;
 #include "pipeline/images.cc"
 #include "pipeline/match_features.cc"
 
-Reconstruction triangulate_points(Reconstruction reconstruction,
-                                  const py::object database_path_,
-                                  const py::object image_path_,
-                                  const py::object output_path_,
-                                  const bool clear_points,
-                                  const IncrementalMapperOptions& options) {
+std::shared_ptr<Reconstruction> triangulate_points(
+    const std::shared_ptr<Reconstruction> reconstruction,
+    const py::object database_path_,
+    const py::object image_path_,
+    const py::object output_path_,
+    const bool clear_points,
+    const IncrementalMapperOptions& options) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -47,7 +49,7 @@ Reconstruction triangulate_points(Reconstruction reconstruction,
 }
 
 // Copied from colmap/exe/sfm.cc
-std::map<size_t, Reconstruction> incremental_mapping(
+std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
     const py::object output_path_,
@@ -62,32 +64,33 @@ std::map<size_t, Reconstruction> incremental_mapping(
     CreateDirIfNotExists(output_path);
 
     py::gil_scoped_release release;
-    ReconstructionManager reconstruction_manager;
+    auto reconstruction_manager = std::make_shared<ReconstructionManager>();
     if (input_path != "") {
         THROW_CHECK_DIR_EXISTS(input_path);
-        reconstruction_manager.Read(input_path);
+        reconstruction_manager->Read(input_path);
     }
+    auto options_ = std::make_shared<IncrementalMapperOptions>(options);
     IncrementalMapperController mapper(
-        &options, image_path, database_path, &reconstruction_manager);
+        options_, image_path, database_path, reconstruction_manager);
 
     // In case a new reconstruction is started, write results of individual sub-
     // models to as their reconstruction finishes instead of writing all results
     // after all reconstructions finished.
     size_t prev_num_reconstructions = 0;
-    std::map<size_t, Reconstruction> reconstructions;
+    std::map<size_t, std::shared_ptr<Reconstruction>> reconstructions;
     mapper.AddCallback(
         IncrementalMapperController::LAST_IMAGE_REG_CALLBACK, [&]() {
             // If the number of reconstructions has not changed, the last model
             // was discarded for some reason.
-            if (reconstruction_manager.Size() > prev_num_reconstructions) {
+            if (reconstruction_manager->Size() > prev_num_reconstructions) {
                 const std::string reconstruction_path = JoinPaths(
                     output_path, std::to_string(prev_num_reconstructions));
                 const auto& reconstruction =
-                    reconstruction_manager.Get(prev_num_reconstructions);
+                    reconstruction_manager->Get(prev_num_reconstructions);
                 CreateDirIfNotExists(reconstruction_path);
-                reconstruction.Write(reconstruction_path);
+                reconstruction->Write(reconstruction_path);
                 reconstructions[prev_num_reconstructions] = reconstruction;
-                prev_num_reconstructions = reconstruction_manager.Size();
+                prev_num_reconstructions = reconstruction_manager->Size();
             }
         });
 
@@ -104,7 +107,7 @@ std::map<size_t, Reconstruction> incremental_mapping(
     return reconstructions;
 }
 
-std::map<size_t, Reconstruction> incremental_mapping(
+std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
     const py::object output_path_,
@@ -194,7 +197,7 @@ void init_sfm(py::module& m) {
           "Triangulate 3D points from known camera poses");
 
     m.def("incremental_mapping",
-          static_cast<std::map<size_t, Reconstruction> (*)(
+          static_cast<std::map<size_t, std::shared_ptr<Reconstruction>> (*)(
               const py::object,
               const py::object,
               const py::object,
@@ -208,13 +211,13 @@ void init_sfm(py::module& m) {
           "Triangulate 3D points from known poses");
 
     m.def("incremental_mapping",
-          static_cast<std::map<size_t, Reconstruction> (*)(const py::object,
-                                                           const py::object,
-                                                           const py::object,
-                                                           const int,
-                                                           const int,
-                                                           const py::object)>(
-              &incremental_mapping),
+          static_cast<std::map<size_t, std::shared_ptr<Reconstruction>> (*)(
+              const py::object,
+              const py::object,
+              const py::object,
+              const int,
+              const int,
+              const py::object)>(&incremental_mapping),
           py::arg("database_path"),
           py::arg("image_path"),
           py::arg("output_path"),

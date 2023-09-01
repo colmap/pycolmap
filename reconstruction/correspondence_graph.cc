@@ -56,8 +56,8 @@ void init_correspondence_graph(py::module& m) {
                 }
                 self.AddCorrespondences(image_id1, image_id2, matches);
             })
-        .def("find_correspondences", &CorrespondenceGraph::FindCorrespondences)
-        .def("find_transitive_correspondences", &CorrespondenceGraph::FindTransitiveCorrespondences)
+        .def("extract_correspondences", &CorrespondenceGraph::ExtractCorrespondences)
+        .def("extract_transitive_correspondences", &CorrespondenceGraph::ExtractTransitiveCorrespondences)
         .def(
             "find_correspondences_between_images",
             [](const CorrespondenceGraph& self, const image_t image_id1, const image_t image_id2) {
