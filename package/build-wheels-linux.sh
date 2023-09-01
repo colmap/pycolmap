@@ -38,19 +38,6 @@ CURRDIR=$(pwd)
 
 echo "Num. processes to use for building: ${nproc}"
 
-# ------ Install boost ------
-cd $CURRDIR
-yum install -y centos-release-scl-rh devtoolset-7-gcc-c++
-
-mkdir -p boost
-cd boost
-export BOOST_FILENAME=boost_1_71_0
-wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
-tar xzf ${BOOST_FILENAME}.tar.gz
-cd ${BOOST_FILENAME}
-./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
-./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
-
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
 yum install -y \
@@ -58,29 +45,45 @@ yum install -y \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
-    glog-devel \
     gflags-devel \
     glew-devel
 cmake --version
 
 yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
 
+# ------ Install boost ------
+cd $CURRDIR
+#yum install -y centos-release-scl-rh devtoolset-7-gcc-c++
+mkdir -p boost && cd boost
+export BOOST_FILENAME=boost_1_71_0
+wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
+tar xzf ${BOOST_FILENAME}.tar.gz
+cd ${BOOST_FILENAME}
+./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
+./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
+
+# ------ Install glog ------
+cd $CURRDIR
+git clone https://github.com/google/glog.git
+cd glog
+git checkout v0.6.0
+mkdir build && cd build
+cmake ..
+make install
+
 # Disable CGAL since it pulls many dependencies and increases the wheel size
 #yum install -y yum-utils
 #yum-config-manager --add-repo=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/
 #yum install -y --nogpgcheck CGAL-devel
 
+# ------ Install Eigen ------
 cd $CURRDIR
-# Using Eigen 3.3, not Eigen 3.4
-wget https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-tar -xvzf eigen-3.3.9.tar.gz
-export EIGEN_DIR="$CURRDIR/eigen-3.3.9"
-
-# While Eigen is a header-only library, it still has to be built!
-# Creates Eigen3Config.cmake from Eigen3Config.cmake.in
+EIGEN_VERSION="3.3.9"
+export EIGEN_DIR="$CURRDIR/eigen-${EIGEN_VERSION}"
+wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+tar -xvzf eigen-${EIGEN_VERSION}.tar.gz
 cd $EIGEN_DIR
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
 
 # ------ Install CERES solver ------
