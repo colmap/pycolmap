@@ -8,7 +8,7 @@ cat /etc/centos-release
 ls -ltrh /io/
 
 CURRDIR=$(pwd)
-echo "Num. processes to use for building: ${nproc}"
+echo "Num. processes to use for building: $(nproc)"
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
