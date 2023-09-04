@@ -19,12 +19,12 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "reconstruction/alignment.cc"
 #include "reconstruction/camera.cc"
 #include "reconstruction/image.cc"
 #include "reconstruction/point2D.cc"
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
-#include "reconstruction/utils.cc"
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
