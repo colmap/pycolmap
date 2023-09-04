@@ -8,7 +8,7 @@
 #include "colmap/geometry/projection.h"
 #include "colmap/geometry/similarity_transform.h"
 #include "colmap/optim/ransac.h"
-#include "colmap/util/random.h"
+#include "colmap/math/random.h"
 #include "colmap/util/misc.h"
 #include "colmap/estimators/pose.h"
 #include "colmap/estimators/generalized_absolute_pose.h"
