@@ -61,7 +61,7 @@ brew info gcc
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 8af292cb096b9478703821aa2e84730145b203a1
+git checkout 02c656e03e9be093d9b9268a04f6e79a3d592f2c
 # patch src/colmap/util/CMakeLists.txt
 sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
 # build
