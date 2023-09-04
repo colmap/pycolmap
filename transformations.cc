@@ -72,28 +72,6 @@ py::dict world_to_image(
 }
 
 void init_transforms(py::module& m) {
-    m.def("compute_alignment",
-        [](const Reconstruction& src_reconstruction,
-            const Reconstruction& tgt_reconstruction,
-            const double min_inlier_observations,
-            const double max_reproj_error) {
-            THROW_CHECK_GE(min_inlier_observations, 0.0);
-            THROW_CHECK_LE(min_inlier_observations, 1.0);
-            SimilarityTransform3 tgtFromSrc;
-            bool success =
-                ComputeAlignmentBetweenReconstructions(src_reconstruction,
-                    tgt_reconstruction, min_inlier_observations,
-                    max_reproj_error, &tgtFromSrc);
-            THROW_CHECK(success);
-            return tgtFromSrc;
-        },
-        py::arg("src_reconstruction").noconvert(),
-        py::arg("tgt_reconstruction").noconvert(),
-        py::arg("min_inlier_observations") = 0.3,
-        py::arg("max_reproj_error") = 8.0,
-        py::keep_alive<1,2>(),
-        py::keep_alive<1,3>());
-
     py::class_<SimilarityTransform3>(m, "SimilarityTransform3")
         .def(py::init<const Eigen::Matrix3x4d&>())
         .def(py::init<double, Eigen::Vector4d, Eigen::Vector3d>())
