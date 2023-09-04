@@ -2,6 +2,7 @@
 
 #include "colmap/camera/models.h"
 #include "colmap/geometry/projection.h"
+#include "colmap/geometry/sim3.h"
 #include "colmap/base/alignment.h"
 #include "colmap/base/reconstruction.h"
 #include "colmap/estimators/similarity_transform.h"
@@ -26,7 +27,7 @@ template <bool kEstimateScale>
 inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3d>& src,
                                                 const std::vector<Eigen::Vector3d>& tgt,
                                                 double max_error, double min_inlier_ratio,
-                                                SimilarityTransform3* tgtFromSrc) {
+                                                Sim3d* tgtFromSrc) {
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error;
     ransac_options.min_inlier_ratio = min_inlier_ratio;
@@ -38,39 +39,39 @@ inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3
     const auto report = ransac.Estimate(src, tgt);
 
     if (report.success) {
-        *tgtFromSrc = SimilarityTransform3(report.model);
+        *tgtFromSrc = Sim3d(report.model);
     }
     return report.success;
 }
 
-inline SimilarityTransform3 AlignReconstructionsWithPoses(const Reconstruction& src,
-                                                          const Reconstruction& tgt,
-                                                          const double min_inlier_observations,
-                                                          const double max_reproj_error) {
+inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
+                                           const Reconstruction& tgt,
+                                           const double min_inlier_observations,
+                                           const double max_reproj_error) {
     THROW_CHECK_GE(min_inlier_observations, 0.0);
     THROW_CHECK_LE(min_inlier_observations, 1.0);
-    SimilarityTransform3 tgtFromSrc;
+    Sim3d tgtFromSrc;
     bool success = AlignReconstructions(src, tgt, min_inlier_observations,
                                         max_reproj_error, &tgtFromSrc);
     THROW_CHECK(success);
     return tgtFromSrc;
 }
 
-inline SimilarityTransform3 AlignReconstructionsWithPoses(const Reconstruction& src,
-                                                          const Reconstruction& tgt,
-                                                          const double max_proj_center_error) {
+inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
+                                           const Reconstruction& tgt,
+                                           const double max_proj_center_error) {
     THROW_CHECK_GT(max_proj_center_error, 0.0);
-    SimilarityTransform3 tgtFromSrc;
+    Sim3d tgtFromSrc;
     bool success = AlignReconstructions(src, tgt, max_proj_center_error, &tgtFromSrc);
     THROW_CHECK(success);
     return tgtFromSrc;
 }
 
-inline SimilarityTransform3 AlignReconstructionsWithPoints(const Reconstruction& src,
-                                                           const Reconstruction& tgt,
-                                                           const int min_overlap,
-                                                           const double max_error,
-                                                           const double min_inlier_ratio) {
+inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
+                                            const Reconstruction& tgt,
+                                            const int min_overlap,
+                                            const double max_error,
+                                            const double min_inlier_ratio) {
     std::vector<Eigen::Vector3d> p_src;
     std::vector<Eigen::Vector3d> p_tgt;
     // Associate 3D points using point2D_idx
@@ -109,14 +110,14 @@ inline SimilarityTransform3 AlignReconstructionsWithPoints(const Reconstruction&
     std::cerr << "Found " << p_src.size() << " / " << src.NumPoints3D() << " valid correspondences."
               << std::endl;
 
-    SimilarityTransform3 tgtFromSrc;
+    Sim3d tgtFromSrc;
     bool success = ComputeRobustAlignmentBetweenPoints<true>(p_src, p_tgt, max_error,
                                                              min_inlier_ratio, &tgtFromSrc);
     THROW_CHECK(success);
     return tgtFromSrc;
 }
 
-inline SimilarityTransform3 AlignReconstructionToLocationsWrapper(
+inline Sim3d AlignReconstructionToLocationsWrapper(
         const Reconstruction& src,
         const std::vector<std::string>& image_names,
         const std::vector<Eigen::Vector3d>& locations,
@@ -124,7 +125,7 @@ inline SimilarityTransform3 AlignReconstructionToLocationsWrapper(
         const RANSACOptions& ransac_options) {
     THROW_CHECK_GE(min_common_images, 3);
     THROW_CHECK_EQ(image_names.size(), locations.size());
-    SimilarityTransform3 locationsFromSrc;
+    Sim3d locationsFromSrc;
     bool success = AlignReconstructionToLocations(src, image_names, locations,
                                                   min_common_images, ransac_options,
                                                   &locationsFromSrc);
@@ -185,7 +186,7 @@ py::dict CompareReconstructions(
         ss.str("");
     };
 
-    SimilarityTransform3 tform;
+    Sim3d tform;
     if (!AlignReconstructions(reconstruction2, reconstruction1,
                               min_inlier_observations, max_reproj_error, &tform)) {
         THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
@@ -237,15 +238,15 @@ using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 void init_reconstruction_utils(py::module& m) {
     m.def(
         "align_reconstructions_with_poses",
-        static_cast<SimilarityTransform3 (*)(const Reconstruction&, const Reconstruction&,
-                                             const double, const double)>(&AlignReconstructionsWithPoses),
+        static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
+                              const double, const double)>(&AlignReconstructionsWithPoses),
         py::arg("src"), py::arg("tgt"), py::arg("min_inlier_observations"),
         py::arg("max_reproj_error"));
 
     m.def(
         "align_reconstructions_with_poses",
-        static_cast<SimilarityTransform3 (*)(const Reconstruction&, const Reconstruction&,
-                                             const double)>(&AlignReconstructionsWithPoses),
+        static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
+                              const double)>(&AlignReconstructionsWithPoses),
         py::arg("src"), py::arg("tgt"), py::arg("max_proj_center_error"));
 
     m.def(

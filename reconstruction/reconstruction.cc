@@ -208,7 +208,7 @@ void init_reconstruction(py::module& m) {
         .def(
             "transform",
             [](Reconstruction& self, const Eigen::Matrix3x4d& tform_mat) {
-                SimilarityTransform3 tform(tform_mat);
+                Sim3d tform(tform_mat);
                 self.Transform(tform);
             },
             "Apply the 3D similarity transformation to all images and points.")
@@ -218,7 +218,7 @@ void init_reconstruction(py::module& m) {
             "align_poses",
             [](Reconstruction& self, const Reconstruction& tgt,
                const double min_inlier_observations, double max_reproj_error) {
-                SimilarityTransform3 tgtFromSrc = AlignReconstructionsWithPoses(
+                Sim3d tgtFromSrc = AlignReconstructionsWithPoses(
                     self, tgt, min_inlier_observations, max_reproj_error);
                 self.Transform(tgtFromSrc);
                 return tgtFromSrc;
@@ -230,7 +230,7 @@ void init_reconstruction(py::module& m) {
         .def("align_points",
             [](Reconstruction& self, const Reconstruction& tgt,
                const int min_overlap, const double max_error, const double min_inlier_ratio) {
-                SimilarityTransform3 tgtFromSrc = AlignReconstructionsWithPoints(
+                Sim3d tgtFromSrc = AlignReconstructionsWithPoints(
                     self, tgt, min_overlap, max_error, min_inlier_ratio);
                 self.Transform(tgtFromSrc);
                 return tgtFromSrc;
