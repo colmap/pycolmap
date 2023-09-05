@@ -4,7 +4,7 @@ This repository exposes to Python most [COLMAP](https://colmap.github.io/) recon
 
 ## Getting started
 
-Wheels for Python 3.7/8/9/10 on Linux and macOS 11 can be install using pip:
+Wheels for Python 8/9/10 on Linux and macOS 11/12 can be install using pip:
 ```bash
 pip install pycolmap
 ```
@@ -13,11 +13,9 @@ The wheels are automatically built and pushed to [pypi](https://pypi.org/project
 
 ### Building from source
 
-Alternatively, we explain below how to compile PyCOLMAP from source.
-
-COLMAP should first be installed as a library following [the official guide](https://colmap.github.io/install.html).
-**We recommend always building PyCOLMAP against the latest commit of the COLMAP [`dev` branch](https://github.com/colmap/colmap/tree/dev) - using a previous COLMAP build might not work.**
-Currently, the earliest supported COLMAP commit is [colmap/colmap@33e2692](https://github.com/colmap/colmap/commit/33e26924f950172751f044a89b964129b3728db8).
+Alternatively, we explain below how to compile PyCOLMAP from source. COLMAP should first be installed as a library following [the official guide](https://colmap.github.io/install.html).
+**⚠️ PyCOLMAP is currently in unstable development! To avoid issues, use tag v0.4.0 and COLMAP commit [colmap/colmap@`d812bcb`](https://github.com/colmap/colmap/commit/d812bcbf5a9a13c52292b711a5c1d4a55dfe5812).**
+In the master branch, the latest supported COLMAP commit is [colmap/colmap@`6d000e4`](https://github.com/colmap/colmap/commit/6d000e48209b5583ab618745b2269992e6584d7f). Using a previous COLMAP build might not work.
 
 Then clone the repository and its submodules:
 
