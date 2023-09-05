@@ -6,7 +6,6 @@
 #include "colmap/base/camera.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/geometry/projection.h"
-#include "colmap/geometry/similarity_transform.h"
 #include "colmap/optim/ransac.h"
 #include "colmap/math/random.h"
 #include "colmap/util/misc.h"
