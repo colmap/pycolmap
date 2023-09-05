@@ -205,13 +205,6 @@ void init_reconstruction(py::module& m) {
              "Scales scene such that the minimum and maximum camera centers are at the\n"
              "given `extent`, whereas `p0` and `p1` determine the minimum and\n"
              "maximum percentiles of the camera centers considered.")
-        .def(
-            "transform",
-            [](Reconstruction& self, const Eigen::Matrix3x4d& tform_mat) {
-                Sim3d tform(tform_mat);
-                self.Transform(tform);
-            },
-            "Apply the 3D similarity transformation to all images and points.")
         .def("transform", &Reconstruction::Transform,
              "Apply the 3D similarity transformation to all images and points.")
         .def(

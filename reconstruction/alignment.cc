@@ -27,7 +27,7 @@ template <bool kEstimateScale>
 inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3d>& src,
                                                 const std::vector<Eigen::Vector3d>& tgt,
                                                 double max_error, double min_inlier_ratio,
-                                                Sim3d* tgtFromSrc) {
+                                                Sim3d& tgt_from_src) {
     RANSACOptions ransac_options;
     ransac_options.max_error = max_error;
     ransac_options.min_inlier_ratio = min_inlier_ratio;
@@ -39,7 +39,10 @@ inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3
     const auto report = ransac.Estimate(src, tgt);
 
     if (report.success) {
-        *tgtFromSrc = Sim3d(report.model);
+        tgt_from_src.scale = report.model.col(0).norm();
+        tgt_from_src.rotation = Eigen::Quaterniond(report.model.template leftCols<3>()
+                                                   / tgt_from_src.scale).normalized();
+        tgt_from_src.translation = report.model.template rightCols<1>();
     }
     return report.success;
 }
@@ -50,21 +53,21 @@ inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
                                            const double max_reproj_error) {
     THROW_CHECK_GE(min_inlier_observations, 0.0);
     THROW_CHECK_LE(min_inlier_observations, 1.0);
-    Sim3d tgtFromSrc;
+    Sim3d tgt_from_src;
     bool success = AlignReconstructions(src, tgt, min_inlier_observations,
-                                        max_reproj_error, &tgtFromSrc);
+                                        max_reproj_error, &tgt_from_src);
     THROW_CHECK(success);
-    return tgtFromSrc;
+    return tgt_from_src;
 }
 
 inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
                                            const Reconstruction& tgt,
                                            const double max_proj_center_error) {
     THROW_CHECK_GT(max_proj_center_error, 0.0);
-    Sim3d tgtFromSrc;
-    bool success = AlignReconstructions(src, tgt, max_proj_center_error, &tgtFromSrc);
+    Sim3d tgt_from_src;
+    bool success = AlignReconstructions(src, tgt, max_proj_center_error, &tgt_from_src);
     THROW_CHECK(success);
-    return tgtFromSrc;
+    return tgt_from_src;
 }
 
 inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
@@ -110,11 +113,11 @@ inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
     std::cerr << "Found " << p_src.size() << " / " << src.NumPoints3D() << " valid correspondences."
               << std::endl;
 
-    Sim3d tgtFromSrc;
+    Sim3d tgt_from_src;
     bool success = ComputeRobustAlignmentBetweenPoints<true>(p_src, p_tgt, max_error,
-                                                             min_inlier_ratio, &tgtFromSrc);
+                                                             min_inlier_ratio, tgt_from_src);
     THROW_CHECK(success);
-    return tgtFromSrc;
+    return tgt_from_src;
 }
 
 inline Sim3d AlignReconstructionToLocationsWrapper(
@@ -192,7 +195,7 @@ py::dict CompareReconstructions(
         THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
     }
 
-    ss << "Computed alignment transform:" << std::endl << tform.Matrix() << std::endl;
+    ss << "Computed alignment transform:" << std::endl << tform.ToMatrix() << std::endl;
     if (verbose) {
         py::print(ss.str());
         ss.str("");

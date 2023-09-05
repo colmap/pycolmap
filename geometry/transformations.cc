@@ -72,40 +72,6 @@ py::dict world_to_image(
 }
 
 void init_transforms(py::module& m) {
-    py::class_<Sim3d>(m, "Sim3d")
-        .def(py::init<const Eigen::Matrix3x4d&>())
-        .def(py::init<double, Eigen::Vector4d, Eigen::Vector3d>())
-        .def_property_readonly_static("estimate", [](py::object){
-            return py::cpp_function([](std::vector<Eigen::Vector3d> src,
-                    std::vector<Eigen::Vector3d> dst){
-                Sim3d tform;
-                bool success = tform.Estimate(src,dst);
-                THROW_CHECK(success);
-                return tform;
-            });
-        })
-        .def_property_readonly("rotation", &Sim3d::Rotation)
-        .def_property_readonly("translation", &Sim3d::Translation)
-        .def_property_readonly("scale", &Sim3d::Scale)
-        .def_property_readonly("matrix", &Sim3d::Matrix)
-        .def(py::self * Eigen::Vector3d())
-        .def("transform_pose", [](const Sim3d& self,
-                                  Eigen::Ref<Eigen::Vector4d> qvec,
-                                  Eigen::Ref<Eigen::Vector3d> tvec){
-            Eigen::Vector3d cpyt(tvec);
-            Eigen::Vector4d cpyq(qvec);
-            self.TransformPose(&cpyq, &cpyt);
-            qvec = cpyq;
-            tvec = cpyt;
-        })
-        .def("inverse", &Sim3d::Inverse)
-        .def("__repr__", [](const Sim3d& self){
-            std::stringstream ss;
-            ss<<"Sim3d:\n"
-            <<self.Matrix();
-            return ss.str();
-        });
-
     m.def("qvec_to_rotmat", &colmap::QuaternionToRotationMatrix,
           py::arg("qvec"),
           "Convert COLMAP quaternion to rotation matrix");
