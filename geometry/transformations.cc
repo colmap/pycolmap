@@ -1,6 +1,6 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
-#include "colmap/geometry/similarity_transform.h"
+#include "colmap/geometry/sim3.h"
 #include "colmap/image/warp.h"
 #include "colmap/camera/models.h"
 
@@ -10,6 +10,7 @@ using namespace colmap;
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <pybind11/eigen.h>
+#include <pybind11/operators.h>
 
 namespace py = pybind11;
 
@@ -71,67 +72,6 @@ py::dict world_to_image(
 }
 
 void init_transforms(py::module& m) {
-    m.def("compute_alignment",
-        [](const Reconstruction& src_reconstruction,
-            const Reconstruction& tgt_reconstruction,
-            const double min_inlier_observations,
-            const double max_reproj_error) {
-            THROW_CHECK_GE(min_inlier_observations, 0.0);
-            THROW_CHECK_LE(min_inlier_observations, 1.0);
-            SimilarityTransform3 tgtFromSrc;
-            bool success =
-                ComputeAlignmentBetweenReconstructions(src_reconstruction,
-                    tgt_reconstruction, min_inlier_observations,
-                    max_reproj_error, &tgtFromSrc);
-            THROW_CHECK(success);
-            return tgtFromSrc;
-        },
-        py::arg("src_reconstruction").noconvert(),
-        py::arg("tgt_reconstruction").noconvert(),
-        py::arg("min_inlier_observations") = 0.3,
-        py::arg("max_reproj_error") = 8.0,
-        py::keep_alive<1,2>(),
-        py::keep_alive<1,3>());
-
-    py::class_<SimilarityTransform3>(m, "SimilarityTransform3")
-        .def(py::init<const Eigen::Matrix3x4d&>())
-        .def(py::init<double, Eigen::Vector4d, Eigen::Vector3d>())
-        .def_property_readonly_static("estimate", [](py::object){
-            return py::cpp_function([](std::vector<Eigen::Vector3d> src,
-                    std::vector<Eigen::Vector3d> dst){
-                SimilarityTransform3 tform;
-                bool success = tform.Estimate(src,dst);
-                THROW_CHECK(success);
-                return tform;
-            });
-        })
-        .def_property_readonly("rotation", &SimilarityTransform3::Rotation)
-        .def_property_readonly("translation", &SimilarityTransform3::Translation)
-        .def_property_readonly("scale", &SimilarityTransform3::Scale)
-        .def_property_readonly("matrix", &SimilarityTransform3::Matrix)
-        .def("transform_point", [](const SimilarityTransform3& self,
-                                   Eigen::Ref<Eigen::Vector3d> xyz){
-            Eigen::Vector3d cpy(xyz);
-            self.TransformPoint(&cpy);
-            xyz = cpy;
-        })
-        .def("transform_pose", [](const SimilarityTransform3& self,
-                                  Eigen::Ref<Eigen::Vector4d> qvec,
-                                  Eigen::Ref<Eigen::Vector3d> tvec){
-            Eigen::Vector3d cpyt(tvec);
-            Eigen::Vector4d cpyq(qvec);
-            self.TransformPose(&cpyq, &cpyt);
-            qvec = cpyq;
-            tvec = cpyt;
-        })
-        .def("inverse", &SimilarityTransform3::Inverse)
-        .def("__repr__", [](const SimilarityTransform3& self){
-            std::stringstream ss;
-            ss<<"SimilarityTransform3:\n"
-            <<self.Matrix();
-            return ss.str();
-        });
-
     m.def("qvec_to_rotmat", &colmap::QuaternionToRotationMatrix,
           py::arg("qvec"),
           "Convert COLMAP quaternion to rotation matrix");

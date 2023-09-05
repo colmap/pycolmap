@@ -5,7 +5,7 @@
 
 #include "colmap/base/camera.h"
 #include "colmap/estimators/pose.h"
-#include "colmap/util/random.h"
+#include "colmap/math/random.h"
 
 using namespace colmap;
 

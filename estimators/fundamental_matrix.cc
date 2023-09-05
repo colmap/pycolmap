@@ -6,7 +6,7 @@
 #include "colmap/base/camera.h"
 #include "colmap/estimators/fundamental_matrix.h"
 #include "colmap/optim/loransac.h"
-#include "colmap/util/random.h"
+#include "colmap/math/random.h"
 
 using namespace colmap;
 

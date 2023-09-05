@@ -7,7 +7,7 @@
 #include "colmap/geometry/pose.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/optim/loransac.h"
-#include "colmap/util/random.h"
+#include "colmap/math/random.h"
 
 using namespace colmap;
 

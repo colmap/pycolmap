@@ -19,12 +19,12 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "reconstruction/alignment.cc"
 #include "reconstruction/camera.cc"
 #include "reconstruction/image.cc"
 #include "reconstruction/point2D.cc"
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
-#include "reconstruction/utils.cc"
 
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
@@ -205,42 +205,35 @@ void init_reconstruction(py::module& m) {
              "Scales scene such that the minimum and maximum camera centers are at the\n"
              "given `extent`, whereas `p0` and `p1` determine the minimum and\n"
              "maximum percentiles of the camera centers considered.")
-        .def(
-            "transform",
-            [](Reconstruction& self, const Eigen::Matrix3x4d& tform_mat) {
-                SimilarityTransform3 tform(tform_mat);
-                self.Transform(tform);
-            },
-            "Apply the 3D similarity transformation to all images and points.")
         .def("transform", &Reconstruction::Transform,
              "Apply the 3D similarity transformation to all images and points.")
-        .def("merge", &Reconstruction::Merge,
-             "Merge the given reconstruction into this reconstruction by registering the\n"
-             "images registered in the given but not in this reconstruction and by\n"
-             "merging the two clouds and their tracks. The coordinate frames of the two\n"
-             "reconstructions are aligned using the projection centers of common\n"
-             "registered images. Return true if the two reconstructions could be merged.")
-        .def("align_poses", &AlignPosesBetweenReconstructions, py::arg("tgt_reconstruction"),
-             py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
-             "Align to reference reconstruction using RANSAC.")
-        .def("align_points", &AlignPointsBetweenReconstructions,
+        .def(
+            "align_poses",
+            [](Reconstruction& self, const Reconstruction& tgt,
+               const double min_inlier_observations, double max_reproj_error) {
+                Sim3d tgtFromSrc = AlignReconstructionsWithPoses(
+                    self, tgt, min_inlier_observations, max_reproj_error);
+                self.Transform(tgtFromSrc);
+                return tgtFromSrc;
+            },
+            py::arg("tgt_reconstruction"),
+            py::arg("min_inlier_observations") = 0.3,
+            py::arg("max_reproj_error") = 8.0,
+            "Align to reference reconstruction using RANSAC.")
+        .def("align_points",
+            [](Reconstruction& self, const Reconstruction& tgt,
+               const int min_overlap, const double max_error, const double min_inlier_ratio) {
+                Sim3d tgtFromSrc = AlignReconstructionsWithPoints(
+                    self, tgt, min_overlap, max_error, min_inlier_ratio);
+                self.Transform(tgtFromSrc);
+                return tgtFromSrc;
+            },
              py::arg("tgt_reconstruction"), py::arg("min_overlap") = 3,
              py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,
              "Align 3D points to reference reconstruction using LORANSAC.\n"
              "Estimates pose by aligning corresponding 3D points.\n"
              "Correspondences are estimated by counting similar detection idxs.\n"
              "Assumes image_ids and point2D_idx overlap.")
-        .def("align", &AlignReconstruction,
-             "Align the given reconstruction with a set of pre-defined camera positions.\n"
-             "Assuming that locations[i] gives the 3D coordinates of the center\n"
-             "of projection of the image with name image_names[i].")
-        .def("align_robust", &RobustAlignReconstruction, py::arg("image_names"),
-             py::arg("locations"), py::arg("min_common_images"), py::arg("max_error") = 12.0,
-             py::arg("min_inlier_ratio") = 0.1,
-             "Robust alignment using RANSAC. \n"
-             "Align the given reconstruction with a set of pre-defined camera positions.\n"
-             "Assuming that locations[i] gives the 3D coordinates of the center\n"
-             "of projection of the image with name image_names[i].")
         .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, py::arg("p0") = 0.0,
              py::arg("p1") = 1.0)
         .def("crop", &Reconstruction::Crop)

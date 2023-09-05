@@ -14,10 +14,13 @@ namespace py = pybind11;
 #include "estimators/homography.cc"
 
 #include "homography_decomposition.cc"
-#include "transformations.cc"
 #include "sift.cc"
 #include "helpers.h"
 #include "utils.h"
+
+#include "geometry/transformations.cc"
+#include "geometry/sim3.cc"
+#include "geometry/rigid3.cc"
 
 #include "pipeline/sfm.cc"
 #include "pipeline/mvs.cc"
@@ -93,8 +96,10 @@ PYBIND11_MODULE(pycolmap, m) {
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
 
-    // Transformation Bindings
+    // Geometry bindings
     init_transforms(m);
+    init_sim3(m);
+    init_rigid3(m);
 
     // Main reconstruction steps
     init_sfm(m);
