@@ -382,7 +382,7 @@ void init_reconstruction(py::module& m) {
                         THROW_CHECK_MSG(self.IsImageRegistered(image_id), image_id);
                         const colmap::Image& image = self.Image(image_id);
                         THROW_CHECK(image.IsRegistered());
-                        THROW_CHECK_EQ(image.Point2D(point2D_idx).Point3DId(), p3Did)
+                        THROW_CHECK_EQ(image.Point2D(point2D_idx).point3D_id, p3Did)
                     }
                 }
                 for (auto& image_id : self.RegImageIds()) {

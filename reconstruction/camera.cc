@@ -158,7 +158,7 @@ void init_camera(py::module& m) {
             [](const Camera& self, const std::vector<Point2D>& points2D) {
                 std::vector<Eigen::Vector2d> world_points2D;
                 for (size_t idx = 0; idx < points2D.size(); ++idx) {
-                    world_points2D.push_back(self.CamFromImg(points2D[idx].XY()));
+                    world_points2D.push_back(self.CamFromImg(points2D[idx].xy));
                 }
                 return world_points2D;
             },
@@ -182,7 +182,7 @@ void init_camera(py::module& m) {
             [](const Camera& self, const std::vector<Point2D>& world_points2D) {
                 std::vector<Eigen::Vector2d> image_points2D;
                 for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
-                    image_points2D.push_back(self.ImgFromCam(world_points2D[idx].XY()));
+                    image_points2D.push_back(self.ImgFromCam(world_points2D[idx].xy));
                 }
                 return image_points2D;
             },

@@ -88,10 +88,10 @@ inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
             }
             const Point2D& p2D_tgt = tgt.Image(track_el.image_id).Point2D(track_el.point2D_idx);
             if (p2D_tgt.HasPoint3D()) {
-                if (counts.find(p2D_tgt.Point3DId()) != counts.end()) {
-                    counts[p2D_tgt.Point3DId()]++;
+                if (counts.find(p2D_tgt.point3D_id) != counts.end()) {
+                    counts[p2D_tgt.point3D_id]++;
                 } else {
-                    counts[p2D_tgt.Point3DId()] = 0;
+                    counts[p2D_tgt.point3D_id] = 0;
                 }
             }
         }
