@@ -141,48 +141,48 @@ void init_camera(py::module& m) {
             },
             "Initialize parameters for given camera model name and focal length, and set\n"
             "the principal point to be the image center.")
-        .def("image_to_world", &Camera::ImageToWorld,
+        .def("cam_from_img", &Camera::CamFromImg,
              "Project point in image plane to world / infinity.")
         .def(
-            "image_to_world",
+            "cam_from_img",
             [](const Camera& self, const std::vector<Eigen::Vector2d>& points2D) {
                 std::vector<Eigen::Vector2d> world_points2D;
                 for (size_t idx = 0; idx < points2D.size(); ++idx) {
-                    world_points2D.push_back(self.ImageToWorld(points2D[idx]));
+                    world_points2D.push_back(self.CamFromImg(points2D[idx]));
                 }
                 return world_points2D;
             },
             "Project list of points in image plane to world / infinity.")
         .def(
-            "image_to_world",
+            "cam_from_img",
             [](const Camera& self, const std::vector<Point2D>& points2D) {
                 std::vector<Eigen::Vector2d> world_points2D;
                 for (size_t idx = 0; idx < points2D.size(); ++idx) {
-                    world_points2D.push_back(self.ImageToWorld(points2D[idx].XY()));
+                    world_points2D.push_back(self.CamFromImg(points2D[idx].XY()));
                 }
                 return world_points2D;
             },
             "Project list of points in image plane to world / infinity.")
-        .def("image_to_world_threshold", &Camera::ImageToWorldThreshold,
+        .def("cam_from_img_threshold", &Camera::CamFromImgThreshold,
              "Convert pixel threshold in image plane to world space.")
-        .def("world_to_image", &Camera::WorldToImage,
+        .def("img_from_cam", &Camera::ImgFromCam,
              "Project point from world / infinity to image plane.")
         .def(
-            "world_to_image",
+            "img_from_cam",
             [](const Camera& self, const std::vector<Eigen::Vector2d>& world_points2D) {
                 std::vector<Eigen::Vector2d> image_points2D;
                 for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
-                    image_points2D.push_back(self.WorldToImage(world_points2D[idx]));
+                    image_points2D.push_back(self.ImgFromCam(world_points2D[idx]));
                 }
                 return image_points2D;
             },
             "Project list of points from world / infinity to image plane.")
         .def(
-            "world_to_image",
+            "img_from_cam",
             [](const Camera& self, const std::vector<Point2D>& world_points2D) {
                 std::vector<Eigen::Vector2d> image_points2D;
                 for (size_t idx = 0; idx < world_points2D.size(); ++idx) {
-                    image_points2D.push_back(self.WorldToImage(world_points2D[idx].XY()));
+                    image_points2D.push_back(self.ImgFromCam(world_points2D[idx].XY()));
                 }
                 return image_points2D;
             },

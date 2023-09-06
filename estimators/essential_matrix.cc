@@ -40,12 +40,12 @@ py::dict essential_matrix_estimation(
     // Image to world.
     std::vector<Eigen::Vector2d> world_points2D1;
     for (size_t idx = 0; idx < points2D1.size(); ++idx) {
-        world_points2D1.push_back(camera1.ImageToWorld(points2D1[idx]));
+        world_points2D1.push_back(camera1.CamFromImg(points2D1[idx]));
     }
 
     std::vector<Eigen::Vector2d> world_points2D2;
     for (size_t idx = 0; idx < points2D2.size(); ++idx) {
-        world_points2D2.push_back(camera2.ImageToWorld(points2D2[idx]));
+        world_points2D2.push_back(camera2.CamFromImg(points2D2[idx]));
     }
 
     // Compute world error.

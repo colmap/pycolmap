@@ -141,7 +141,7 @@ py::dict rig_absolute_pose_estimation(
     for (size_t i = 0; i < points2D.size(); ++i) {
         for (size_t j = 0; j < points2D[i].size(); ++j) {
             points2D_rig.emplace_back();
-            points2D_rig.back().ray_in_cam = cameras[i].ImageToWorld(
+            points2D_rig.back().ray_in_cam = cameras[i].CamFromImg(
                 points2D[i][j]).homogeneous().normalized();
             points2D_rig.back().cam_from_rig = cams_from_rig[i];
             camera_idxs.push_back(i);
@@ -149,7 +149,7 @@ py::dict rig_absolute_pose_estimation(
         points3D_all.insert(points3D_all.end(), points3D[i].begin(), points3D[i].end());
         points2D_all.insert(points2D_all.end(), points2D[i].begin(), points2D[i].end());
 
-        error_threshold += cameras[i].ImageToWorldThreshold(max_error_px) * points2D[i].size();
+        error_threshold += cameras[i].CamFromImgThreshold(max_error_px) * points2D[i].size();
     }
     // Average of the errors over the cameras, weighted by the number of correspondences
     error_threshold /= points3D_all.size();
