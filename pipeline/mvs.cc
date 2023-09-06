@@ -1,6 +1,6 @@
 #include "colmap/camera/models.h"
 #include "colmap/image/reader.h"
-#include "colmap/base/reconstruction.h"
+#include "colmap/scene/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
@@ -9,7 +9,7 @@
 #include "colmap/feature/sift.h"
 #include "colmap/util/misc.h"
 
-#include "colmap/base/reconstruction.h"
+#include "colmap/scene/reconstruction.h"
 #include "colmap/mvs/fusion.h"
 #include "colmap/mvs/meshing.h"
 #include "colmap/mvs/patch_match.h"

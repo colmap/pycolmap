@@ -2,7 +2,7 @@
 
 #include "colmap/camera/models.h"
 #include "colmap/image/reader.h"
-#include "colmap/base/reconstruction.h"
+#include "colmap/scene/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"

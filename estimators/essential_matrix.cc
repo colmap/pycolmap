@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "colmap/base/camera.h"
+#include "colmap/scene/camera.h"
 #include "colmap/geometry/essential_matrix.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/estimators/essential_matrix.h"

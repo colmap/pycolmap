@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "colmap/base/camera.h"
+#include "colmap/scene/camera.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/optim/loransac.h"

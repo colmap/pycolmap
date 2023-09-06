@@ -3,7 +3,7 @@
 // Use Eigens aligned allocator for vectors
 #include <Eigen/StdVector>
 
-#include "colmap/base/point2d.h"
+#include "colmap/scene/point2d.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
