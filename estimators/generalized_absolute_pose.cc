@@ -115,8 +115,7 @@ py::dict rig_absolute_pose_estimation(
         const std::vector<std::vector<Eigen::Vector2d>> points2D,
         const std::vector<std::vector<Eigen::Vector3d>> points3D,
         const std::vector<Camera> cameras,
-        const std::vector<Eigen::Vector4d> rig_qvecs,
-        const std::vector<Eigen::Vector3d> rig_tvecs,
+        const std::vector<Rigid3d> cams_from_rig,
         RANSACOptions ransac_options,
         AbsolutePoseRefinementOptions refinement_options,
         const bool return_covariance
@@ -125,15 +124,13 @@ py::dict rig_absolute_pose_estimation(
 
     THROW_CHECK_EQ(points2D.size(), points3D.size());
     THROW_CHECK_EQ(points2D.size(), cameras.size());
-    THROW_CHECK_EQ(points2D.size(), rig_qvecs.size());
-    THROW_CHECK_EQ(points2D.size(), rig_tvecs.size());
+    THROW_CHECK_EQ(points2D.size(), cams_from_rig.size());
 
     const double max_error_px = ransac_options.max_error;
     THROW_CHECK_GT(max_error_px, 0.);
 
     // Failure output dictionary.
-    py::dict failure_dict;
-    failure_dict["success"] = false;
+    py::dict failure_dict("success"_a = false);
     py::gil_scoped_release release;
 
     std::vector<GP3PEstimator::X_t> points2D_rig;
@@ -142,11 +139,11 @@ py::dict rig_absolute_pose_estimation(
     std::vector<size_t> camera_idxs;
     double error_threshold = 0.;
     for (size_t i = 0; i < points2D.size(); ++i) {
-        const Eigen::Matrix3x4d rig_tform = ComposeProjectionMatrix(rig_qvecs[i], rig_tvecs[i]);
         for (size_t j = 0; j < points2D[i].size(); ++j) {
             points2D_rig.emplace_back();
-            points2D_rig.back().xy = cameras[i].ImageToWorld(points2D[i][j]);
-            points2D_rig.back().rel_tform = rig_tform;
+            points2D_rig.back().ray_in_cam = cameras[i].ImageToWorld(
+                points2D[i][j]).homogeneous().normalized();
+            points2D_rig.back().cam_from_rig = cams_from_rig[i];
             camera_idxs.push_back(i);
         }
         points3D_all.insert(points3D_all.end(), points3D[i].begin(), points3D[i].end());
@@ -185,16 +182,14 @@ py::dict rig_absolute_pose_estimation(
     if (!report.success) {
         return failure_dict;
     }
-
-    Eigen::Vector3d tvec = report.model.rightCols<1>();
-    Eigen::Vector4d qvec = RotationMatrixToQuaternion(report.model.leftCols<3>());
+    Rigid3d rig_from_world = report.model;
 
     // Absolute pose refinement.
     Eigen::Matrix<double, 6, 6> covariance;
     if (!RefineGeneralizedAbsolutePose(
           refinement_options, report.inlier_mask,
           points2D_all, points3D_all, camera_idxs,
-          rig_qvecs, rig_tvecs, &qvec, &tvec,
+          cams_from_rig, &rig_from_world,
           const_cast<std::vector<Camera>*>(&cameras),
           return_covariance ? &covariance : nullptr)) {
         return failure_dict;
@@ -211,15 +206,12 @@ py::dict rig_absolute_pose_estimation(
     }
 
     py::gil_scoped_acquire acquire;
-    py::dict success_dict;
-    success_dict["success"] = true;
-    success_dict["qvec"] = qvec;
-    success_dict["tvec"] = tvec;
-    success_dict["num_inliers"] = report.support.num_unique_inliers;
-    success_dict["inliers"] = inliers;
+    py::dict success_dict("success"_a = true,
+                          "cam_from_world"_a = rig_from_world,
+                          "num_inliers"_a = report.support.num_unique_inliers,
+                          "inliers"_a = inliers);
     if (return_covariance)
         success_dict["covariance"] = covariance;
-
     return success_dict;
 }
 
@@ -227,8 +219,7 @@ py::dict rig_absolute_pose_estimation(
         const std::vector<std::vector<Eigen::Vector2d>> points2D,
         const std::vector<std::vector<Eigen::Vector3d>> points3D,
         const std::vector<Camera> cameras,
-        const std::vector<Eigen::Vector4d> rig_qvecs,
-        const std::vector<Eigen::Vector3d> rig_tvecs,
+        const std::vector<Rigid3d> cams_from_rig,
         const double max_error_px,
         const double min_inlier_ratio,
         const int min_num_trials,
@@ -250,7 +241,7 @@ py::dict rig_absolute_pose_estimation(
     refinement_options.print_summary = false;
 
     return rig_absolute_pose_estimation(
-        points2D, points3D, cameras, rig_qvecs, rig_tvecs,
+        points2D, points3D, cameras, cams_from_rig,
         ransac_options, refinement_options, return_covariance);
 }
 
@@ -263,14 +254,13 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         static_cast<py::dict (*)(const std::vector<std::vector<Eigen::Vector2d>>,
                                  const std::vector<std::vector<Eigen::Vector3d>>,
                                  const std::vector<Camera>,
-                                 const std::vector<Eigen::Vector4d>,
-                                 const std::vector<Eigen::Vector3d>,
+                                 const std::vector<Rigid3d>,
                                  const RANSACOptions,
                                  const AbsolutePoseRefinementOptions,
                                  bool
                                  )>(&rig_absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"),
-        py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
+        py::arg("cameras"), py::arg("cams_from_rig"),
         py::arg("estimation_options") = est_options,
         py::arg("refinement_options") = ref_options,
         py::arg("return_covariance") = false,
@@ -281,13 +271,12 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
         static_cast<py::dict (*)(const std::vector<std::vector<Eigen::Vector2d>>,
                                  const std::vector<std::vector<Eigen::Vector3d>>,
                                  const std::vector<Camera>,
-                                 const std::vector<Eigen::Vector4d>,
-                                 const std::vector<Eigen::Vector3d>,
+                                 const std::vector<Rigid3d>,
                                  const double, const double,
                                  const int, const int, const double, const bool
                                  )>(&rig_absolute_pose_estimation),
         py::arg("points2D"), py::arg("points3D"),
-        py::arg("cameras"), py::arg("rig_qvecs"), py::arg("rig_tvecs"),
+        py::arg("cameras"), py::arg("cams_from_rig"),
         py::arg("max_error_px") = est_options.max_error,
         py::arg("min_inlier_ratio") = est_options.min_inlier_ratio,
         py::arg("min_num_trials") = est_options.min_num_trials,

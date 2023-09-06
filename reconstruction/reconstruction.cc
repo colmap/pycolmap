@@ -211,10 +211,10 @@ void init_reconstruction(py::module& m) {
             "align_poses",
             [](Reconstruction& self, const Reconstruction& tgt,
                const double min_inlier_observations, double max_reproj_error) {
-                Sim3d tgtFromSrc = AlignReconstructionsWithPoses(
+                const Sim3d tgt_from_src = AlignReconstructionsWithPoses(
                     self, tgt, min_inlier_observations, max_reproj_error);
-                self.Transform(tgtFromSrc);
-                return tgtFromSrc;
+                self.Transform(tgt_from_src);
+                return tgt_from_src;
             },
             py::arg("tgt_reconstruction"),
             py::arg("min_inlier_observations") = 0.3,
@@ -223,10 +223,10 @@ void init_reconstruction(py::module& m) {
         .def("align_points",
             [](Reconstruction& self, const Reconstruction& tgt,
                const int min_overlap, const double max_error, const double min_inlier_ratio) {
-                Sim3d tgtFromSrc = AlignReconstructionsWithPoints(
+                const Sim3d tgt_from_src = AlignReconstructionsWithPoints(
                     self, tgt, min_overlap, max_error, min_inlier_ratio);
-                self.Transform(tgtFromSrc);
-                return tgtFromSrc;
+                self.Transform(tgt_from_src);
+                return tgt_from_src;
             },
              py::arg("tgt_reconstruction"), py::arg("min_overlap") = 3,
              py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,

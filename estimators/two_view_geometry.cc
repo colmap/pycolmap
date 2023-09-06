@@ -34,8 +34,7 @@ py::dict two_view_geometry_estimation(
     THROW_CHECK_EQ(points2D1.size(), points2D2.size());
 
     // Failure output dictionary.
-    py::dict failure_dict;
-    failure_dict["success"] = false;
+    py::dict failure_dict("success"_a = false);
     py::gil_scoped_release release;
 
     FeatureMatches matches;
@@ -62,17 +61,12 @@ py::dict two_view_geometry_estimation(
     }
 
     // Success output dictionary.
-    // See https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L48
-    // for a definition of the different configuration types.
     py::gil_scoped_acquire acquire;
-    py::dict success_dict;
-    success_dict["success"] = true;
-    success_dict["configuration_type"] = two_view_geometry.config;
-    success_dict["qvec"] = two_view_geometry.qvec;
-    success_dict["tvec"] = two_view_geometry.tvec;
-    success_dict["num_inliers"] = inlier_matches.size();
-    success_dict["inliers"] = inliers;
-
+    py::dict success_dict("success"_a = true,
+                          "configuration_type"_a = two_view_geometry.config,
+                          "cam2_from_cam1"_a = two_view_geometry.cam2_from_cam1,
+                          "num_inliers"_a = inlier_matches.size(),
+                          "inliers"_a = inliers);
     return success_dict;
 }
 

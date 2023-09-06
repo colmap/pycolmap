@@ -18,7 +18,7 @@ namespace py = pybind11;
 #include "helpers.h"
 #include "utils.h"
 
-#include "geometry/transformations.cc"
+#include "geometry/quaternion.cc"
 #include "geometry/sim3.cc"
 #include "geometry/rigid3.cc"
 
@@ -31,7 +31,7 @@ namespace py = pybind11;
 #include "reconstruction/incremental_triangulator.cc"
 
 void init_reconstruction(py::module &);
-void init_transforms(py::module &);
+void init_quaternion(py::module &);
 
 PYBIND11_MODULE(pycolmap, m) {
     m.doc() = "COLMAP plugin";
@@ -48,6 +48,11 @@ PYBIND11_MODULE(pycolmap, m) {
     AddStringToEnumConstructor(PyDevice);
 
     m.attr("has_cuda") = IsGPU(Device::AUTO);
+
+    // Geometry bindings
+    init_quaternion(m);
+    init_sim3(m);
+    init_rigid3(m);
 
     // Estimators
     auto PyRANSACOptions = py::class_<RANSACOptions>(m, "RANSACOptions")
@@ -95,11 +100,6 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Automatic conversion from python dicts to colmap cameras for backwards compatibility
     py::implicitly_convertible<py::dict, colmap::Camera>();
-
-    // Geometry bindings
-    init_transforms(m);
-    init_sim3(m);
-    init_rigid3(m);
 
     // Main reconstruction steps
     init_sfm(m);
