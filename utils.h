@@ -10,7 +10,7 @@ enum class Device { AUTO = -1, CPU = 0, CUDA = 1 };
 
 bool IsGPU(Device device) {
     if (device == Device::AUTO) {
-#ifdef CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
         return true;
 #else
         return false;
@@ -21,7 +21,7 @@ bool IsGPU(Device device) {
 }
 
 void VerifySiftGPUParams(const bool use_gpu) {
-#ifndef CUDA_ENABLED
+#ifndef COLMAP_CUDA_ENABLED
     if (use_gpu) {
         THROW_EXCEPTION(std::invalid_argument,
                         "Cannot use Sift GPU without CUDA support; "

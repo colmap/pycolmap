@@ -14,7 +14,7 @@ extern "C" {
 #include <colmap/feature/sift.h>
 #include <colmap/feature/utils.h>
 #include <colmap/thirdparty/SiftGPU/SiftGPU.h>
-#ifdef CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
 #include "GL/glew.h"
 #endif
 
@@ -46,7 +46,7 @@ class Sift {
         : options_(options), use_gpu_(IsGPU(device)) {
         VerifySiftGPUParams(use_gpu_);
         if (use_gpu_) {
-#ifdef CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
             sift_gpu.reset(new SiftGPU);
             CreateSiftGPUExtractor(options_, sift_gpu.get());
             if (sift_gpu_mutexes.count(sift_gpu->gpu_index) == 0) {
@@ -69,7 +69,7 @@ class Sift {
         scores_t scores;
 
         if (use_gpu_) {
-#ifdef CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
             // TODO: SiftGPU changes the image inplace --> we copy it for now
             pyimage_t<dtype> image_copy = image;
             std::tie(keypoints, scores, descriptors) = ExtractGPU(image_copy);
@@ -96,7 +96,7 @@ class Sift {
     };
 
    private:
-#ifdef CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
     template <typename dtype>
     sift_output_t ExtractGPU(const pyimage_t<dtype>& image /* [h, w] */) {
         THROW_CHECK_LE(options_.max_image_size, sift_gpu->GetMaxDimension());

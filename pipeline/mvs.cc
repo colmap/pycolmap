@@ -34,13 +34,13 @@ void patch_match_stereo(py::object workspace_path_,
                         mvs::PatchMatchOptions options,
                         std::string config_path,
                         bool verbose) {
-#ifndef CUDA_ENABLED
+#ifndef COLMAP_CUDA_ENABLED
     THROW_EXCEPTION(
         std::runtime_error,
         "ERROR: Dense stereo reconstruction requires CUDA, which is not "
         "available on your system.");
     return;
-#endif  // CUDA_ENABLED
+#endif  // COLMAP_CUDA_ENABLED
     std::string workspace_path = py::str(workspace_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(workspace_path);
 
