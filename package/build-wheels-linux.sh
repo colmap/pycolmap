@@ -109,6 +109,8 @@ cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DBoost_USE_STATIC_LIBS=OFF \
          -DBOOST_ROOT=/usr/local \
+         -DCUDA_ENABLED=OFF \
+         -DCGAL_ENABLED=OFF \
          -DGUI_ENABLED=OFF \
          -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
 

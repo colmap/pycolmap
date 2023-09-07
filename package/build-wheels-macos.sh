@@ -67,7 +67,7 @@ sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
 # build
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
+cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
 make -j ${NUM_LOGICAL_CPUS} install
 sudo make install
 
