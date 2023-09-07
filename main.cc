@@ -7,6 +7,7 @@ namespace py = pybind11;
 #include <colmap/geometry/pose.h>
 
 #include "estimators/absolute_pose.cc"
+#include "estimators/alignment.cc"
 #include "estimators/generalized_absolute_pose.cc"
 #include "estimators/essential_matrix.cc"
 #include "estimators/fundamental_matrix.cc"
@@ -79,6 +80,7 @@ PYBIND11_MODULE(pycolmap, m) {
     bind_generalized_absolute_pose_estimation(m);
     bind_homography_estimation(m);
     bind_two_view_geometry_estimation(m, PyRANSACOptions);
+    bind_alignment(m);
 
     // Homography Decomposition.
     m.def("homography_decomposition", &homography_decomposition_estimation,

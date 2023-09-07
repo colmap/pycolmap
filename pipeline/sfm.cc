@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "colmap/exe/sfm.h"
-#include "colmap/camera/models.h"
+#include "colmap/sensor/models.h"
 #include "colmap/scene/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/util/misc.h"

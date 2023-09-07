@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "colmap/scene/camera.h"
+#include "colmap/scene/two_view_geometry.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/optim/loransac.h"
@@ -26,7 +27,7 @@ py::dict two_view_geometry_estimation(
         const std::vector<Eigen::Vector2d> points2D2,
         Camera& camera1,
         Camera& camera2,
-        TwoViewGeometry::Options options
+        TwoViewGeometryOptions options
 ) {
     SetPRNGSeed(0);
 
@@ -44,12 +45,10 @@ py::dict two_view_geometry_estimation(
        matches.emplace_back(i,i);
     }
 
-    TwoViewGeometry two_view_geometry;
-
-    two_view_geometry.EstimateCalibrated(
+    auto two_view_geometry = EstimateCalibratedTwoViewGeometry(
             camera1, points2D1, camera2, points2D2, matches, options);
 
-    if (!two_view_geometry.EstimateRelativePose(camera1, points2D1, camera2, points2D2)) {
+    if (!EstimateTwoViewGeometryPose(camera1, points2D1, camera2, points2D2, &two_view_geometry)) {
         return failure_dict;
     }
     const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
@@ -81,7 +80,7 @@ py::dict two_view_geometry_estimation(
         const int max_num_trials,
         const double confidence
 ) {
-    TwoViewGeometry::Options two_view_geometry_options;
+    TwoViewGeometryOptions two_view_geometry_options;
     two_view_geometry_options.ransac_options.max_error = max_error_px;
     two_view_geometry_options.ransac_options.min_inlier_ratio = min_inlier_ratio;
     two_view_geometry_options.ransac_options.min_num_trials = min_num_trials;
@@ -93,23 +92,23 @@ py::dict two_view_geometry_estimation(
 
 void bind_two_view_geometry_estimation(py::module& m, py::class_<RANSACOptions> PyRANSACOptions) {
     auto PyEstimationOptions =
-        py::class_<TwoViewGeometry::Options>(m, "TwoViewGeometryOptions")
+        py::class_<TwoViewGeometryOptions>(m, "TwoViewGeometryOptions")
         .def(py::init<>([PyRANSACOptions]() {
-            TwoViewGeometry::Options options;
+            TwoViewGeometryOptions options;
             // init through Python to obtain the new defaults defined in __init__
             options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
             return options;
         }))
-        .def_readwrite("min_num_inliers", &TwoViewGeometry::Options::min_num_inliers)
-        .def_readwrite("min_E_F_inlier_ratio", &TwoViewGeometry::Options::min_E_F_inlier_ratio)
-        .def_readwrite("max_H_inlier_ratio", &TwoViewGeometry::Options::max_H_inlier_ratio)
-        .def_readwrite("watermark_min_inlier_ratio", &TwoViewGeometry::Options::watermark_min_inlier_ratio)
-        .def_readwrite("watermark_border_size", &TwoViewGeometry::Options::watermark_border_size)
-        .def_readwrite("detect_watermark", &TwoViewGeometry::Options::detect_watermark)
-        .def_readwrite("multiple_ignore_watermark", &TwoViewGeometry::Options::multiple_ignore_watermark)
-        .def_readwrite("ransac", &TwoViewGeometry::Options::ransac_options);
+        .def_readwrite("min_num_inliers", &TwoViewGeometryOptions::min_num_inliers)
+        .def_readwrite("min_E_F_inlier_ratio", &TwoViewGeometryOptions::min_E_F_inlier_ratio)
+        .def_readwrite("max_H_inlier_ratio", &TwoViewGeometryOptions::max_H_inlier_ratio)
+        .def_readwrite("watermark_min_inlier_ratio", &TwoViewGeometryOptions::watermark_min_inlier_ratio)
+        .def_readwrite("watermark_border_size", &TwoViewGeometryOptions::watermark_border_size)
+        .def_readwrite("detect_watermark", &TwoViewGeometryOptions::detect_watermark)
+        .def_readwrite("multiple_ignore_watermark", &TwoViewGeometryOptions::multiple_ignore_watermark)
+        .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
     make_dataclass(PyEstimationOptions);
-    auto est_options = PyEstimationOptions().cast<TwoViewGeometry::Options>();
+    auto est_options = PyEstimationOptions().cast<TwoViewGeometryOptions>();
 
     py::enum_<TwoViewGeometry::ConfigurationType>(m, "TwoViewGeometry")
         .value("UNDEFINED", TwoViewGeometry::UNDEFINED)
@@ -127,7 +126,7 @@ void bind_two_view_geometry_estimation(py::module& m, py::class_<RANSACOptions> 
         static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
                                  const std::vector<Eigen::Vector2d>,
                                  Camera&, Camera&,
-                                 const TwoViewGeometry::Options
+                                 const TwoViewGeometryOptions
                                  )>(&two_view_geometry_estimation),
         py::arg("points2D1"), py::arg("points2D2"),
         py::arg("camera1"), py::arg("camera2"),

@@ -291,7 +291,7 @@ camera = pycolmap.Camera(
 )
 ```
 
-The different camera models and their extra parameters are defined in [`colmap/src/colmap/camera/models.h`](https://github.com/colmap/colmap/blob/main/src/colmap/camera/models.h). For example for a pinhole camera:
+The different camera models and their extra parameters are defined in [`colmap/src/colmap/sensor/models.h`](https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h). For example for a pinhole camera:
 
 ```python
 camera = pycolmap.Camera(

@@ -8,7 +8,7 @@ namespace py = pybind11;
 #include <Eigen/Core>
 
 extern "C" {
-#include <lib/VLFeat/sift.h>
+#include <colmap/lib/VLFeat/sift.h>
 }
 
 #include <colmap/feature/sift.h>
