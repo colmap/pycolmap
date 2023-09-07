@@ -8,12 +8,12 @@ namespace py = pybind11;
 #include <Eigen/Core>
 
 extern "C" {
-#include <colmap/lib/VLFeat/sift.h>
+#include <colmap/thirdparty/VLFeat/sift.h>
 }
 
 #include <colmap/feature/sift.h>
 #include <colmap/feature/utils.h>
-#include <colmap/lib/SiftGPU/SiftGPU.h>
+#include <colmap/thirdparty/SiftGPU/SiftGPU.h>
 #ifdef CUDA_ENABLED
 #include "GL/glew.h"
 #endif
