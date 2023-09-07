@@ -136,100 +136,93 @@ inline Sim3d AlignReconstructionToLocationsWrapper(
     return locationsFromSrc;
 }
 
+// TODO(skydes): expose in colmap/exe/model.h
+void PrintErrorStats(std::ostream& out, std::vector<double>& vals) {
+  const size_t len = vals.size();
+  if (len == 0) {
+    out << "Cannot extract error statistics from empty input" << std::endl;
+    return;
+  }
+  std::sort(vals.begin(), vals.end());
+  out << "Min:    " << vals.front() << std::endl;
+  out << "Max:    " << vals.back() << std::endl;
+  out << "Mean:   " << Mean(vals) << std::endl;
+  out << "Median: " << Median(vals) << std::endl;
+  out << "P90:    " << vals[size_t(0.9 * len)] << std::endl;
+  out << "P99:    " << vals[size_t(0.99 * len)] << std::endl;
+}
+
+void PrintComparisonSummary(std::ostream& out,
+                            const std::vector<ImageAlignmentError>& errors) {
+  std::vector<double> rotation_errors_deg;
+  rotation_errors_deg.reserve(errors.size());
+  std::vector<double> proj_center_errors;
+  proj_center_errors.reserve(errors.size());
+  for (const auto& error : errors) {
+    rotation_errors_deg.push_back(error.rotation_error_deg);
+    proj_center_errors.push_back(error.proj_center_error);
+  }
+  out << std::endl << "Rotation errors (degrees)" << std::endl;
+  PrintErrorStats(out, rotation_errors_deg);
+  out << std::endl << "Projection center errors" << std::endl;
+  PrintErrorStats(out, proj_center_errors);
+}
+
 py::dict CompareReconstructions(
-        const Reconstruction& reconstruction1, const Reconstruction& reconstruction2,
+        const Reconstruction& tgt_reconstruction, const Reconstruction& src_reconstruction,
         const double min_inlier_observations, const double max_reproj_error, bool verbose) {
     THROW_CHECK_GE(min_inlier_observations, 0.0);
     THROW_CHECK_LE(min_inlier_observations, 1.0);
-    auto PrintComparisonSummary = [](std::stringstream& ss,
-                                     std::vector<double>& rotation_errors,
-                                     std::vector<double>& translation_errors,
-                                     std::vector<double>& proj_center_errors) {
-        auto PrintErrorStats = [](std::stringstream& ss, std::vector<double>& vals) {
-            const size_t len = vals.size();
-            if (len == 0) {
-                ss << "Cannot extract error statistics from empty input" << std::endl;
-                return;
-            }
-            std::sort(vals.begin(), vals.end());
-            ss << "Min:    " << vals.front() << std::endl;
-            ss << "Max:    " << vals.back() << std::endl;
-            ss << "Mean:   " << Mean(vals) << std::endl;
-            ss << "Median: " << Median(vals) << std::endl;
-            ss << "P90:    " << vals[size_t(0.9 * len)] << std::endl;
-            ss << "P99:    " << vals[size_t(0.99 * len)] << std::endl;
-        };
-        ss << "# Image pose error summary" << std::endl;
-        ss << std::endl << "Rotation angular errors (degrees)" << std::endl;
-        PrintErrorStats(ss, rotation_errors);
-        ss << std::endl << "Translation distance errors" << std::endl;
-        PrintErrorStats(ss, translation_errors);
-        ss << std::endl << "Projection center distance errors" << std::endl;
-        PrintErrorStats(ss, proj_center_errors);
-    };
 
     std::stringstream ss;
     ss << std::endl << "Reconstruction 1" << std::endl;
-    ss << StringPrintf("Images: %d", reconstruction1.NumRegImages()) << std::endl;
-    ss << StringPrintf("Points: %d", reconstruction1.NumPoints3D()) << std::endl;
+    ss << StringPrintf("Images: %d", tgt_reconstruction.NumRegImages()) << std::endl;
+    ss << StringPrintf("Points: %d", tgt_reconstruction.NumPoints3D()) << std::endl;
 
     ss << std::endl << "Reconstruction 2" << std::endl;
-    ss << StringPrintf("Images: %d", reconstruction2.NumRegImages()) << std::endl;
-    ss << StringPrintf("Points: %d", reconstruction2.NumPoints3D()) << std::endl;
+    ss << StringPrintf("Images: %d", src_reconstruction.NumRegImages()) << std::endl;
+    ss << StringPrintf("Points: %d", src_reconstruction.NumPoints3D()) << std::endl;
     if (verbose) {
         py::print(ss.str());
         ss.str("");
     };
 
     ss << std::endl << "Comparing reconstructed image poses" << std::endl;
-    const auto common_image_ids = reconstruction1.FindCommonRegImageIds(reconstruction2);
+    const auto common_image_ids = tgt_reconstruction.FindCommonRegImageIds(src_reconstruction);
     ss << StringPrintf("Common images: %d", common_image_ids.size()) << std::endl;
     if (verbose) {
         py::print(ss.str());
         ss.str("");
     };
 
-    Sim3d tform;
-    if (!AlignReconstructions(reconstruction2, reconstruction1,
-                              min_inlier_observations, max_reproj_error, &tform)) {
+    Sim3d tgt_from_src;
+    if (!AlignReconstructions(src_reconstruction, tgt_reconstruction,
+                              min_inlier_observations, max_reproj_error, &tgt_from_src)) {
         THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
     }
 
-    ss << "Computed alignment transform:" << std::endl << tform.ToMatrix() << std::endl;
+    ss << "Computed alignment transform:" << std::endl << tgt_from_src.ToMatrix() << std::endl;
     if (verbose) {
         py::print(ss.str());
         ss.str("");
     };
 
-    const size_t num_images = common_image_ids.size();
-    std::vector<double> rotation_errors(num_images, 0.0);
-    std::vector<double> translation_errors(num_images, 0.0);
-    std::vector<double> proj_center_errors(num_images, 0.0);
-    for (size_t i = 0; i < num_images; ++i) {
-        const image_t image_id = common_image_ids[i];
-        Image image1 = reconstruction1.Image(image_id);  // copy!
-        Image image2 = reconstruction2.Image(image_id);  // copy!
-        tform.TransformPose(&image2.Qvec(), &image2.Tvec());
-
-        const Eigen::Vector4d normalized_qvec1 = NormalizeQuaternion(image1.Qvec());
-        const Eigen::Quaterniond quat1(normalized_qvec1(0), normalized_qvec1(1),
-                                       normalized_qvec1(2), normalized_qvec1(3));
-        const Eigen::Vector4d normalized_qvec2 = NormalizeQuaternion(image2.Qvec());
-        const Eigen::Quaterniond quat2(normalized_qvec2(0), normalized_qvec2(1),
-                                       normalized_qvec2(2), normalized_qvec2(3));
-
-        rotation_errors[i] = RadToDeg(quat1.angularDistance(quat2));
-        translation_errors[i] = (image1.Tvec() - image2.Tvec()).norm();
-        proj_center_errors[i] =
-            (image1.ProjectionCenter() - image2.ProjectionCenter()).norm();
+    auto errors = ComputeImageAlignmentError(src_reconstruction, tgt_reconstruction, tgt_from_src);
+    std::vector<double> rotation_errors_deg;
+    rotation_errors_deg.reserve(errors.size());
+    std::vector<double> proj_center_errors;
+    proj_center_errors.reserve(errors.size());
+    for (const auto& error : errors) {
+        rotation_errors_deg.push_back(error.rotation_error_deg);
+        proj_center_errors.push_back(error.proj_center_error);
     }
-    PrintComparisonSummary(ss, rotation_errors, translation_errors, proj_center_errors);
+    PrintComparisonSummary(ss, errors);
     if (verbose) {
         py::print(ss.str());
         ss.str("");
     };
-    py::dict res("alignment"_a = tform, "rotation_errors"_a = rotation_errors,
-                 "translation_errors"_a = translation_errors,
+    py::dict res("tgt_from_src"_a = tgt_from_src,
+                 "rotation_errors"_a = rotation_errors_deg,
                  "proj_center_errors"_a = proj_center_errors);
     return res;
 }
@@ -264,7 +257,7 @@ void init_reconstruction_utils(py::module& m) {
 
     m.def(
         "compare_reconstructions", CompareReconstructions,
-        py::arg("src_reconstruction"), py::arg("tgt_reconstruction"),
+        py::arg("tgt_reconstruction"), py::arg("src_reconstruction"),
         py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
         py::arg("verbose") = true);
 }

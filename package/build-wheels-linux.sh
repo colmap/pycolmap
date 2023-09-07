@@ -97,7 +97,7 @@ make install
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 6d000e48209b5583ab618745b2269992e6584d7f
+git checkout 67029ad21205fac3d149e06000c1e20bf4be1b80
 # patch FindGlog.cmake
 rm -f cmake/FindGlog.cmake
 wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/

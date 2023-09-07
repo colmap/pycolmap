@@ -34,8 +34,7 @@ py::dict essential_matrix_estimation(
     THROW_CHECK_EQ(points2D1.size(), points2D2.size());
 
     // Failure output dictionary.
-    py::dict failure_dict;
-    failure_dict["success"] = false;
+    py::dict failure_dict("success"_a = false);
     py::gil_scoped_release release;
 
     // Image to world.
@@ -85,12 +84,16 @@ py::dict essential_matrix_estimation(
         }
     }
 
-    Eigen::Matrix3d R;
-    Eigen::Vector3d tvec;
+    Rigid3d cam2_from_cam1;
+    Eigen::Matrix3d cam2_from_cam1_rot_mat;
     std::vector<Eigen::Vector3d> points3D;
-    PoseFromEssentialMatrix(E, inlier_world_points2D1, inlier_world_points2D2, &R, &tvec, &points3D);
-
-    Eigen::Vector4d qvec = RotationMatrixToQuaternion(R);
+    PoseFromEssentialMatrix(E,
+                            inlier_world_points2D1,
+                            inlier_world_points2D2,
+                            &cam2_from_cam1_rot_mat,
+                            &cam2_from_cam1.translation,
+                            &points3D);
+    cam2_from_cam1.rotation = Eigen::Quaterniond(cam2_from_cam1_rot_mat);
 
     // Convert vector<char> to vector<int>.
     std::vector<bool> inliers;
@@ -104,14 +107,11 @@ py::dict essential_matrix_estimation(
 
     // Success output dictionary.
     py::gil_scoped_acquire acquire;
-    py::dict success_dict;
-    success_dict["success"] = true;
-    success_dict["E"] = E;
-    success_dict["qvec"] = qvec;
-    success_dict["tvec"] = tvec;
-    success_dict["num_inliers"] = num_inliers;
-    success_dict["inliers"] = inliers;
-
+    py::dict success_dict("success"_a = true,
+                          "E"_a = E,
+                          "cam2_from_cam1"_a = cam2_from_cam1,
+                          "num_inliers"_a = num_inliers,
+                          "inliers"_a = inliers);
     return success_dict;
 }
 

@@ -1,4 +1,5 @@
 #include "colmap/geometry/rigid3.h"
+#include "colmap/geometry/pose.h"
 
 using namespace colmap;
 
@@ -21,6 +22,7 @@ void init_rigid3(py::module& m) {
         .def(py::self * Eigen::Vector3d())
         .def(py::self * Rigid3d())
         .def("inverse", static_cast<Rigid3d (*)(const Rigid3d&)>(&Inverse))
+        .def_static("interpolate", &InterpolateCameraPoses)
         .def("__repr__", [](const Rigid3d& self){
             std::stringstream ss;
             ss<<"Rigid3d:\n"

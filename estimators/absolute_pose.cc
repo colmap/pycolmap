@@ -5,6 +5,7 @@
 
 #include "colmap/base/camera.h"
 #include "colmap/estimators/pose.h"
+#include "colmap/geometry/rigid3.h"
 #include "colmap/math/random.h"
 
 using namespace colmap;
@@ -14,6 +15,7 @@ using namespace colmap;
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 #include "helpers.h"
@@ -33,23 +35,21 @@ py::dict absolute_pose_estimation(
     THROW_CHECK_EQ(points2D.size(), points3D.size());
 
     // Failure output dictionary.
-    py::dict failure_dict;
-    failure_dict["success"] = false;
+    py::dict failure_dict("success"_a = false);
     py::gil_scoped_release release;
 
     // Absolute pose estimation.
-    Eigen::Vector4d qvec;
-    Eigen::Vector3d tvec;
+    Rigid3d cam_from_world;
     size_t num_inliers;
     std::vector<char> inlier_mask;
 
-    if (!EstimateAbsolutePose(estimation_options, points2D, points3D, &qvec, &tvec, &camera, &num_inliers, &inlier_mask)) {
+    if (!EstimateAbsolutePose(estimation_options, points2D, points3D, &cam_from_world, &camera, &num_inliers, &inlier_mask)) {
         return failure_dict;
     }
 
     // Absolute pose refinement.
     Eigen::Matrix<double, 6, 6> covariance;
-    if (!RefineAbsolutePose(refinement_options, inlier_mask, points2D, points3D, &qvec, &tvec, &camera,
+    if (!RefineAbsolutePose(refinement_options, inlier_mask, points2D, points3D, &cam_from_world, &camera,
                             return_covariance ? &covariance : nullptr)) {
         return failure_dict;
     }
@@ -66,15 +66,12 @@ py::dict absolute_pose_estimation(
 
     // Success output dictionary.
     py::gil_scoped_acquire acquire;
-    py::dict success_dict;
-    success_dict["success"] = true;
-    success_dict["qvec"] = qvec;
-    success_dict["tvec"] = tvec;
-    success_dict["num_inliers"] = num_inliers;
-    success_dict["inliers"] = inliers;
+    py::dict success_dict("success"_a = true,
+                          "cam_from_world"_a = cam_from_world,
+                          "num_inliers"_a = num_inliers,
+                          "inliers"_a = inliers);
     if (return_covariance)
         success_dict["covariance"] = covariance;
-
     return success_dict;
 }
 
@@ -111,8 +108,7 @@ py::dict absolute_pose_estimation(
 
 
 py::dict pose_refinement(
-        const Eigen::Vector3d tvec,
-        const Eigen::Vector4d qvec,
+        const Rigid3d init_cam_from_world,
         const std::vector<Eigen::Vector2d> points2D,
         const std::vector<Eigen::Vector3d> points3D,
         const std::vector<bool> inlier_mask,
@@ -126,13 +122,11 @@ py::dict pose_refinement(
     THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
 
     // Failure output dictionary.
-    py::dict failure_dict;
-    failure_dict["success"] = false;
+    py::dict failure_dict("success"_a = false);
     py::gil_scoped_release release;
 
     // Absolute pose estimation.
-    Eigen::Vector4d qvec_refined = qvec;
-    Eigen::Vector3d tvec_refined = tvec;
+    Rigid3d refined_cam_from_world = init_cam_from_world;
     std::vector<char> inlier_mask_char;
     for (size_t i = 0; i < inlier_mask.size(); ++i) {
         if(inlier_mask[i])
@@ -148,19 +142,14 @@ py::dict pose_refinement(
     // Absolute pose refinement.
     if (!RefineAbsolutePose(
             refinement_options, inlier_mask_char,
-            points2D, points3D, &qvec_refined, &tvec_refined,
+            points2D, points3D, &refined_cam_from_world,
             const_cast<Camera*>(&camera))) {
         return failure_dict;
     }
 
     // Success output dictionary.
     py::gil_scoped_acquire acquire;
-    py::dict success_dict;
-    success_dict["success"] = true;
-    success_dict["qvec"] = qvec_refined;
-    success_dict["tvec"] = tvec_refined;
-
-    return success_dict;
+    return py::dict("success"_a = true, "cam_from_world"_a = refined_cam_from_world);
 }
 
 
@@ -235,7 +224,7 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
 
     m.def(
         "pose_refinement", &pose_refinement,
-        py::arg("tvec"), py::arg("qvec"),
+        py::arg("cam_from_world"),
         py::arg("points2D"), py::arg("points3D"),
         py::arg("inlier_mask"),
         py::arg("camera"),
