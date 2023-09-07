@@ -95,9 +95,9 @@ make install
 
 # ------ Build COLMAP ------
 cd $CURRDIR
-git clone https://github.com/colmap/colmap.git
+git clone https://github.com/Skydes/colmap.git
 cd colmap
-git checkout 67029ad21205fac3d149e06000c1e20bf4be1b80
+git checkout paul/add-exe-lib
 # patch FindGlog.cmake
 rm -f cmake/FindGlog.cmake
 wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/

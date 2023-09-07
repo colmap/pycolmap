@@ -59,9 +59,9 @@ brew info gcc
 #./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 cd $CURRDIR
-git clone https://github.com/colmap/colmap.git
+git clone https://github.com/Skydes/colmap.git
 cd colmap
-git checkout 67029ad21205fac3d149e06000c1e20bf4be1b80
+git checkout paul/add-exe-lib
 # patch src/colmap/util/CMakeLists.txt
 sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
 # build
