@@ -16,7 +16,7 @@ add_subdirectory(pybind11)
 
 pybind11_add_module(pycolmap main.cc)
 target_include_directories(pycolmap PRIVATE ${PROJECT_SOURCE_DIR})
-target_link_libraries(pycolmap PRIVATE colmap::colmap colmap::colmap_vlfeat)
+target_link_libraries(pycolmap PRIVATE colmap::colmap colmap::colmap_vlfeat freeimage)
 if(MSVC)
 # these are added in COLMAP_LIBRARIES for UNIX systems but for some reasons they are omited for windows
 # it crashes with LNK2019 because of that
