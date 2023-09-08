@@ -25,7 +25,9 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "utils.h"
 
-template <typename Matcher, typename Opts>
+template <typename Opts,
+          std::unique_ptr<Thread> MatcherFactory(
+                const Opts&, const SiftMatchingOptions&, const std::string&)>
 void match_features(py::object database_path_,
                     SiftMatchingOptions sift_options,
                     Opts matching_options,
@@ -45,7 +47,8 @@ void match_features(py::object database_path_,
     sift_options.use_gpu = IsGPU(device);
     VerifySiftGPUParams(sift_options.use_gpu);
     py::gil_scoped_release release;
-    Matcher feature_matcher(matching_options, sift_options, database_path);
+    std::unique_ptr<Thread> matcher = MatcherFactory(
+        matching_options, sift_options, database_path);
 
     std::stringstream oss;
     std::streambuf* oldcerr = nullptr;
@@ -54,8 +57,8 @@ void match_features(py::object database_path_,
         oldcout = std::cout.rdbuf(oss.rdbuf());
     }
 
-    feature_matcher.Start();
-    PyWait(&feature_matcher);
+    matcher->Start();
+    PyWait(matcher.get());
 
     if (!verbose) {
         std::cout.rdbuf(oldcout);
@@ -69,7 +72,7 @@ void match_exhaustive(py::object database_path_,
                       bool verbose) {
     ExhaustiveMatchingOptions options;
     options.block_size = block_size;
-    match_features<ExhaustiveFeatureMatcher>(
+    match_features<ExhaustiveMatchingOptions, CreateExhaustiveFeatureMatcher>(
         database_path_, sift_options, options, device, verbose);
 }
 
@@ -91,10 +94,10 @@ void verify_matches(const py::object database_path_,
     ImagePairsMatchingOptions matcher_options;
     matcher_options.match_list_path = pairs_path;
 
-    ImagePairsFeatureMatcher feature_matcher(
+    std::unique_ptr<Thread> matcher = CreateImagePairsFeatureMatcher(
         matcher_options, options, database_path);
-    feature_matcher.Start();
-    PyWait(&feature_matcher);
+    matcher->Start();
+    PyWait(matcher.get());
 }
 
 void init_match_features(py::module& m) {
@@ -289,7 +292,7 @@ void init_match_features(py::module& m) {
           "Exhaustive feature matching");
 
     m.def("match_exhaustive",
-          &match_features<ExhaustiveFeatureMatcher, EMOpts>,
+          &match_features<EMOpts, CreateExhaustiveFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = exhaustive_options,
@@ -298,7 +301,7 @@ void init_match_features(py::module& m) {
           "Sequential feature matching");
 
     m.def("match_sequential",
-          &match_features<SequentialFeatureMatcher, SeqMOpts>,
+          &match_features<SeqMOpts, CreateSequentialFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = sequential_options,
@@ -307,7 +310,7 @@ void init_match_features(py::module& m) {
           "Sequential feature matching");
 
     m.def("match_spatial",
-          &match_features<SpatialFeatureMatcher, SpMOpts>,
+          &match_features<SpMOpts, CreateSpatialFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = spatial_options,
@@ -316,7 +319,7 @@ void init_match_features(py::module& m) {
           "Spatial feature matching");
 
     m.def("match_vocabtree",
-          &match_features<VocabTreeFeatureMatcher, VTMOpts>,
+          &match_features<VTMOpts, CreateVocabTreeFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = vocabtree_options,
