@@ -79,7 +79,7 @@ PYBIND11_MODULE(pycolmap, m) {
     bind_fundamental_matrix_estimation(m);
     bind_generalized_absolute_pose_estimation(m);
     bind_homography_estimation(m);
-    bind_two_view_geometry_estimation(m, PyRANSACOptions);
+    bind_two_view_geometry_estimation(m);
     bind_alignment(m);
 
     // Homography Decomposition.

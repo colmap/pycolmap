@@ -90,15 +90,10 @@ py::dict two_view_geometry_estimation(
             points2D1, points2D2, camera1, camera2, two_view_geometry_options);
 }
 
-void bind_two_view_geometry_estimation(py::module& m, py::class_<RANSACOptions> PyRANSACOptions) {
+void bind_two_view_geometry_estimation(py::module& m) {
     auto PyEstimationOptions =
         py::class_<TwoViewGeometryOptions>(m, "TwoViewGeometryOptions")
-        .def(py::init<>([PyRANSACOptions]() {
-            TwoViewGeometryOptions options;
-            // init through Python to obtain the new defaults defined in __init__
-            options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
-            return options;
-        }))
+        .def(py::init<>())
         .def_readwrite("min_num_inliers", &TwoViewGeometryOptions::min_num_inliers)
         .def_readwrite("min_E_F_inlier_ratio", &TwoViewGeometryOptions::min_E_F_inlier_ratio)
         .def_readwrite("max_H_inlier_ratio", &TwoViewGeometryOptions::max_H_inlier_ratio)
@@ -106,6 +101,9 @@ void bind_two_view_geometry_estimation(py::module& m, py::class_<RANSACOptions> 
         .def_readwrite("watermark_border_size", &TwoViewGeometryOptions::watermark_border_size)
         .def_readwrite("detect_watermark", &TwoViewGeometryOptions::detect_watermark)
         .def_readwrite("multiple_ignore_watermark", &TwoViewGeometryOptions::multiple_ignore_watermark)
+        .def_readwrite("force_H_use", &TwoViewGeometryOptions::force_H_use)
+        .def_readwrite("compute_relative_pose", &TwoViewGeometryOptions::compute_relative_pose)
+        .def_readwrite("multiple_models", &TwoViewGeometryOptions::multiple_models)
         .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
     make_dataclass(PyEstimationOptions);
     auto est_options = PyEstimationOptions().cast<TwoViewGeometryOptions>();

@@ -1,9 +1,8 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
-#include "colmap/sensor/models.h"
 #include "colmap/controllers/image_reader.h"
-#include "colmap/scene/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
+#include "colmap/estimators/two_view_geometry.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
 #include "colmap/controllers/feature_extraction.h"
@@ -27,13 +26,15 @@ using namespace pybind11::literals;
 
 template <typename Opts,
           std::unique_ptr<Thread> MatcherFactory(
-                const Opts&, const SiftMatchingOptions&, const std::string&)>
+                const Opts&, const SiftMatchingOptions&,
+                const TwoViewGeometryOptions&, const std::string&)>
 void match_features(py::object database_path_,
                     SiftMatchingOptions sift_options,
-                    Opts matching_options,
+                    const Opts& matching_options,
+                    const TwoViewGeometryOptions& verification_options,
                     const Device device,
                     bool verbose) {
-    std::string database_path = py::str(database_path_).cast<std::string>();
+    const std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     try {
         py::cast(matching_options).attr("check").attr("__call__")();
@@ -48,7 +49,7 @@ void match_features(py::object database_path_,
     VerifySiftGPUParams(sift_options.use_gpu);
     py::gil_scoped_release release;
     std::unique_ptr<Thread> matcher = MatcherFactory(
-        matching_options, sift_options, database_path);
+        matching_options, sift_options, verification_options, database_path);
 
     std::stringstream oss;
     std::streambuf* oldcerr = nullptr;
@@ -65,37 +66,24 @@ void match_features(py::object database_path_,
     }
 }
 
-void match_exhaustive(py::object database_path_,
-                      SiftMatchingOptions sift_options,
-                      int block_size,
-                      const Device device,
-                      bool verbose) {
-    ExhaustiveMatchingOptions options;
-    options.block_size = block_size;
-    match_features<ExhaustiveMatchingOptions, CreateExhaustiveFeatureMatcher>(
-        database_path_, sift_options, options, device, verbose);
-}
-
 void verify_matches(const py::object database_path_,
                     const py::object pairs_path_,
-                    const int max_num_trials,
-                    const float min_inlier_ratio) {
-    std::string database_path = py::str(database_path_).cast<std::string>();
+                    const TwoViewGeometryOptions& verification_options
+                    ) {
+    const std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string pairs_path = py::str(pairs_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(pairs_path);
     py::gil_scoped_release release;  // verification is multi-threaded
 
-    SiftMatchingOptions options;
-    options.use_gpu = false;
-    options.max_num_trials = max_num_trials;
-    options.min_inlier_ratio = min_inlier_ratio;
+    SiftMatchingOptions sift_options;
+    sift_options.use_gpu = false;
 
     ImagePairsMatchingOptions matcher_options;
     matcher_options.match_list_path = pairs_path;
 
     std::unique_ptr<Thread> matcher = CreateImagePairsFeatureMatcher(
-        matcher_options, options, database_path);
+        matcher_options, sift_options, verification_options, database_path);
     matcher->Start();
     PyWait(matcher.get());
 }
@@ -126,45 +114,45 @@ void init_match_features(py::module& m) {
             .def_readwrite("max_num_matches",
                            &SMOpts::max_num_matches,
                            "Maximum number of matches.")
-            .def_readwrite(
-                "max_error",
-                &SMOpts::max_error,
-                "Maximum epipolar error in pixels for geometric verification.")
-            .def_readwrite("confidence",
-                           &SMOpts::confidence,
-                           "Confidence threshold for geometric verification.")
-            .def_readwrite(
-                "min_num_trials",
-                &SMOpts::min_num_trials,
-                "Minimum number of RANSAC iterations. Note that this option "
-                "overrules the min_inlier_ratio option.")
-            .def_readwrite(
-                "max_num_trials",
-                &SMOpts::max_num_trials,
-                "Maximum number of RANSAC iterations. Note that this option "
-                "overrules the min_inlier_ratio option.")
-            .def_readwrite("min_inlier_ratio",
-                           &SMOpts::min_inlier_ratio,
-                           "A priori assumed minimum inlier ratio, which "
-                           "determines the maximum "
-                           "number of iterations.")
-            .def_readwrite("min_num_inliers",
-                           &SMOpts::min_num_inliers,
-                           "Minimum number of inliers for an image pair to be "
-                           "considered as "
-                           "geometrically verified.")
-            .def_readwrite("multiple_models",
-                           &SMOpts::multiple_models,
-                           "Whether to attempt to estimate multiple geometric "
-                           "models per image pair.")
             .def_readwrite("guided_matching",
                            &SMOpts::guided_matching,
                            "Whether to perform guided matching, if geometric "
-                           "verification succeeds.")
-            .def_readwrite("planar_scene",
-                           &SMOpts::planar_scene,
-                           "Force Homography use for Two-view Geometry (can "
-                           "help for planar scenes)");
+                           "verification succeeds.");
+            //.def_readwrite(
+                //"max_error",
+                //&SMOpts::max_error,
+                //"Maximum epipolar error in pixels for geometric verification.")
+            //.def_readwrite("confidence",
+                           //&SMOpts::confidence,
+                           //"Confidence threshold for geometric verification.")
+            //.def_readwrite(
+                //"min_num_trials",
+                //&SMOpts::min_num_trials,
+                //"Minimum number of RANSAC iterations. Note that this option "
+                //"overrules the min_inlier_ratio option.")
+            //.def_readwrite(
+                //"max_num_trials",
+                //&SMOpts::max_num_trials,
+                //"Maximum number of RANSAC iterations. Note that this option "
+                //"overrules the min_inlier_ratio option.")
+            //.def_readwrite("min_inlier_ratio",
+                           //&SMOpts::min_inlier_ratio,
+                           //"A priori assumed minimum inlier ratio, which "
+                           //"determines the maximum "
+                           //"number of iterations.")
+            //.def_readwrite("min_num_inliers",
+                           //&SMOpts::min_num_inliers,
+                           //"Minimum number of inliers for an image pair to be "
+                           //"considered as "
+                           //"geometrically verified.")
+            //.def_readwrite("multiple_models",
+                           //&SMOpts::multiple_models,
+                           //"Whether to attempt to estimate multiple geometric "
+                           //"models per image pair.")
+            //.def_readwrite("planar_scene",
+                           //&SMOpts::planar_scene,
+                           //"Force Homography use for Two-view Geometry (can "
+                           //"help for planar scenes)");
     make_dataclass(PySiftMatchingOptions);
     auto sift_matching_options = PySiftMatchingOptions().cast<SMOpts>();
 
@@ -282,29 +270,24 @@ void init_match_features(py::module& m) {
     make_dataclass(PyVocabTreeMatchingOptions);
     auto vocabtree_options = PyVocabTreeMatchingOptions().cast<VTMOpts>();
 
-    m.def("match_exhaustive",
-          &match_exhaustive,
-          py::arg("database_path"),
-          py::arg("sift_options") = sift_matching_options,
-          py::arg("block_size") = 50,
-          py::arg("device") = Device::AUTO,
-          py::arg("verbose") = true,
-          "Exhaustive feature matching");
+    auto verification_options = m.attr("TwoViewGeometryOptions")().cast<TwoViewGeometryOptions>();
 
     m.def("match_exhaustive",
           &match_features<EMOpts, CreateExhaustiveFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = exhaustive_options,
+          py::arg("verification_options") = verification_options,
           py::arg("device") = Device::AUTO,
           py::arg("verbose") = true,
-          "Sequential feature matching");
+          "Exhaustive feature matching");
 
     m.def("match_sequential",
           &match_features<SeqMOpts, CreateSequentialFeatureMatcher>,
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = sequential_options,
+          py::arg("verification_options") = verification_options,
           py::arg("device") = Device::AUTO,
           py::arg("verbose") = true,
           "Sequential feature matching");
@@ -314,6 +297,7 @@ void init_match_features(py::module& m) {
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = spatial_options,
+          py::arg("verification_options") = verification_options,
           py::arg("device") = Device::AUTO,
           py::arg("verbose") = true,
           "Spatial feature matching");
@@ -323,6 +307,7 @@ void init_match_features(py::module& m) {
           py::arg("database_path"),
           py::arg("sift_options") = sift_matching_options,
           py::arg("matching_options") = vocabtree_options,
+          py::arg("verification_options") = verification_options,
           py::arg("device") = Device::AUTO,
           py::arg("verbose") = true,
           "Vocab tree feature matching");
@@ -331,7 +316,6 @@ void init_match_features(py::module& m) {
           &verify_matches,
           py::arg("database_path"),
           py::arg("pairs_path"),
-          py::arg("max_num_trials") = SiftMatchingOptions().max_num_trials,
-          py::arg("min_inlier_ratio") = SiftMatchingOptions().min_inlier_ratio,
+          py::arg("options") = verification_options,
           "Run geometric verification of the matches");
 }
