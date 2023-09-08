@@ -62,9 +62,6 @@ cd $CURRDIR
 git clone https://github.com/Skydes/colmap.git
 cd colmap
 git checkout paul/add-exe-lib
-# patch src/colmap/util/CMakeLists.txt
-sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
-# build
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON

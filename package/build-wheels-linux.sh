@@ -98,12 +98,6 @@ cd $CURRDIR
 git clone https://github.com/Skydes/colmap.git
 cd colmap
 git checkout paul/add-exe-lib
-# patch FindGlog.cmake
-rm -f cmake/FindGlog.cmake
-wget https://raw.githubusercontent.com/colmap/colmap/main/cmake/FindGlog.cmake -P cmake/
-# patch src/colmap/util/CMakeLists.txt
-sed -n -i '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
-# build
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
