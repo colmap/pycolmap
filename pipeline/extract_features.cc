@@ -82,10 +82,11 @@ void extract_features(const py::object database_path_,
         oldcout = std::cout.rdbuf(oss.rdbuf());
     }
     py::gil_scoped_release release;
-    SiftFeatureExtractor feature_extractor(reader_options, sift_options);
+    std::unique_ptr<Thread> extractor = CreateFeatureExtractorController(
+        reader_options, sift_options);
 
-    feature_extractor.Start();
-    PyWait(&feature_extractor);
+    extractor->Start();
+    PyWait(extractor.get());
 
     if (!verbose) {
         std::cout.rdbuf(oldcout);
