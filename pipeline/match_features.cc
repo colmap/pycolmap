@@ -118,41 +118,6 @@ void init_match_features(py::module& m) {
                            &SMOpts::guided_matching,
                            "Whether to perform guided matching, if geometric "
                            "verification succeeds.");
-            //.def_readwrite(
-                //"max_error",
-                //&SMOpts::max_error,
-                //"Maximum epipolar error in pixels for geometric verification.")
-            //.def_readwrite("confidence",
-                           //&SMOpts::confidence,
-                           //"Confidence threshold for geometric verification.")
-            //.def_readwrite(
-                //"min_num_trials",
-                //&SMOpts::min_num_trials,
-                //"Minimum number of RANSAC iterations. Note that this option "
-                //"overrules the min_inlier_ratio option.")
-            //.def_readwrite(
-                //"max_num_trials",
-                //&SMOpts::max_num_trials,
-                //"Maximum number of RANSAC iterations. Note that this option "
-                //"overrules the min_inlier_ratio option.")
-            //.def_readwrite("min_inlier_ratio",
-                           //&SMOpts::min_inlier_ratio,
-                           //"A priori assumed minimum inlier ratio, which "
-                           //"determines the maximum "
-                           //"number of iterations.")
-            //.def_readwrite("min_num_inliers",
-                           //&SMOpts::min_num_inliers,
-                           //"Minimum number of inliers for an image pair to be "
-                           //"considered as "
-                           //"geometrically verified.")
-            //.def_readwrite("multiple_models",
-                           //&SMOpts::multiple_models,
-                           //"Whether to attempt to estimate multiple geometric "
-                           //"models per image pair.")
-            //.def_readwrite("planar_scene",
-                           //&SMOpts::planar_scene,
-                           //"Force Homography use for Two-view Geometry (can "
-                           //"help for planar scenes)");
     make_dataclass(PySiftMatchingOptions);
     auto sift_matching_options = PySiftMatchingOptions().cast<SMOpts>();
 
