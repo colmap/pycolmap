@@ -46,7 +46,7 @@ void match_features(py::object database_path_,
     }
 
     sift_options.use_gpu = IsGPU(device);
-    VerifySiftGPUParams(sift_options.use_gpu);
+    VerifyGPUParams(sift_options.use_gpu);
     py::gil_scoped_release release;
     std::unique_ptr<Thread> matcher = MatcherFactory(
         matching_options, sift_options, verification_options, database_path);

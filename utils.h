@@ -20,7 +20,7 @@ bool IsGPU(Device device) {
     }
 }
 
-void VerifySiftGPUParams(const bool use_gpu) {
+void VerifyGPUParams(const bool use_gpu) {
 #ifndef COLMAP_CUDA_ENABLED
     if (use_gpu) {
         THROW_EXCEPTION(std::invalid_argument,
