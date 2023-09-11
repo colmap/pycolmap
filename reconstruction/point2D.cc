@@ -1,9 +1,9 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 // Use Eigens aligned allocator for vectors
-#include<Eigen/StdVector>
+#include <Eigen/StdVector>
 
-#include "colmap/base/point2d.h"
+#include "colmap/scene/point2d.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
@@ -22,13 +22,13 @@ using namespace pybind11::literals;
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
-using vector_Point2D = std::vector<class colmap::Point2D, Eigen::aligned_allocator<colmap::Point2D>>;
+using vector_Point2D = std::vector<class Point2D, Eigen::aligned_allocator<Point2D>>;
 PYBIND11_MAKE_OPAQUE(vector_Point2D);
 
-std::string PrintPoint2D(const colmap::Point2D& p2D) {
+std::string PrintPoint2D(const Point2D& p2D) {
     std::stringstream ss;
-    ss << "<Point2D 'xy=[" << p2D.XY().transpose()
-       << "], point3D_id=" << (p2D.HasPoint3D() ? std::to_string(p2D.Point3DId()) : "Invalid")
+    ss << "<Point2D 'xy=[" << p2D.xy.transpose()
+       << "], point3D_id=" << (p2D.HasPoint3D() ? std::to_string(p2D.point3D_id) : "Invalid")
        << "'>";
     return ss.str();
 }
@@ -49,23 +49,14 @@ void init_point2D(py::module& m) {
             return repr;
         });
 
-    py::class_<colmap::Point2D, std::shared_ptr<colmap::Point2D>>(m, "Point2D")
+    py::class_<Point2D, std::shared_ptr<Point2D>>(m, "Point2D")
         .def(py::init<>())
-        .def(py::init([](const Eigen::Vector2d& xy, size_t point3D_id) {
-                 std::unique_ptr<Point2D> point2D = std::unique_ptr<Point2D>(new Point2D());
-                 point2D->SetXY(xy);
-                 point2D->SetPoint3DId(point3D_id);
-                 return point2D;
-             }),
+        .def(py::init<const Eigen::Vector2d&, size_t>(),
              py::arg("xy"), py::arg("point3D_id") = kInvalidPoint3DId)
-        .def_property("xy", overload_cast_<>()(&Point2D::XY), &Point2D::SetXY)
-        .def_property("x", &Point2D::X,
-                      [](Point2D& self, double x) { self.SetXY(Eigen::Vector2d(x, self.Y())); })
-        .def_property("y", &Point2D::Y,
-                      [](Point2D& self, double y) { self.SetXY(Eigen::Vector2d(self.X(), y)); })
-        .def_property("point3D_id", &Point2D::Point3DId, &Point2D::SetPoint3DId)
+        .def_readwrite("xy", &Point2D::xy)
+        .def_readwrite("point3D_id", &Point2D::point3D_id)
         .def("has_point3D", &Point2D::HasPoint3D)
         .def("__copy__", [](const Point2D& self) { return Point2D(self); })
         .def("__deepcopy__", [](const Point2D& self, py::dict) { return Point2D(self); })
-        .def("__repr__", [](const Point2D& self) { return PrintPoint2D(self); });
+        .def("__repr__", &PrintPoint2D);
 }

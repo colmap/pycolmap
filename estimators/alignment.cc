@@ -1,10 +1,9 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
-#include "colmap/camera/models.h"
-#include "colmap/geometry/projection.h"
+#include "colmap/sensor/models.h"
 #include "colmap/geometry/sim3.h"
-#include "colmap/base/alignment.h"
-#include "colmap/base/reconstruction.h"
+#include "colmap/scene/reconstruction.h"
+#include "colmap/estimators/alignment.h"
 #include "colmap/estimators/similarity_transform.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/misc.h"
@@ -88,10 +87,10 @@ inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
             }
             const Point2D& p2D_tgt = tgt.Image(track_el.image_id).Point2D(track_el.point2D_idx);
             if (p2D_tgt.HasPoint3D()) {
-                if (counts.find(p2D_tgt.Point3DId()) != counts.end()) {
-                    counts[p2D_tgt.Point3DId()]++;
+                if (counts.find(p2D_tgt.point3D_id) != counts.end()) {
+                    counts[p2D_tgt.point3D_id]++;
                 } else {
-                    counts[p2D_tgt.Point3DId()] = 0;
+                    counts[p2D_tgt.point3D_id] = 0;
                 }
             }
         }
@@ -231,7 +230,7 @@ py::dict CompareReconstructions(
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
-void init_reconstruction_utils(py::module& m) {
+void bind_alignment(py::module& m) {
     m.def(
         "align_reconstructions_with_poses",
         static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,

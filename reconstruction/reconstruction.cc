@@ -1,9 +1,8 @@
 // Author: Philipp Lindenberger (Phil26AT)
 #include <memory>
 
-#include "colmap/base/reconstruction.h"
-#include "colmap/camera/models.h"
-#include "colmap/geometry/projection.h"
+#include "colmap/scene/reconstruction.h"
+#include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"
 #include "colmap/util/types.h"
@@ -19,7 +18,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
-#include "reconstruction/alignment.cc"
 #include "reconstruction/camera.cc"
 #include "reconstruction/image.cc"
 #include "reconstruction/point2D.cc"
@@ -34,7 +32,6 @@ void init_point2D(py::module&);
 void init_point3D(py::module&);
 void init_image(py::module&);
 void init_camera(py::module&);
-void init_reconstruction_utils(py::module&);
 
 bool ExistsReconstructionText(const std::string& path) {
     return (ExistsFile(JoinPaths(path, "cameras.txt")) &&
@@ -78,7 +75,6 @@ void init_reconstruction(py::module& m) {
     init_point3D(m);
     init_image(m);
     init_camera(m);
-    init_reconstruction_utils(m);
 
     py::class_<Reconstruction, std::shared_ptr<Reconstruction>>(m, "Reconstruction")
         .def(py::init<>())
@@ -207,33 +203,6 @@ void init_reconstruction(py::module& m) {
              "maximum percentiles of the camera centers considered.")
         .def("transform", &Reconstruction::Transform,
              "Apply the 3D similarity transformation to all images and points.")
-        .def(
-            "align_poses",
-            [](Reconstruction& self, const Reconstruction& tgt,
-               const double min_inlier_observations, double max_reproj_error) {
-                const Sim3d tgt_from_src = AlignReconstructionsWithPoses(
-                    self, tgt, min_inlier_observations, max_reproj_error);
-                self.Transform(tgt_from_src);
-                return tgt_from_src;
-            },
-            py::arg("tgt_reconstruction"),
-            py::arg("min_inlier_observations") = 0.3,
-            py::arg("max_reproj_error") = 8.0,
-            "Align to reference reconstruction using RANSAC.")
-        .def("align_points",
-            [](Reconstruction& self, const Reconstruction& tgt,
-               const int min_overlap, const double max_error, const double min_inlier_ratio) {
-                const Sim3d tgt_from_src = AlignReconstructionsWithPoints(
-                    self, tgt, min_overlap, max_error, min_inlier_ratio);
-                self.Transform(tgt_from_src);
-                return tgt_from_src;
-            },
-             py::arg("tgt_reconstruction"), py::arg("min_overlap") = 3,
-             py::arg("max_error") = 0.005, py::arg("min_inlier_ratio") = 0.9,
-             "Align 3D points to reference reconstruction using LORANSAC.\n"
-             "Estimates pose by aligning corresponding 3D points.\n"
-             "Correspondences are estimated by counting similar detection idxs.\n"
-             "Assumes image_ids and point2D_idx overlap.")
         .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, py::arg("p0") = 0.0,
              py::arg("p1") = 1.0)
         .def("crop", &Reconstruction::Crop)
@@ -382,7 +351,7 @@ void init_reconstruction(py::module& m) {
                         THROW_CHECK_MSG(self.IsImageRegistered(image_id), image_id);
                         const colmap::Image& image = self.Image(image_id);
                         THROW_CHECK(image.IsRegistered());
-                        THROW_CHECK_EQ(image.Point2D(point2D_idx).Point3DId(), p3Did)
+                        THROW_CHECK_EQ(image.Point2D(point2D_idx).point3D_id, p3Did)
                     }
                 }
                 for (auto& image_id : self.RegImageIds()) {

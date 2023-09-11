@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "colmap/base/camera.h"
+#include "colmap/scene/camera.h"
 #include "colmap/estimators/fundamental_matrix.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/math/random.h"

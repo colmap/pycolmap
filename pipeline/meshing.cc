@@ -101,7 +101,7 @@ void init_meshing(py::module& m) {
           py::arg("options") = poisson_options,
           "Perform Poisson surface reconstruction and return true if successful.");
 
-#ifdef CGAL_ENABLED
+#ifdef COLMAP_CGAL_ENABLED
     m.def("sparse_delaunay_meshing",
           [](py::object input_path_,
              py::object output_path_,

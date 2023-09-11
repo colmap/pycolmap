@@ -59,15 +59,15 @@ brew info gcc
 #./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 cd $CURRDIR
-git clone https://github.com/colmap/colmap.git
+git clone https://github.com/Skydes/colmap.git
 cd colmap
-git checkout 67029ad21205fac3d149e06000c1e20bf4be1b80
+git checkout paul/add-exe-lib
 # patch src/colmap/util/CMakeLists.txt
 sed -n -i '.txt' '/testing.h testing.cc/!p' src/colmap/util/CMakeLists.txt
 # build
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
+cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
 make -j ${NUM_LOGICAL_CPUS} install
 sudo make install
 

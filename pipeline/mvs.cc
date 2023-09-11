@@ -1,15 +1,15 @@
-#include "colmap/camera/models.h"
-#include "colmap/image/reader.h"
-#include "colmap/base/reconstruction.h"
+#include "colmap/sensor/models.h"
+#include "colmap/controllers/image_reader.h"
+#include "colmap/scene/reconstruction.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
-#include "colmap/feature/extraction.h"
-#include "colmap/feature/matching.h"
+#include "colmap/controllers/feature_extraction.h"
+#include "colmap/controllers/feature_matching.h"
 #include "colmap/feature/sift.h"
 #include "colmap/util/misc.h"
 
-#include "colmap/base/reconstruction.h"
+#include "colmap/scene/reconstruction.h"
 #include "colmap/mvs/fusion.h"
 #include "colmap/mvs/meshing.h"
 #include "colmap/mvs/patch_match.h"
@@ -34,13 +34,13 @@ void patch_match_stereo(py::object workspace_path_,
                         mvs::PatchMatchOptions options,
                         std::string config_path,
                         bool verbose) {
-#ifndef CUDA_ENABLED
+#ifndef COLMAP_CUDA_ENABLED
     THROW_EXCEPTION(
         std::runtime_error,
         "ERROR: Dense stereo reconstruction requires CUDA, which is not "
         "available on your system.");
     return;
-#endif  // CUDA_ENABLED
+#endif  // COLMAP_CUDA_ENABLED
     std::string workspace_path = py::str(workspace_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(workspace_path);
 

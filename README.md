@@ -15,7 +15,7 @@ The wheels are automatically built and pushed to [pypi](https://pypi.org/project
 
 Alternatively, we explain below how to compile PyCOLMAP from source. COLMAP should first be installed as a library following [the official guide](https://colmap.github.io/install.html).
 **⚠️ PyCOLMAP is currently in unstable development! To avoid issues, use tag v0.4.0 and COLMAP commit [colmap/colmap@`d812bcb`](https://github.com/colmap/colmap/commit/d812bcbf5a9a13c52292b711a5c1d4a55dfe5812).**
-In the master branch, the latest supported COLMAP commit is [colmap/colmap@`67029ad`](https://github.com/colmap/colmap/commit/67029ad21205fac3d149e06000c1e20bf4be1b80). Using a previous COLMAP build might not work.
+In the master branch, the latest supported COLMAP commit is [colmap/colmap@`6b299ef`](https://github.com/colmap/colmap/commit/6b299ef23c488a32e5ae115e828e0fa8d98761c8). Using a previous COLMAP build might not work.
 
 Then clone the repository and its submodules:
 
@@ -291,7 +291,7 @@ camera = pycolmap.Camera(
 )
 ```
 
-The different camera models and their extra parameters are defined in [`colmap/src/base/camera_models.h`](https://github.com/colmap/colmap/blob/master/src/base/camera_models.h). For example for a pinhole camera:
+The different camera models and their extra parameters are defined in [`colmap/src/colmap/sensor/models.h`](https://github.com/colmap/colmap/blob/main/src/colmap/sensor/models.h). For example for a pinhole camera:
 
 ```python
 camera = pycolmap.Camera(
