@@ -30,7 +30,8 @@ std::shared_ptr<Reconstruction> triangulate_points(
     const py::object image_path_,
     const py::object output_path_,
     const bool clear_points,
-    const IncrementalMapperOptions& options) {
+    const IncrementalMapperOptions& options,
+    const bool refine_intrinsics) {
     std::string database_path = py::str(database_path_).cast<std::string>();
     THROW_CHECK_FILE_EXISTS(database_path);
     std::string image_path = py::str(image_path_).cast<std::string>();
@@ -44,7 +45,8 @@ std::shared_ptr<Reconstruction> triangulate_points(
                              image_path,
                              output_path,
                              options,
-                             clear_points);
+                             clear_points,
+                             refine_intrinsics);
     return reconstruction;
 }
 
@@ -194,6 +196,7 @@ void init_sfm(py::module& m) {
           py::arg("output_path"),
           py::arg("clear_points") = true,
           py::arg("options") = mapper_options,
+          py::arg("refine_intrinsics") = false,
           "Triangulate 3D points from known camera poses");
 
     m.def("incremental_mapping",
