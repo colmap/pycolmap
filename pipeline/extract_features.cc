@@ -25,22 +25,6 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "utils.h"
 
-void VerifyCameraParams(const std::string& camera_model,
-                        const std::string& params) {
-    THROW_CUSTOM_CHECK_MSG(
-        ExistsCameraModelWithName(camera_model),
-        std::invalid_argument,
-        (std::string("Invalid camera model: ") + camera_model).c_str());
-
-    const std::vector<double> camera_params = CSVToVector<double>(params);
-    const int camera_model_id = CameraModelNameToId(camera_model);
-
-    if (camera_params.size() > 0 &&
-        !CameraModelVerifyParams(camera_model_id, camera_params)) {
-        THROW_EXCEPTION(std::invalid_argument, "Invalid camera parameters.");
-    }
-}
-
 void extract_features(const py::object database_path_,
                       const py::object image_path_,
                       const std::vector<std::string> image_list,
@@ -58,7 +42,7 @@ void extract_features(const py::object database_path_,
     std::string image_path = py::str(image_path_).cast<std::string>();
     THROW_CHECK_DIR_EXISTS(image_path);
     sift_options.use_gpu = IsGPU(device);
-    VerifySiftGPUParams(sift_options.use_gpu);
+    VerifyGPUParams(sift_options.use_gpu);
 
     UpdateImageReaderOptionsFromCameraMode(reader_options, camera_mode);
     reader_options.camera_model = camera_model;
@@ -72,8 +56,10 @@ void extract_features(const py::object database_path_,
 
     THROW_CHECK(ExistsCameraModelWithName(reader_options.camera_model));
 
-    VerifyCameraParams(reader_options.camera_model,
-                       reader_options.camera_params);
+    THROW_CUSTOM_CHECK_MSG(VerifyCameraParams(reader_options.camera_model,
+                                              reader_options.camera_params),
+                           std::invalid_argument,
+                           "Invalid camera parameters.");
 
     std::stringstream oss;
     std::streambuf* oldcerr = nullptr;
@@ -82,10 +68,11 @@ void extract_features(const py::object database_path_,
         oldcout = std::cout.rdbuf(oss.rdbuf());
     }
     py::gil_scoped_release release;
-    SiftFeatureExtractor feature_extractor(reader_options, sift_options);
+    std::unique_ptr<Thread> extractor = CreateFeatureExtractorController(
+        reader_options, sift_options);
 
-    feature_extractor.Start();
-    PyWait(&feature_extractor);
+    extractor->Start();
+    PyWait(extractor.get());
 
     if (!verbose) {
         std::cout.rdbuf(oldcout);
