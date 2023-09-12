@@ -56,10 +56,10 @@ void extract_features(const py::object database_path_,
 
     THROW_CHECK(ExistsCameraModelWithName(reader_options.camera_model));
 
-    if (!VerifyCameraParams(reader_options.camera_model,
-                            reader_options.camera_params)) {
-        THROW_CHECK_MSG(std::invalid_argument, "Invalid camera parameters.");
-    }
+    THROW_CUSTOM_CHECK_MSG(VerifyCameraParams(reader_options.camera_model,
+                                              reader_options.camera_params),
+                           std::invalid_argument,
+                           "Invalid camera parameters.");
 
     std::stringstream oss;
     std::streambuf* oldcerr = nullptr;
