@@ -3,6 +3,7 @@
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include <colmap/geometry/pose.h>
 
@@ -84,11 +85,11 @@ PYBIND11_MODULE(pycolmap, m) {
 
     // Homography Decomposition.
     m.def("homography_decomposition", &homography_decomposition_estimation,
-          py::arg("H"),
-          py::arg("K1"),
-          py::arg("K2"),
-          py::arg("points1"),
-          py::arg("points2"),
+          "H"_a,
+          "K1"_a,
+          "K2"_a,
+          "points1"_a,
+          "points2"_a,
           "Analytical Homography Decomposition.");
 
     // Reconstruction bindings

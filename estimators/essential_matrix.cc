@@ -17,6 +17,7 @@ using namespace colmap;
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
@@ -146,9 +147,9 @@ void bind_essential_matrix_estimation(py::module& m) {
                                  Camera&, Camera&,
                                  const RANSACOptions
                                  )>(&essential_matrix_estimation),
-        py::arg("points2D1"), py::arg("points2D2"),
-        py::arg("camera1"), py::arg("camera2"),
-        py::arg("estimation_options") = est_options,
+        "points2D1"_a, "points2D2"_a,
+        "camera1"_a, "camera2"_a,
+        "estimation_options"_a = est_options,
         "LORANSAC + 5-point algorithm.");
 
     m.def(
@@ -159,12 +160,12 @@ void bind_essential_matrix_estimation(py::module& m) {
                                  const double, const double,
                                  const int, const int, const double
                                  )>(&essential_matrix_estimation),
-        py::arg("points2D1"), py::arg("points2D2"),
-        py::arg("camera1"), py::arg("camera2"),
-        py::arg("max_error_px") = est_options.max_error,
-        py::arg("min_inlier_ratio") = est_options.min_inlier_ratio,
-        py::arg("min_num_trials") = est_options.min_num_trials,
-        py::arg("max_num_trials") = est_options.max_num_trials,
-        py::arg("confidence") = est_options.confidence,
+        "points2D1"_a, "points2D2"_a,
+        "camera1"_a, "camera2"_a,
+        "max_error_px"_a = est_options.max_error,
+        "min_inlier_ratio"_a = est_options.min_inlier_ratio,
+        "min_num_trials"_a = est_options.min_num_trials,
+        "max_num_trials"_a = est_options.max_num_trials,
+        "confidence"_a = est_options.confidence,
         "LORANSAC + 5-point algorithm.");
 }

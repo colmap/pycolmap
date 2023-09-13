@@ -50,7 +50,7 @@ void init_point3D(py::module& m) {
                  point3D->SetTrack(track);
                  return point3D;
              }),
-             py::arg("xyz"), py::arg("track") = Track())
+             "xyz"_a, "track"_a = Track())
         .def_property("xyz", py::overload_cast<>(&Point3D::XYZ), &Point3D::SetXYZ)
         .def_property(
             "x", &Point3D::X,

@@ -10,6 +10,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include <regex>
 #include <string>
@@ -157,7 +158,7 @@ inline void make_dataclass(py::class_<T> cls) {
             }
         }
         return ss.str();
-    }, py::arg("write_type") = false);
+    }, "write_type"_a = false);
 
     cls.def("todict", [cls](const T& self) {
         auto pyself = py::cast(self);

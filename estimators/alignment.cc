@@ -85,25 +85,25 @@ void bind_alignment(py::module& m) {
         "align_reconstructions_with_poses",
         py::overload_cast<const Reconstruction&, const Reconstruction&,
                           const double, const double>(&AlignReconstructionsWithPoses),
-        py::arg("src"), py::arg("tgt"), py::arg("min_inlier_observations") = 0.3,
-        py::arg("max_reproj_error") = 8.0);
+        "src"_a, "tgt"_a, "min_inlier_observations"_a = 0.3,
+        "max_reproj_error"_a = 8.0);
 
     m.def(
         "align_reconstructions_with_poses",
         py::overload_cast<const Reconstruction&, const Reconstruction&,
                           const double>(&AlignReconstructionsWithPoses),
-        py::arg("src"), py::arg("tgt"), py::arg("max_proj_center_error"));
+        "src"_a, "tgt"_a, "max_proj_center_error"_a);
 
     m.def(
         "align_reconstructions_with_points",
-        &AlignReconstructionsWithPoints, py::arg("src"), py::arg("tgt"),
-        py::arg("min_common_observations") = 3, py::arg("max_error") = 0.005,
-        py::arg("min_inlier_ratio") = 0.9);
+        &AlignReconstructionsWithPoints, "src"_a, "tgt"_a,
+        "min_common_observations"_a = 3, "max_error"_a = 0.005,
+        "min_inlier_ratio"_a = 0.9);
 
     m.def(
         "align_reconstrution_to_locations", &AlignReconstructionToLocationsWrapper,
-        py::arg("src"), py::arg("image_names"), py::arg("locations"),
-        py::arg("min_common_points"), py::arg("ransac_options"));
+        "src"_a, "image_names"_a, "locations"_a,
+        "min_common_points"_a, "ransac_options"_a);
 
     m.def(
         "compare_reconstructions",

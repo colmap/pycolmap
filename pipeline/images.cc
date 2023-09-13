@@ -285,11 +285,11 @@ void init_images(py::module& m) {
                              const std::vector<std::string>,
                              const ImageReaderOptions
                              )>(&import_images),
-        py::arg("database_path"),
-        py::arg("image_path"),
-        py::arg("camera_mode") = CameraMode::AUTO,
-        py::arg("image_list") = std::vector<std::string>(),
-        py::arg("options") = reader_options,
+        "database_path"_a,
+        "image_path"_a,
+        "camera_mode"_a = CameraMode::AUTO,
+        "image_list"_a = std::vector<std::string>(),
+        "options"_a = reader_options,
         "Import images into a database");
 
     m.def(
@@ -300,29 +300,29 @@ void init_images(py::module& m) {
                              const std::string,
                              const std::vector<std::string>
                              )>(&import_images),
-        py::arg("database_path"),
-        py::arg("image_path"),
-        py::arg("camera_mode") = CameraMode::AUTO,
-        py::arg("camera_model") = std::string(),
-        py::arg("image_list") = std::vector<std::string>(),
+        "database_path"_a,
+        "image_path"_a,
+        "camera_mode"_a = CameraMode::AUTO,
+        "camera_model"_a = std::string(),
+        "image_list"_a = std::vector<std::string>(),
         "Import images into a database");
 
     m.def("infer_camera_from_image",
           &infer_camera_from_image,
-          py::arg("image_path"),
-          py::arg("options") = reader_options,
+          "image_path"_a,
+          "options"_a = reader_options,
           "Guess the camera parameters from the EXIF metadata");
 
     m.def("undistort_images",
           &undistort_images,
-          py::arg("output_path"),
-          py::arg("input_path"),
-          py::arg("image_path"),
-          py::arg("image_list") = std::vector<std::string>(),
-          py::arg("output_type") = "COLMAP",
-          py::arg("copy_policy") = CopyType::COPY,
-          py::arg("num_patch_match_src_images") = 20,
-          py::arg("undistort_options") = undistort_options,
-          py::arg("verbose") = false,
+          "output_path"_a,
+          "input_path"_a,
+          "image_path"_a,
+          "image_list"_a = std::vector<std::string>(),
+          "output_type"_a = "COLMAP",
+          "copy_policy"_a = CopyType::COPY,
+          "num_patch_match_src_images"_a = 20,
+          "undistort_options"_a = undistort_options,
+          "verbose"_a = false,
           "Undistort images");
 }

@@ -82,7 +82,7 @@ void init_reconstruction(py::module& m) {
                  reconstruction->Read(path);
                  return reconstruction;
              }),
-             py::arg("sfm_dir"))
+             "sfm_dir"_a)
         .def(
             "read",
             [](Reconstruction& self, py::object input_path) {
@@ -90,7 +90,7 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_RECONSTRUCTION_EXISTS(path);
                 self.Read(path);
             },
-            py::arg("sfm_dir"), "Read reconstruction in COLMAP format. Prefer binary.")
+            "sfm_dir"_a, "Read reconstruction in COLMAP format. Prefer binary.")
         .def(
             "write",
             [](const Reconstruction& self, py::object output_path) {
@@ -98,7 +98,7 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_DIR_EXISTS(path);
                 self.Write(path);
             },
-            py::arg("output_dir"), "Write reconstruction in COLMAP binary format.")
+            "output_dir"_a, "Write reconstruction in COLMAP binary format.")
         .def("read_text",
              [](Reconstruction& self, const std::string& input_path) {
                  THROW_CHECK_RECONSTRUCTION_TEXT_EXISTS(input_path);
@@ -160,12 +160,12 @@ void init_reconstruction(py::module& m) {
                     self.RegisterImage(image.ImageId());
                 }
             },
-            py::arg("image"), py::arg("check_not_registered") = false,
+            "image"_a, "check_not_registered"_a = false,
             "Add new image. If Image.IsRegistered()==true, either throw "
             "if check_not_registered, or register image also in reconstr.")
         .def("add_point3D", &Reconstruction::AddPoint3D,
              "Add new 3D object, and return its unique ID.",
-             py::arg("xyz"), py::arg("track"), py::arg("color") = Eigen::Vector3ub::Zero())
+             "xyz"_a, "track"_a, "color"_a = Eigen::Vector3ub::Zero())
         .def("add_observation", &Reconstruction::AddObservation,
              "Add observation to existing 3D point.")
         .def("merge_points3D", &Reconstruction::MergePoints3D,
@@ -200,8 +200,8 @@ void init_reconstruction(py::module& m) {
              "maximum percentiles of the camera centers considered.")
         .def("transform", &Reconstruction::Transform,
              "Apply the 3D similarity transformation to all images and points.")
-        .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, py::arg("p0") = 0.0,
-             py::arg("p1") = 1.0)
+        .def("compute_bounding_box", &Reconstruction::ComputeBoundingBox, "p0"_a = 0.0,
+             "p1"_a = 1.0)
         .def("crop", &Reconstruction::Crop)
         .def("find_image_with_name", &Reconstruction::FindImageWithName,
              py::return_value_policy::reference_internal,
@@ -250,7 +250,7 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_HAS_FILE_EXTENSION(path, ".nvm");
                 THROW_CHECK_FILE_OPEN(path);
                 self.ExportNVM(path, skip_distortion);
-            }, py::arg("output_path"), py::arg("skip_distortion") = false,
+            }, "output_path"_a, "skip_distortion"_a = false,
              "Export reconstruction in NVM format (.nvm).\n\n"
              "Only supports SIMPLE_RADIAL camera models when exporting\n"
              "distortion parameters. When skip_distortion == True it supports all camera\n"
@@ -261,7 +261,7 @@ void init_reconstruction(py::module& m) {
                 std::string dir = py::str(cam_dir).cast<std::string>();
                 THROW_CHECK_DIR_EXISTS(dir);
                 self.ExportCam(dir, skip_distortion);
-            }, py::arg("output_dir"), py::arg("skip_distortion") = false,
+            }, "output_dir"_a, "skip_distortion"_a = false,
              "Exports in CAM format which is a simple text file that contains pose\n"
              "information and camera intrinsics for each image and exports one file per\n"
              "image; it does not include information on the 3D points. The format is as\n"
@@ -285,8 +285,8 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_FILE_OPEN(path);
                 THROW_CHECK_FILE_OPEN(list_path);
                 self.ExportBundler(path, list_path, skip_distortion);
-            }, py::arg("output_path"), py::arg("list_path"),
-               py::arg("skip_distortion") = false,
+            }, "output_path"_a, "list_path"_a,
+               "skip_distortion"_a = false,
              "Export reconstruction in Bundler format.\n"
              "Supports SIMPLE_PINHOLE, PINHOLE, SIMPLE_RADIAL and RADIAL camera models\n"
              "when exporting distortion parameters. When skip_distortion == True it\n"
@@ -300,7 +300,7 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_HAS_FILE_EXTENSION(path, ".ply");
                 THROW_CHECK_FILE_OPEN(path);
                 self.ExportPLY(path);
-            }, py::arg("output_path"),
+            }, "output_path"_a,
             "Export 3D points to PLY format (.ply).")
         .def(
             "export_VRML",
@@ -315,10 +315,10 @@ void init_reconstruction(py::module& m) {
                 THROW_CHECK_HAS_FILE_EXTENSION(p3D_path, ".wrl");
                 self.ExportVRML(img_path, p3D_path, image_scale, image_rgb);
             },
-            py::arg("images_path"),
-            py::arg("points3D_path"),
-            py::arg("image_scale") = 1.0,
-            py::arg("image_rgb") = Eigen::Vector3d(1,0,0),
+            "images_path"_a,
+            "points3D_path"_a,
+            "image_scale"_a = 1.0,
+            "image_rgb"_a = Eigen::Vector3d(1,0,0),
             "Export reconstruction in VRML format (.wrl).")
         .def("extract_colors_for_image", &Reconstruction::ExtractColorsForImage,
              "Extract colors for 3D points of given image. Colors will be extracted\n"

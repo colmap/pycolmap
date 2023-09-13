@@ -63,13 +63,13 @@ void init_image(py::module& m) {
     py::class_<colmap::Image, std::shared_ptr<colmap::Image>>(m, "Image")
         .def(py::init<>())
         .def(py::init(&MakeImage<Point2D>),
-             py::arg("name") = "", py::arg("points2D") = std::vector<Point2D>(),
-             py::arg("cam_from_world") = Rigid3d(),
-             py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
+             "name"_a = "", "points2D"_a = std::vector<Point2D>(),
+             "cam_from_world"_a = Rigid3d(),
+             "camera_id"_a = kInvalidCameraId, "id"_a = kInvalidImageId)
         .def(py::init(&MakeImage<Eigen::Vector2d>),
-             py::arg("name") = "", py::arg("keypoints") = std::vector<Eigen::Vector2d>(),
-             py::arg("cam_from_world") = Rigid3d(),
-             py::arg("camera_id") = kInvalidCameraId, py::arg("id") = kInvalidImageId)
+             "name"_a = "", "keypoints"_a = std::vector<Eigen::Vector2d>(),
+             "cam_from_world"_a = Rigid3d(),
+             "camera_id"_a = kInvalidCameraId, "id"_a = kInvalidImageId)
         .def_property("image_id", &Image::ImageId, &Image::SetImageId,
                       "Unique identifier of image.")
         .def_property(
