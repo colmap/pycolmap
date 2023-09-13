@@ -199,10 +199,10 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
                                  const AbsolutePoseRefinementOptions,
                                  bool
                                  )>(&absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
-        py::arg("estimation_options") = est_options,
-        py::arg("refinement_options") = ref_options,
-        py::arg("return_covariance") = false,
+        "points2D"_a, "points3D"_a, "camera"_a,
+        "estimation_options"_a = est_options,
+        "refinement_options"_a = ref_options,
+        "return_covariance"_a = false,
         "Absolute pose estimation with non-linear refinement.");
 
     m.def(
@@ -213,21 +213,21 @@ void bind_absolute_pose_estimation(py::module& m, py::class_<RANSACOptions> PyRA
                                  const double, const double,
                                  const int, const int, const double, const bool
                                  )>(&absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"), py::arg("camera"),
-        py::arg("max_error_px") = est_options.ransac_options.max_error,
-        py::arg("min_inlier_ratio") = est_options.ransac_options.min_inlier_ratio,
-        py::arg("min_num_trials") = est_options.ransac_options.min_num_trials,
-        py::arg("max_num_trials") = est_options.ransac_options.max_num_trials,
-        py::arg("confidence") = est_options.ransac_options.confidence,
-        py::arg("return_covariance") = false,
+        "points2D"_a, "points3D"_a, "camera"_a,
+        "max_error_px"_a = est_options.ransac_options.max_error,
+        "min_inlier_ratio"_a = est_options.ransac_options.min_inlier_ratio,
+        "min_num_trials"_a = est_options.ransac_options.min_num_trials,
+        "max_num_trials"_a = est_options.ransac_options.max_num_trials,
+        "confidence"_a = est_options.ransac_options.confidence,
+        "return_covariance"_a = false,
         "Absolute pose estimation with non-linear refinement.");
 
     m.def(
         "pose_refinement", &pose_refinement,
-        py::arg("cam_from_world"),
-        py::arg("points2D"), py::arg("points3D"),
-        py::arg("inlier_mask"),
-        py::arg("camera"),
-        py::arg("refinement_options") = ref_options,
+        "cam_from_world"_a,
+        "points2D"_a, "points3D"_a,
+        "inlier_mask"_a,
+        "camera"_a,
+        "refinement_options"_a = ref_options,
         "Non-linear refinement of absolute pose.");
 }

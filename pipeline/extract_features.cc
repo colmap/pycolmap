@@ -163,14 +163,14 @@ void init_extract_features(py::module& m) {
     /* PIPELINE */
     m.def("extract_features",
           &extract_features,
-          py::arg("database_path"),
-          py::arg("image_path"),
-          py::arg("image_list") = std::vector<std::string>(),
-          py::arg("camera_mode") = CameraMode::AUTO,
-          py::arg("camera_model") = "SIMPLE_RADIAL",
-          py::arg("reader_options") = ImageReaderOptions(),
-          py::arg("sift_options") = sift_extraction_options,
-          py::arg("device") = Device::AUTO,
-          py::arg("verbose") = true,
+          "database_path"_a,
+          "image_path"_a,
+          "image_list"_a = std::vector<std::string>(),
+          "camera_mode"_a = CameraMode::AUTO,
+          "camera_model"_a = "SIMPLE_RADIAL",
+          "reader_options"_a = ImageReaderOptions(),
+          "sift_options"_a = sift_extraction_options,
+          "device"_a = Device::AUTO,
+          "verbose"_a = true,
           "Extract SIFT Features and write them to database");
 }

@@ -57,8 +57,8 @@ void init_camera(py::module& m) {
                  camera->SetCameraId(camera_id);
                  return camera;
              }),
-             py::arg("model"), py::arg("width"), py::arg("height"), py::arg("params"),
-             py::arg("id") = kInvalidCameraId)
+             "model"_a, "width"_a, "height"_a, "params"_a,
+             "id"_a = kInvalidCameraId)
         .def(py::init([](py::dict camera_dict) {
                  std::unique_ptr<Camera> camera = std::unique_ptr<Camera>(new Camera());
                  std::string name = camera_dict["model"].cast<std::string>();
@@ -69,7 +69,7 @@ void init_camera(py::module& m) {
                  camera->SetParams(camera_dict["params"].cast<std::vector<double>>());
                  return camera;
              }),
-             py::arg("camera_dict"))
+             "camera_dict"_a)
         .def_property("camera_id", &Camera::CameraId, &Camera::SetCameraId,
                       "Unique identifier of the camera.")
         .def_property(

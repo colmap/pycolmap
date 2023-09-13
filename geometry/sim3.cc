@@ -13,7 +13,6 @@ using namespace colmap;
 #include <pybind11/operators.h>
 
 namespace py = pybind11;
-using namespace pybind11::literals;
 
 
 void init_sim3(py::module& m) {

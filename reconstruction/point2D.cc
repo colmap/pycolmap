@@ -49,7 +49,7 @@ void init_point2D(py::module& m) {
     py::class_<Point2D, std::shared_ptr<Point2D>>(m, "Point2D")
         .def(py::init<>())
         .def(py::init<const Eigen::Vector2d&, size_t>(),
-             py::arg("xy"), py::arg("point3D_id") = kInvalidPoint3DId)
+             "xy"_a, "point3D_id"_a = kInvalidPoint3DId)
         .def_readwrite("xy", &Point2D::xy)
         .def_readwrite("point3D_id", &Point2D::point3D_id)
         .def("has_point3D", &Point2D::HasPoint3D)

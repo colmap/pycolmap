@@ -96,9 +96,9 @@ void init_meshing(py::module& m) {
             THROW_CHECK_FILE_OPEN(output_path);
             PoissonMeshing(options, input_path, output_path);
           },
-          py::arg("input_path"),
-          py::arg("output_path"),
-          py::arg("options") = poisson_options,
+          "input_path"_a,
+          "output_path"_a,
+          "options"_a = poisson_options,
           "Perform Poisson surface reconstruction and return true if successful.");
 
 #ifdef COLMAP_CGAL_ENABLED
@@ -114,9 +114,9 @@ void init_meshing(py::module& m) {
             THROW_CHECK_FILE_OPEN(output_path);
             mvs::SparseDelaunayMeshing(options, input_path, output_path);
           },
-          py::arg("input_path"),
-          py::arg("output_path"),
-          py::arg("options") = delaunay_options,
+          "input_path"_a,
+          "output_path"_a,
+          "options"_a = delaunay_options,
           "Delaunay meshing of sparse COLMAP reconstructions.");
 
     m.def("dense_delaunay_meshing",
@@ -131,9 +131,9 @@ void init_meshing(py::module& m) {
             THROW_CHECK_FILE_OPEN(output_path);
             mvs::DenseDelaunayMeshing(options, input_path, output_path);
           },
-          py::arg("input_path"),
-          py::arg("output_path"),
-          py::arg("options") = delaunay_options,
+          "input_path"_a,
+          "output_path"_a,
+          "options"_a = delaunay_options,
           "Delaunay meshing of dense COLMAP reconstructions.");
 #endif
 };

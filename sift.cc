@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include <Eigen/Core>
 #include <FreeImage.h>
@@ -99,12 +100,12 @@ void init_sift(py::module& m) {
 
     py::class_<Sift>(m, "Sift")
         .def(py::init<SiftExtractionOptions, Device>(),
-             py::arg("options") = sift_options,
-             py::arg("device") = Device::AUTO)
+             "options"_a = sift_options,
+             "device"_a = Device::AUTO)
         .def("extract", py::overload_cast<Eigen::Ref<const pyimage_t<uint8_t>>>(&Sift::Extract),
-             py::arg("image").noconvert())
+             "image"_a.noconvert())
         .def("extract", py::overload_cast<Eigen::Ref<const pyimage_t<float>>>(&Sift::Extract),
-             py::arg("image").noconvert())
+             "image"_a.noconvert())
         .def_property_readonly("options", &Sift::Options)
         .def_property_readonly("device", &Sift::GetDevice);
 }

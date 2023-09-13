@@ -18,6 +18,7 @@ using namespace colmap;
 #include <pybind11/eigen.h>
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
@@ -258,11 +259,11 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
                                  const AbsolutePoseRefinementOptions,
                                  bool
                                  )>(&rig_absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"),
-        py::arg("cameras"), py::arg("cams_from_rig"),
-        py::arg("estimation_options") = est_options,
-        py::arg("refinement_options") = ref_options,
-        py::arg("return_covariance") = false,
+        "points2D"_a, "points3D"_a,
+        "cameras"_a, "cams_from_rig"_a,
+        "estimation_options"_a = est_options,
+        "refinement_options"_a = ref_options,
+        "return_covariance"_a = false,
         "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 
     m.def(
@@ -274,13 +275,13 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
                                  const double, const double,
                                  const int, const int, const double, const bool
                                  )>(&rig_absolute_pose_estimation),
-        py::arg("points2D"), py::arg("points3D"),
-        py::arg("cameras"), py::arg("cams_from_rig"),
-        py::arg("max_error_px") = est_options.max_error,
-        py::arg("min_inlier_ratio") = est_options.min_inlier_ratio,
-        py::arg("min_num_trials") = est_options.min_num_trials,
-        py::arg("max_num_trials") = est_options.max_num_trials,
-        py::arg("confidence") = est_options.confidence,
-        py::arg("return_covariance") = false,
+        "points2D"_a, "points3D"_a,
+        "cameras"_a, "cams_from_rig"_a,
+        "max_error_px"_a = est_options.max_error,
+        "min_inlier_ratio"_a = est_options.min_inlier_ratio,
+        "min_num_trials"_a = est_options.min_num_trials,
+        "max_num_trials"_a = est_options.max_num_trials,
+        "confidence"_a = est_options.confidence,
+        "return_covariance"_a = false,
         "Absolute pose estimation with non-linear refinement for a multi-camera rig.");
 }
