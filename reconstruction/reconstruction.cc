@@ -70,9 +70,9 @@ bool ExistsReconstruction(const std::string& path) {
 // Reconstruction Bindings
 void init_reconstruction(py::module& m) {
   // STL Containers, required for fast looping over members (avoids copying)
-  using ImageMap = std::unordered_map<colmap::image_t, colmap::Image>;
-  using Point3DMap = std::unordered_map<colmap::point3D_t, colmap::Point3D>;
-  using CameraMap = std::unordered_map<colmap::camera_t, colmap::Camera>;
+  using ImageMap = std::unordered_map<image_t, Image>;
+  using Point3DMap = std::unordered_map<point3D_t, Point3D>;
+  using CameraMap = std::unordered_map<camera_t, Camera>;
 
   init_track(m);
   init_point2D(m);
@@ -152,7 +152,7 @@ void init_reconstruction(py::module& m) {
       .def("exists_image_pair", &Reconstruction::ExistsImagePair)
       .def(
           "add_camera",
-          [](Reconstruction& self, const class colmap::Camera& camera) {
+          [](Reconstruction& self, const class Camera& camera) {
             THROW_CHECK(!self.ExistsCamera(camera.CameraId()));
             THROW_CHECK(camera.VerifyParams());
             self.AddCamera(camera);
@@ -163,7 +163,7 @@ void init_reconstruction(py::module& m) {
       .def(
           "add_image",
           [](Reconstruction& self,
-             const class colmap::Image& image,
+             const class Image& image,
              bool check_not_registered) {
             THROW_CHECK(!self.ExistsImage(image.ImageId()));
             if (check_not_registered) {
@@ -171,7 +171,7 @@ void init_reconstruction(py::module& m) {
             }
             self.AddImage(image);
             if (image.IsRegistered()) {
-              THROW_CHECK_NE(image.ImageId(), colmap::kInvalidImageId);
+              THROW_CHECK_NE(image.ImageId(), kInvalidImageId);
               self.Image(image.ImageId())
                   .SetRegistered(false);  // Set true in next line
               self.RegisterImage(image.ImageId());
@@ -208,7 +208,7 @@ void init_reconstruction(py::module& m) {
            "prior to calling this method.")
       .def(
           "register_image",
-          [](colmap::Reconstruction& self, colmap::image_t imid) {
+          [](Reconstruction& self, image_t imid) {
             THROW_CHECK_EQ(self.Image(imid).IsRegistered(),
                            self.IsImageRegistered(imid));
             self.RegisterImage(imid);
@@ -431,23 +431,23 @@ void init_reconstruction(py::module& m) {
            "Create all image sub-directories in the given path.")
       .def(
           "check",
-          [](colmap::Reconstruction& self) {
+          [](Reconstruction& self) {
             for (auto& p3D_p : self.Points3D()) {
-              const colmap::Point3D& p3D = p3D_p.second;
-              const colmap::point3D_t p3Did = p3D_p.first;
+              const Point3D& p3D = p3D_p.second;
+              const point3D_t p3Did = p3D_p.first;
               for (auto& track_el : p3D.Track().Elements()) {
-                colmap::image_t image_id = track_el.image_id;
-                colmap::point2D_t point2D_idx = track_el.point2D_idx;
+                image_t image_id = track_el.image_id;
+                point2D_t point2D_idx = track_el.point2D_idx;
                 THROW_CHECK_MSG(self.ExistsImage(image_id), image_id);
                 THROW_CHECK_MSG(self.IsImageRegistered(image_id), image_id);
-                const colmap::Image& image = self.Image(image_id);
+                const Image& image = self.Image(image_id);
                 THROW_CHECK(image.IsRegistered());
                 THROW_CHECK_EQ(image.Point2D(point2D_idx).point3D_id, p3Did)
               }
             }
             for (auto& image_id : self.RegImageIds()) {
               THROW_CHECK_MSG(self.Image(image_id).HasCamera(), image_id);
-              colmap::camera_t camera_id = self.Image(image_id).CameraId();
+              camera_t camera_id = self.Image(image_id).CameraId();
               THROW_CHECK_MSG(self.ExistsCamera(camera_id), camera_id);
             }
           },

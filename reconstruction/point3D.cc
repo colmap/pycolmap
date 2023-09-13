@@ -17,9 +17,9 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::point3D_t, colmap::Point3D>);
+PYBIND11_MAKE_OPAQUE(std::unordered_map<point3D_t, Point3D>);
 
-std::string PrintPoint3D(const colmap::Point3D& point3D) {
+std::string PrintPoint3D(const Point3D& point3D) {
   std::stringstream ss;
   ss << "<Point3D 'xyz=[" << point3D.XYZ().transpose()
      << "], track_length=" << (point3D.Track().Length())
@@ -28,7 +28,7 @@ std::string PrintPoint3D(const colmap::Point3D& point3D) {
 }
 
 void init_point3D(py::module& m) {
-  using Point3DMap = std::unordered_map<colmap::point3D_t, colmap::Point3D>;
+  using Point3DMap = std::unordered_map<point3D_t, Point3D>;
 
   py::bind_map<Point3DMap>(m, "MapPoint3DIdPoint3D")
       .def("__repr__", [](const Point3DMap& self) {
@@ -45,7 +45,7 @@ void init_point3D(py::module& m) {
         return repr;
       });
 
-  py::class_<colmap::Point3D, std::shared_ptr<colmap::Point3D>>(m, "Point3D")
+  py::class_<Point3D, std::shared_ptr<Point3D>>(m, "Point3D")
       .def(py::init<>())
       .def(py::init([](const Eigen::Vector3d& xyz, const Track& track) {
              std::unique_ptr<Point3D> point3D =

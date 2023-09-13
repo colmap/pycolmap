@@ -66,13 +66,13 @@ void patch_match_stereo(py::object workspace_path_,
   }
 }
 
-colmap::Reconstruction stereo_fusion(py::object output_path_,
-                                     py::object workspace_path_,
-                                     std::string workspace_format,
-                                     std::string pmvs_option_name,
-                                     std::string input_type,
-                                     mvs::StereoFusionOptions options,
-                                     bool verbose) {
+Reconstruction stereo_fusion(py::object output_path_,
+                             py::object workspace_path_,
+                             std::string workspace_format,
+                             std::string pmvs_option_name,
+                             std::string input_type,
+                             mvs::StereoFusionOptions options,
+                             bool verbose) {
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 

@@ -4,10 +4,11 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
+#include "colmap/feature/sift.h"
+#include "colmap/feature/utils.h"
+
 #include <Eigen/Core>
 #include <FreeImage.h>
-#include <colmap/feature/sift.h>
-#include <colmap/feature/utils.h>
 
 using namespace colmap;
 

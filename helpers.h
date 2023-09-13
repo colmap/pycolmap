@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <colmap/util/threading.h>
+#include "colmap/util/threading.h"
+
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>

@@ -18,9 +18,9 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::image_t, colmap::Image>);
+PYBIND11_MAKE_OPAQUE(std::unordered_map<image_t, Image>);
 
-std::string PrintImage(const colmap::Image& image) {
+std::string PrintImage(const Image& image) {
   std::stringstream ss;
   ss << "<Image 'image_id="
      << (image.ImageId() != kInvalidImageId ? std::to_string(image.ImageId())
@@ -38,7 +38,7 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
                                  const std::vector<T>& points2D,
                                  const Rigid3d& cam_from_world,
                                  size_t camera_id,
-                                 colmap::image_t image_id) {
+                                 image_t image_id) {
   auto image = std::make_shared<Image>();
   image->SetName(name);
   image->SetPoints2D(points2D);
@@ -51,7 +51,7 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
 }
 
 void init_image(py::module& m) {
-  using ImageMap = std::unordered_map<colmap::image_t, colmap::Image>;
+  using ImageMap = std::unordered_map<image_t, Image>;
   py::bind_map<ImageMap>(m, "MapImageIdImage")
       .def("__repr__", [](const ImageMap& self) {
         std::string repr = "{";
@@ -67,7 +67,7 @@ void init_image(py::module& m) {
         return repr;
       });
 
-  py::class_<colmap::Image, std::shared_ptr<colmap::Image>>(m, "Image")
+  py::class_<Image, std::shared_ptr<Image>>(m, "Image")
       .def(py::init<>())
       .def(py::init(&MakeImage<Point2D>),
            "name"_a = "",
@@ -214,10 +214,9 @@ void init_image(py::module& m) {
            "registration.")
       .def("get_valid_point2D_ids",
            [](const Image& self) {
-             std::vector<colmap::point2D_t> valid_point2D_ids;
+             std::vector<point2D_t> valid_point2D_ids;
 
-             for (colmap::point2D_t point2D_idx = 0;
-                  point2D_idx < self.NumPoints2D();
+             for (point2D_t point2D_idx = 0; point2D_idx < self.NumPoints2D();
                   ++point2D_idx) {
                if (self.Point2D(point2D_idx).HasPoint3D()) {
                  valid_point2D_ids.push_back(point2D_idx);
@@ -228,10 +227,9 @@ void init_image(py::module& m) {
            })
       .def("get_valid_points2D",
            [](const Image& self) {
-             std::vector<colmap::Point2D> valid_points2D;
+             std::vector<Point2D> valid_points2D;
 
-             for (colmap::point2D_t point2D_idx = 0;
-                  point2D_idx < self.NumPoints2D();
+             for (point2D_t point2D_idx = 0; point2D_idx < self.NumPoints2D();
                   ++point2D_idx) {
                if (self.Point2D(point2D_idx).HasPoint3D()) {
                  valid_points2D.push_back(self.Point2D(point2D_idx));

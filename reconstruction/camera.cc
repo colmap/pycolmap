@@ -16,9 +16,9 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::camera_t, colmap::Camera>);
+PYBIND11_MAKE_OPAQUE(std::unordered_map<camera_t, Camera>);
 
-std::string PrintCamera(const colmap::Camera& camera) {
+std::string PrintCamera(const Camera& camera) {
   std::stringstream ss;
   ss << "<Camera 'camera_id="
      << (camera.CameraId() != kInvalidCameraId
@@ -31,7 +31,7 @@ std::string PrintCamera(const colmap::Camera& camera) {
 }
 
 void init_camera(py::module& m) {
-  using CameraMap = std::unordered_map<colmap::camera_t, colmap::Camera>;
+  using CameraMap = std::unordered_map<camera_t, Camera>;
 
   py::bind_map<CameraMap>(m, "MapCameraIdCamera")
       .def("__repr__", [](const CameraMap& self) {
@@ -54,7 +54,7 @@ void init_camera(py::module& m) {
                        size_t width,
                        size_t height,
                        const std::vector<double>& params,
-                       colmap::camera_t camera_id) {
+                       camera_t camera_id) {
              std::unique_ptr<Camera> camera =
                  std::unique_ptr<Camera>(new Camera());
              THROW_CHECK(ExistsCameraModelWithName(name));
