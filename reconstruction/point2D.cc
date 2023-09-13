@@ -19,9 +19,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 using vector_Point2D = std::vector<class Point2D, Eigen::aligned_allocator<Point2D>>;
 PYBIND11_MAKE_OPAQUE(vector_Point2D);
 

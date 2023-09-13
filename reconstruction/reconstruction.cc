@@ -24,9 +24,6 @@ using namespace pybind11::literals;
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 void init_track(py::module&);
 void init_point2D(py::module&);
 void init_point3D(py::module&);
@@ -244,7 +241,7 @@ void init_reconstruction(py::module& m) {
              &Reconstruction::ComputeMeanObservationsPerRegImage)
         .def("compute_mean_reprojection_error", &Reconstruction::ComputeMeanReprojectionError)
         // .def("convert_to_PLY", &Reconstruction::ConvertToPLY)
-        .def("import_PLY", overload_cast_<const std::string&>()(&Reconstruction::ImportPLY),
+        .def("import_PLY", py::overload_cast<const std::string&>(&Reconstruction::ImportPLY),
              "Import from PLY format. Note that these import functions are\n"
              "only intended for visualization of data and usable for reconstruction.")
         .def("export_NVM",

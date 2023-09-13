@@ -16,9 +16,6 @@ using namespace colmap;
 
 #define kdim 4
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 template <typename dtype>
 using pyimage_t =
     Eigen::Matrix<dtype, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -104,9 +101,9 @@ void init_sift(py::module& m) {
         .def(py::init<SiftExtractionOptions, Device>(),
              py::arg("options") = sift_options,
              py::arg("device") = Device::AUTO)
-        .def("extract", overload_cast_<Eigen::Ref<const pyimage_t<uint8_t>>>()(&Sift::Extract),
+        .def("extract", py::overload_cast<Eigen::Ref<const pyimage_t<uint8_t>>>(&Sift::Extract),
              py::arg("image").noconvert())
-        .def("extract", overload_cast_<Eigen::Ref<const pyimage_t<float>>>()(&Sift::Extract),
+        .def("extract", py::overload_cast<Eigen::Ref<const pyimage_t<float>>>(&Sift::Extract),
              py::arg("image").noconvert())
         .def_property_readonly("options", &Sift::Options)
         .def_property_readonly("device", &Sift::GetDevice);

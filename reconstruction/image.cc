@@ -19,9 +19,6 @@ using namespace pybind11::literals;
 
 PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::image_t, colmap::Image>);
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 std::string PrintImage(const colmap::Image& image) {
     std::stringstream ss;
     ss << "<Image 'image_id="
@@ -82,18 +79,18 @@ void init_image(py::module& m) {
                 self.SetCameraId(kInvalidCameraId);
             },
             "Unique identifier of the camera.")
-        .def_property("name", overload_cast_<>()(&Image::Name), &Image::SetName,
+        .def_property("name", py::overload_cast<>(&Image::Name), &Image::SetName,
                       "Name of the image.")
         .def_property(
-            "cam_from_world", overload_cast_<>()(&Image::CamFromWorld),
+            "cam_from_world", py::overload_cast<>(&Image::CamFromWorld),
             [](Image& self, const Rigid3d& cam_from_world) {self.CamFromWorld() = cam_from_world;},
             "The pose of the image, defined as the transformation from world to camera space.")
         .def_property(
-            "cam_from_world_prior", overload_cast_<>()(&Image::CamFromWorldPrior),
+            "cam_from_world_prior", py::overload_cast<>(&Image::CamFromWorldPrior),
             [](Image& self, const Rigid3d& cam_from_world) {self.CamFromWorldPrior() = cam_from_world;},
             "The pose prior of the image, e.g. extracted from EXIF tags.")
         .def_property(
-            "points2D", overload_cast_<>()(&Image::Points2D),
+            "points2D", py::overload_cast<>(&Image::Points2D),
             [](Image& self, const std::vector<class Point2D>& points2D) {
                 THROW_CUSTOM_CHECK(!points2D.empty(), std::invalid_argument);
                 self.SetPoints2D(points2D);

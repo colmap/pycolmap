@@ -9,9 +9,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 
 void init_quaternion(py::module& m) {
     py::class_<Eigen::Quaterniond>(m, "Rotation3d")
@@ -21,7 +18,7 @@ void init_quaternion(py::module& m) {
         .def(py::self * Eigen::Vector3d())
         .def("normalize", &Eigen::Quaterniond::normalize)
         .def("matrix", &Eigen::Quaterniond::toRotationMatrix)
-        .def("quat", overload_cast_<>()(&Eigen::Quaterniond::coeffs))
+        .def("quat", py::overload_cast<>(&Eigen::Quaterniond::coeffs))
         .def("norm", &Eigen::Quaterniond::norm)
         .def("inverse", &Eigen::Quaterniond::inverse)
         .def("__repr__", [](const Eigen::Quaterniond& self){
