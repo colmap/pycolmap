@@ -5,6 +5,7 @@
 #include "colmap/scene/reconstruction.h"
 #include "colmap/estimators/alignment.h"
 #include "colmap/estimators/similarity_transform.h"
+#include "colmap/exe/model.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"
@@ -135,102 +136,16 @@ inline Sim3d AlignReconstructionToLocationsWrapper(
     return locationsFromSrc;
 }
 
-// TODO(skydes): expose in colmap/exe/model.h
-void PrintErrorStats(std::ostream& out, std::vector<double>& vals) {
-  const size_t len = vals.size();
-  if (len == 0) {
-    out << "Cannot extract error statistics from empty input" << std::endl;
-    return;
-  }
-  std::sort(vals.begin(), vals.end());
-  out << "Min:    " << vals.front() << std::endl;
-  out << "Max:    " << vals.back() << std::endl;
-  out << "Mean:   " << Mean(vals) << std::endl;
-  out << "Median: " << Median(vals) << std::endl;
-  out << "P90:    " << vals[size_t(0.9 * len)] << std::endl;
-  out << "P99:    " << vals[size_t(0.99 * len)] << std::endl;
-}
-
-void PrintComparisonSummary(std::ostream& out,
-                            const std::vector<ImageAlignmentError>& errors) {
-  std::vector<double> rotation_errors_deg;
-  rotation_errors_deg.reserve(errors.size());
-  std::vector<double> proj_center_errors;
-  proj_center_errors.reserve(errors.size());
-  for (const auto& error : errors) {
-    rotation_errors_deg.push_back(error.rotation_error_deg);
-    proj_center_errors.push_back(error.proj_center_error);
-  }
-  out << std::endl << "Rotation errors (degrees)" << std::endl;
-  PrintErrorStats(out, rotation_errors_deg);
-  out << std::endl << "Projection center errors" << std::endl;
-  PrintErrorStats(out, proj_center_errors);
-}
-
-py::dict CompareReconstructions(
-        const Reconstruction& tgt_reconstruction, const Reconstruction& src_reconstruction,
-        const double min_inlier_observations, const double max_reproj_error, bool verbose) {
-    THROW_CHECK_GE(min_inlier_observations, 0.0);
-    THROW_CHECK_LE(min_inlier_observations, 1.0);
-
-    std::stringstream ss;
-    ss << std::endl << "Reconstruction 1" << std::endl;
-    ss << StringPrintf("Images: %d", tgt_reconstruction.NumRegImages()) << std::endl;
-    ss << StringPrintf("Points: %d", tgt_reconstruction.NumPoints3D()) << std::endl;
-
-    ss << std::endl << "Reconstruction 2" << std::endl;
-    ss << StringPrintf("Images: %d", src_reconstruction.NumRegImages()) << std::endl;
-    ss << StringPrintf("Points: %d", src_reconstruction.NumPoints3D()) << std::endl;
-    if (verbose) {
-        py::print(ss.str());
-        ss.str("");
-    };
-
-    ss << std::endl << "Comparing reconstructed image poses" << std::endl;
-    const auto common_image_ids = tgt_reconstruction.FindCommonRegImageIds(src_reconstruction);
-    ss << StringPrintf("Common images: %d", common_image_ids.size()) << std::endl;
-    if (verbose) {
-        py::print(ss.str());
-        ss.str("");
-    };
-
-    Sim3d tgt_from_src;
-    if (!AlignReconstructions(src_reconstruction, tgt_reconstruction,
-                              min_inlier_observations, max_reproj_error, &tgt_from_src)) {
-        THROW_EXCEPTION(std::runtime_error, "=> Reconstruction alignment failed.");
-    }
-
-    ss << "Computed alignment transform:" << std::endl << tgt_from_src.ToMatrix() << std::endl;
-    if (verbose) {
-        py::print(ss.str());
-        ss.str("");
-    };
-
-    auto errors = ComputeImageAlignmentError(src_reconstruction, tgt_reconstruction, tgt_from_src);
-    std::vector<double> rotation_errors_deg;
-    rotation_errors_deg.reserve(errors.size());
-    std::vector<double> proj_center_errors;
-    proj_center_errors.reserve(errors.size());
-    for (const auto& error : errors) {
-        rotation_errors_deg.push_back(error.rotation_error_deg);
-        proj_center_errors.push_back(error.proj_center_error);
-    }
-    PrintComparisonSummary(ss, errors);
-    if (verbose) {
-        py::print(ss.str());
-        ss.str("");
-    };
-    py::dict res("tgt_from_src"_a = tgt_from_src,
-                 "rotation_errors"_a = rotation_errors_deg,
-                 "proj_center_errors"_a = proj_center_errors);
-    return res;
-}
-
-
 template <typename... Args>
 using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
 
 void bind_alignment(py::module& m) {
+    py::class_<ImageAlignmentError>(m, "ImageAlignmentError")
+        .def(py::init<>())
+        .def_readwrite("image_name", &ImageAlignmentError::image_name)
+        .def_readwrite("rotation_error_deg", &ImageAlignmentError::rotation_error_deg)
+        .def_readwrite("proj_center_error", &ImageAlignmentError::proj_center_error);
+
     m.def(
         "align_reconstructions_with_poses",
         static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
@@ -255,8 +170,28 @@ void bind_alignment(py::module& m) {
         py::arg("min_common_points"), py::arg("ransac_options"));
 
     m.def(
-        "compare_reconstructions", CompareReconstructions,
-        py::arg("tgt_reconstruction"), py::arg("src_reconstruction"),
-        py::arg("min_inlier_observations") = 0.3, py::arg("max_reproj_error") = 8.0,
-        py::arg("verbose") = true);
+        "compare_reconstructions",
+        [](const Reconstruction& reconstruction1,
+           const Reconstruction& reconstruction2,
+           const std::string& alignment_error,
+           double min_inlier_observations,
+           double max_reproj_error,
+           double max_proj_center_error) {
+            std::vector<ImageAlignmentError> errors;
+            Sim3d rec2_from_rec1;
+            THROW_CUSTOM_CHECK_MSG(
+                CompareModels(reconstruction1,
+                              reconstruction2,
+                              alignment_error,
+                              min_inlier_observations,
+                              max_reproj_error,
+                              max_proj_center_error,
+                              errors,
+                              rec2_from_rec1),
+                std::runtime_error, "=> Reconstruction alignment failed.");
+            return py::dict("rec2_from_rec1"_a = rec2_from_rec1,
+                            "errors"_a = errors);
+        }, "reconstruction1"_a, "reconstruction2"_a, "alignment_error"_a = "reprojection",
+       "min_inlier_observations"_a = 0.3, "max_reproj_error"_a = 8.0,
+       "max_proj_center_error"_a = 0.1);
 }
