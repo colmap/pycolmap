@@ -23,30 +23,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <bool kEstimateScale>
-inline bool ComputeRobustAlignmentBetweenPoints(const std::vector<Eigen::Vector3d>& src,
-                                                const std::vector<Eigen::Vector3d>& tgt,
-                                                double max_error, double min_inlier_ratio,
-                                                Sim3d& tgt_from_src) {
-    RANSACOptions ransac_options;
-    ransac_options.max_error = max_error;
-    ransac_options.min_inlier_ratio = min_inlier_ratio;
-
-    LORANSAC<SimilarityTransformEstimator<3, kEstimateScale>,
-             SimilarityTransformEstimator<3, kEstimateScale>>
-        ransac(ransac_options);
-
-    const auto report = ransac.Estimate(src, tgt);
-
-    if (report.success) {
-        tgt_from_src.scale = report.model.col(0).norm();
-        tgt_from_src.rotation = Eigen::Quaterniond(report.model.template leftCols<3>()
-                                                   / tgt_from_src.scale).normalized();
-        tgt_from_src.translation = report.model.template rightCols<1>();
-    }
-    return report.success;
-}
-
 inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
                                            const Reconstruction& tgt,
                                            const double min_inlier_observations,
@@ -54,9 +30,8 @@ inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
     THROW_CHECK_GE(min_inlier_observations, 0.0);
     THROW_CHECK_LE(min_inlier_observations, 1.0);
     Sim3d tgt_from_src;
-    bool success = AlignReconstructions(src, tgt, min_inlier_observations,
-                                        max_reproj_error, &tgt_from_src);
-    THROW_CHECK(success);
+    THROW_CHECK(AlignReconstructions(src, tgt, min_inlier_observations,
+                                     max_reproj_error, &tgt_from_src));
     return tgt_from_src;
 }
 
@@ -65,58 +40,22 @@ inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
                                            const double max_proj_center_error) {
     THROW_CHECK_GT(max_proj_center_error, 0.0);
     Sim3d tgt_from_src;
-    bool success = AlignReconstructions(src, tgt, max_proj_center_error, &tgt_from_src);
-    THROW_CHECK(success);
+    THROW_CHECK(AlignReconstructions(src, tgt, max_proj_center_error, &tgt_from_src));
     return tgt_from_src;
 }
 
 inline Sim3d AlignReconstructionsWithPoints(const Reconstruction& src,
                                             const Reconstruction& tgt,
-                                            const int min_overlap,
+                                            const size_t min_common_observations,
                                             const double max_error,
                                             const double min_inlier_ratio) {
-    std::vector<Eigen::Vector3d> p_src;
-    std::vector<Eigen::Vector3d> p_tgt;
-    // Associate 3D points using point2D_idx
-    for (auto& p3D_p : src.Points3D()) {
-        // Count how often a 3D point in tgt is associated to this 3D point
-        std::map<point3D_t, size_t> counts;
-        const Track& track = p3D_p.second.Track();
-        for (auto& track_el : track.Elements()) {
-            if (!tgt.IsImageRegistered(track_el.image_id)) {
-                continue;
-            }
-            const Point2D& p2D_tgt = tgt.Image(track_el.image_id).Point2D(track_el.point2D_idx);
-            if (p2D_tgt.HasPoint3D()) {
-                if (counts.find(p2D_tgt.point3D_id) != counts.end()) {
-                    counts[p2D_tgt.point3D_id]++;
-                } else {
-                    counts[p2D_tgt.point3D_id] = 0;
-                }
-            }
-        }
-        if (counts.size() == 0) {
-            continue;
-        }
-        // The 3D point in tgt who is associated the most is selected
-        auto best_p3D = std::max_element(
-            counts.begin(), counts.end(),
-            [](const std::pair<point3D_t, size_t>& p1, const std::pair<point3D_t, size_t>& p2) {
-                return p1.second < p2.second;
-            });
-        if (best_p3D->second >= min_overlap) {
-            p_src.push_back(p3D_p.second.XYZ());
-            p_tgt.push_back(tgt.Point3D(best_p3D->first).XYZ());
-        }
-    }
-    THROW_CHECK_EQ(p_src.size(), p_tgt.size());
-    std::cerr << "Found " << p_src.size() << " / " << src.NumPoints3D() << " valid correspondences."
-              << std::endl;
-
+    THROW_CHECK_GT(min_common_observations, 0);
+    THROW_CHECK_GT(max_error, 0.0);
+    THROW_CHECK_GE(min_inlier_ratio, 0.0);
+    THROW_CHECK_LE(min_inlier_ratio, 1.0);
     Sim3d tgt_from_src;
-    bool success = ComputeRobustAlignmentBetweenPoints<true>(p_src, p_tgt, max_error,
-                                                             min_inlier_ratio, tgt_from_src);
-    THROW_CHECK(success);
+    THROW_CHECK(AlignReconstructionsViaPoints(src, tgt, min_common_observations,
+                                              max_error, min_inlier_ratio, &tgt_from_src));
     return tgt_from_src;
 }
 
@@ -129,10 +68,9 @@ inline Sim3d AlignReconstructionToLocationsWrapper(
     THROW_CHECK_GE(min_common_images, 3);
     THROW_CHECK_EQ(image_names.size(), locations.size());
     Sim3d locationsFromSrc;
-    bool success = AlignReconstructionToLocations(src, image_names, locations,
-                                                  min_common_images, ransac_options,
-                                                  &locationsFromSrc);
-    THROW_CHECK(success);
+    THROW_CHECK(AlignReconstructionToLocations(src, image_names, locations,
+                                               min_common_images, ransac_options,
+                                               &locationsFromSrc));
     return locationsFromSrc;
 }
 
@@ -150,8 +88,8 @@ void bind_alignment(py::module& m) {
         "align_reconstructions_with_poses",
         static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
                               const double, const double)>(&AlignReconstructionsWithPoses),
-        py::arg("src"), py::arg("tgt"), py::arg("min_inlier_observations"),
-        py::arg("max_reproj_error"));
+        py::arg("src"), py::arg("tgt"), py::arg("min_inlier_observations") = 0.3,
+        py::arg("max_reproj_error") = 8.0);
 
     m.def(
         "align_reconstructions_with_poses",
@@ -162,7 +100,8 @@ void bind_alignment(py::module& m) {
     m.def(
         "align_reconstructions_with_points",
         &AlignReconstructionsWithPoints, py::arg("src"), py::arg("tgt"),
-        py::arg("min_overlap"), py::arg("max_error"), py::arg("min_inlier_ratio"));
+        py::arg("min_common_observations") = 3, py::arg("max_error") = 0.005,
+        py::arg("min_inlier_ratio") = 0.9);
 
     m.def(
         "align_reconstrution_to_locations", &AlignReconstructionToLocationsWrapper,
