@@ -16,9 +16,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 void init_correspondence_graph(py::module& m) {
     py::class_<CorrespondenceGraph::Correspondence, std::shared_ptr<CorrespondenceGraph::Correspondence>>(m, "Correspondence")
         .def(py::init<>())

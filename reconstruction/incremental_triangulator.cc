@@ -14,9 +14,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 void init_incremental_triangulator(py::module& m) {
     py::class_<IncrementalTriangulator::Options, std::shared_ptr<IncrementalTriangulator::Options>>(m, "IncrementalTriangulatorOptions")
         .def(py::init<>())

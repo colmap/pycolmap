@@ -16,9 +16,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::point3D_t, colmap::Point3D>);
 
 std::string PrintPoint3D(const colmap::Point3D& point3D) {
@@ -54,7 +51,7 @@ void init_point3D(py::module& m) {
                  return point3D;
              }),
              py::arg("xyz"), py::arg("track") = Track())
-        .def_property("xyz", overload_cast_<>()(&Point3D::XYZ), &Point3D::SetXYZ)
+        .def_property("xyz", py::overload_cast<>(&Point3D::XYZ), &Point3D::SetXYZ)
         .def_property(
             "x", &Point3D::X,
             [](Point3D& self, double x) { self.SetXYZ(Eigen::Vector3d(x, self.Y(), self.Z())); })
@@ -64,9 +61,9 @@ void init_point3D(py::module& m) {
         .def_property(
             "z", &Point3D::Z,
             [](Point3D& self, double z) { self.SetXYZ(Eigen::Vector3d(self.X(), self.Y(), z)); })
-        .def_property("color", overload_cast_<>()(&Point3D::Color), &Point3D::SetColor)
+        .def_property("color", py::overload_cast<>(&Point3D::Color), &Point3D::SetColor)
         .def_property("error", &Point3D::Error, &Point3D::SetError)
-        .def_property("track", overload_cast_<>()(&Point3D::Track), &Point3D::SetTrack,
+        .def_property("track", py::overload_cast<>(&Point3D::Track), &Point3D::SetTrack,
                       py::return_value_policy::reference_internal)
         .def("__copy__", [](const Point3D& self) { return Point3D(self); })
         .def("__deepcopy__", [](const Point3D& self, py::dict) { return Point3D(self); })

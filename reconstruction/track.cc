@@ -16,9 +16,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 void init_track(py::module& m) {
     py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
         .def(py::init<>())
@@ -40,12 +37,12 @@ void init_track(py::module& m) {
             return track;
         }))
         .def("length", &Track::Length, "Track Length.")
-        .def("add_element", overload_cast_<image_t, point2D_t>()(&Track::AddElement),
+        .def("add_element", py::overload_cast<image_t, point2D_t>(&Track::AddElement),
              "Add observation (image_id, point2D_idx) to track.")
-        .def("delete_element", overload_cast_<image_t, point2D_t>()(&Track::DeleteElement),
+        .def("delete_element", py::overload_cast<image_t, point2D_t>(&Track::DeleteElement),
              "Delete observation (image_id, point2D_idx) from track.")
-        .def("append", overload_cast_<const TrackElement&>()(&Track::AddElement))
-        .def("add_element", overload_cast_<const image_t, const point2D_t>()(&Track::AddElement))
+        .def("append", py::overload_cast<const TrackElement&>(&Track::AddElement))
+        .def("add_element", py::overload_cast<const image_t, const point2D_t>(&Track::AddElement))
         .def("add_elements", &Track::AddElements, "Add TrackElement list.")
         .def(
             "remove",
@@ -54,8 +51,8 @@ void init_track(py::module& m) {
                 self.DeleteElement(idx);
             },
             "Remove TrackElement at index.")
-        .def_property("elements", overload_cast_<>()(&Track::Elements), &Track::SetElements)
-        .def("remove", overload_cast_<const image_t, const point2D_t>()(&Track::DeleteElement),
+        .def_property("elements", py::overload_cast<>(&Track::Elements), &Track::SetElements)
+        .def("remove", py::overload_cast<const image_t, const point2D_t>(&Track::DeleteElement),
              "Remove TrackElement with (image_id,point2D_idx).")
         .def("__copy__", [](const Track& self) { return Track(self); })
         .def("__deepcopy__", [](const Track& self, py::dict) { return Track(self); })

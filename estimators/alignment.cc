@@ -74,9 +74,6 @@ inline Sim3d AlignReconstructionToLocationsWrapper(
     return locationsFromSrc;
 }
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 void bind_alignment(py::module& m) {
     py::class_<ImageAlignmentError>(m, "ImageAlignmentError")
         .def(py::init<>())
@@ -86,15 +83,15 @@ void bind_alignment(py::module& m) {
 
     m.def(
         "align_reconstructions_with_poses",
-        static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
-                              const double, const double)>(&AlignReconstructionsWithPoses),
+        py::overload_cast<const Reconstruction&, const Reconstruction&,
+                          const double, const double>(&AlignReconstructionsWithPoses),
         py::arg("src"), py::arg("tgt"), py::arg("min_inlier_observations") = 0.3,
         py::arg("max_reproj_error") = 8.0);
 
     m.def(
         "align_reconstructions_with_poses",
-        static_cast<Sim3d (*)(const Reconstruction&, const Reconstruction&,
-                              const double)>(&AlignReconstructionsWithPoses),
+        py::overload_cast<const Reconstruction&, const Reconstruction&,
+                          const double>(&AlignReconstructionsWithPoses),
         py::arg("src"), py::arg("tgt"), py::arg("max_proj_center_error"));
 
     m.def(

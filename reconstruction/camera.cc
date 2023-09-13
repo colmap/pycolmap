@@ -16,9 +16,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-template <typename... Args>
-using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
-
 PYBIND11_MAKE_OPAQUE(std::unordered_map<colmap::camera_t, colmap::Camera>);
 
 std::string PrintCamera(const colmap::Camera& camera) {
@@ -187,10 +184,10 @@ void init_camera(py::module& m) {
                 return image_points2D;
             },
             "Project list of points from world / infinity to image plane.")
-        .def("rescale", overload_cast_<size_t, size_t>()(&Camera::Rescale),
+        .def("rescale", py::overload_cast<size_t, size_t>(&Camera::Rescale),
              "Rescale camera dimensions to (width_height) and accordingly the focal length and\n"
              "and the principal point.")
-        .def("rescale", overload_cast_<double>()(&Camera::Rescale),
+        .def("rescale", py::overload_cast<double>(&Camera::Rescale),
              "Rescale camera dimensions by given factor and accordingly the focal length and\n"
              "and the principal point.")
         .def("__copy__", [](const Camera& self) { return Camera(self); })
