@@ -97,7 +97,7 @@ make install
 cd $CURRDIR
 git clone https://github.com/Skydes/colmap.git
 cd colmap
-git checkout expose-exe-libs
+git checkout temp-patch
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
