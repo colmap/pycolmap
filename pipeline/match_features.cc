@@ -69,7 +69,6 @@ void verify_matches(const py::object database_path_,
   ImagePairsMatchingOptions matcher_options;
   matcher_options.match_list_path = pairs_path;
 
-  py::gil_scoped_release release;
   std::unique_ptr<Thread> matcher = CreateImagePairsFeatureMatcher(
       matcher_options, sift_options, verification_options, database_path);
   matcher->Start();
