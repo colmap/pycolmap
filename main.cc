@@ -27,6 +27,7 @@ using namespace pybind11::literals;
 #include "reconstruction/reconstruction.cc"
 #include "sift.cc"
 #include "utils.h"
+#include <glog/logging.h>
 
 void init_reconstruction(py::module&);
 void init_quaternion(py::module&);
@@ -38,6 +39,10 @@ PYBIND11_MODULE(pycolmap, m) {
 #else
   m.attr("__version__") = py::str("dev");
 #endif
+
+  google::InitGoogleLogging("");
+  google::InstallFailureSignalHandler();
+  FLAGS_logtostderr = true;
 
   auto PyDevice = py::enum_<Device>(m, "Device")
                       .value("auto", Device::AUTO)
