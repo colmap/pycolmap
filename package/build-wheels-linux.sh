@@ -95,9 +95,9 @@ make install
 
 # ------ Build COLMAP ------
 cd $CURRDIR
-git clone https://github.com/Skydes/colmap.git
+git clone https://github.com/sarlinpe/colmap.git
 cd colmap
-git checkout temp-patch
+git checkout generalized-pose
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \

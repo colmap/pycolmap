@@ -59,9 +59,9 @@ brew info gcc
 #./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 cd $CURRDIR
-git clone https://github.com/Skydes/colmap.git
+git clone https://github.com/sarlinpe/colmap.git
 cd colmap
-git checkout temp-patch
+git checkout generalized-pose
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
