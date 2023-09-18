@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <experimental/optional>
 
 using namespace colmap;
 
@@ -24,41 +25,25 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "utils.h"
 
-py::object two_view_geometry_estimation(
-    const Camera& camera1,
-    const std::vector<Eigen::Vector2d>& points1,
-    const Camera& camera2,
-    const std::vector<Eigen::Vector2d>& points2,
-    TwoViewGeometryOptions options) {
-  SetPRNGSeed(0);
-  THROW_CHECK_EQ(points1.size(), points2.size());
-  py::object failure = py::none();
-  py::gil_scoped_release release;
+// TODO(sarlinpe): Consider changing the COLMAP type.
+typedef Eigen::MatrixX2<uint32_t> PyFeatureMatches;
 
-  FeatureMatches matches;
-  matches.reserve(points1.size());
-  for (size_t i = 0; i < points1.size(); i++) {
-    matches.emplace_back(i, i);
+PyFeatureMatches FeatureMatchesToMatrix(const FeatureMatches& matches) {
+  PyFeatureMatches matrix(matches.size(), 2);
+  for (size_t i = 0; i < matches.size(); i++) {
+    matrix(i, 0) = matches[i].point2D_idx1;
+    matrix(i, 1) = matches[i].point2D_idx2;
   }
+  return matrix;
+}
 
-  auto two_view_geometry = EstimateCalibratedTwoViewGeometry(
-      camera1, points1, camera2, points2, matches, options);
-
-  if (!EstimateTwoViewGeometryPose(
-          camera1, points1, camera2, points2, &two_view_geometry)) {
-    return failure;
+FeatureMatches FeatureMatchesFromMatrix(const PyFeatureMatches& matrix) {
+  FeatureMatches matches(matrix.rows());
+  for (size_t i = 0; i < matches.size(); i++) {
+    matches[i].point2D_idx1 = matrix(i, 0);
+    matches[i].point2D_idx2 = matrix(i, 1);
   }
-  const FeatureMatches& inlier_matches = two_view_geometry.inlier_matches;
-  Eigen::VectorX<bool> inlier_mask(points1.size());
-  inlier_mask.setConstant(false);
-  for (auto m : inlier_matches) {
-    inlier_mask(m.point2D_idx1) = true;
-  }
-  py::gil_scoped_acquire acquire;
-  return py::dict("configuration_type"_a = two_view_geometry.config,
-                  "cam2_from_cam1"_a = two_view_geometry.cam2_from_cam1,
-                  "num_inliers"_a = inlier_matches.size(),
-                  "inliers"_a = inlier_mask);
+  return matches;
 }
 
 void bind_two_view_geometry_estimation(py::module& m) {
@@ -88,7 +73,8 @@ void bind_two_view_geometry_estimation(py::module& m) {
   make_dataclass(PyTwoViewGeometryOptions);
   auto tvg_options = PyTwoViewGeometryOptions().cast<TwoViewGeometryOptions>();
 
-  py::enum_<TwoViewGeometry::ConfigurationType>(m, "TwoViewGeometry")
+  py::enum_<TwoViewGeometry::ConfigurationType>(m,
+                                                "TwoViewGeometryConfiguration")
       .value("UNDEFINED", TwoViewGeometry::UNDEFINED)
       .value("DEGENERATE", TwoViewGeometry::DEGENERATE)
       .value("CALIBRATED", TwoViewGeometry::CALIBRATED)
@@ -99,12 +85,87 @@ void bind_two_view_geometry_estimation(py::module& m) {
       .value("WATERMARK", TwoViewGeometry::WATERMARK)
       .value("MULTIPLE", TwoViewGeometry::MULTIPLE);
 
-  m.def("two_view_geometry_estimation",
-        &two_view_geometry_estimation,
+  py::class_<TwoViewGeometry>(m, "TwoViewGeometry")
+      .def(py::init<>())
+      .def_readwrite("config", &TwoViewGeometry::config)
+      .def_readwrite("E", &TwoViewGeometry::E)
+      .def_readwrite("F", &TwoViewGeometry::F)
+      .def_readwrite("H", &TwoViewGeometry::H)
+      .def_readwrite("cam2_from_cam1", &TwoViewGeometry::cam2_from_cam1)
+      .def_property(
+          "inlier_matches",
+          [](const TwoViewGeometry& self) {
+            return FeatureMatchesToMatrix(self.inlier_matches);
+          },
+          [](TwoViewGeometry& self, const PyFeatureMatches& matches) {
+            self.inlier_matches = FeatureMatchesFromMatrix(matches);
+          })
+      .def_readwrite("tri_angle", &TwoViewGeometry::tri_angle)
+      .def("invert", &TwoViewGeometry::Invert);
+
+  m.def(
+      "estimate_calibrated_two_view_geometry",
+      [](const Camera& camera1,
+         const std::vector<Eigen::Vector2d>& points1,
+         const Camera& camera2,
+         const std::vector<Eigen::Vector2d>& points2,
+         const std::experimental::optional<PyFeatureMatches>& matches_or_none,
+         const TwoViewGeometryOptions& options) {
+        py::gil_scoped_release release;
+        FeatureMatches matches;
+        if (matches_or_none) {
+          matches = FeatureMatchesFromMatrix(matches_or_none.value());
+        } else {
+          THROW_CHECK_EQ(points1.size(), points2.size());
+          matches.reserve(points1.size());
+          for (size_t i = 0; i < points1.size(); i++) {
+            matches.emplace_back(i, i);
+          }
+        }
+        return EstimateCalibratedTwoViewGeometry(
+            camera1, points1, camera2, points2, matches, options);
+      },
+      "camera1"_a,
+      "points1"_a,
+      "camera2"_a,
+      "points2"_a,
+      "matches"_a = py::none(),
+      "estimation_options"_a = tvg_options);
+
+  m.def(
+      "estimate_two_view_geometry",
+      [](const Camera& camera1,
+         const std::vector<Eigen::Vector2d>& points1,
+         const Camera& camera2,
+         const std::vector<Eigen::Vector2d>& points2,
+         const std::experimental::optional<PyFeatureMatches>& matches_or_none,
+         const TwoViewGeometryOptions& options) {
+        py::gil_scoped_release release;
+        FeatureMatches matches;
+        if (matches_or_none) {
+          matches = FeatureMatchesFromMatrix(matches_or_none.value());
+        } else {
+          THROW_CHECK_EQ(points1.size(), points2.size());
+          matches.reserve(points1.size());
+          for (size_t i = 0; i < points1.size(); i++) {
+            matches.emplace_back(i, i);
+          }
+        }
+        return EstimateTwoViewGeometry(
+            camera1, points1, camera2, points2, matches, options);
+      },
+      "camera1"_a,
+      "points1"_a,
+      "camera2"_a,
+      "points2"_a,
+      "matches"_a = py::none(),
+      "estimation_options"_a = tvg_options);
+
+  m.def("estimate_two_view_geometry_pose",
+        &EstimateTwoViewGeometryPose,
         "camera1"_a,
         "points1"_a,
         "camera2"_a,
         "points2"_a,
-        "estimation_options"_a = tvg_options,
-        "Generic two-view geometry estimation");
+        "geometry"_a);
 }
