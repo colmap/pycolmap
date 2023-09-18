@@ -30,8 +30,10 @@ void VerifyGPUParams(const bool use_gpu) {
 #endif
 }
 
-Eigen::VectorX<bool> ToPythonMask(const std::vector<char> mask_char) {
-  return Eigen::Map<const Eigen::VectorX<char>>(mask_char.data(),
-                                                mask_char.size())
+typedef Eigen::Vector<bool, Eigen::Dynamic> PyInlierMask;
+
+PyInlierMask ToPythonMask(const std::vector<char> mask_char) {
+  return Eigen::Map<const Eigen::Vector<char, Eigen::Dynamic>>(mask_char.data(),
+                                                               mask_char.size())
       .cast<bool>();
 }

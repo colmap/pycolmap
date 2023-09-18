@@ -27,7 +27,8 @@ using namespace pybind11::literals;
 #include "utils.h"
 
 // TODO(sarlinpe): Consider changing the COLMAP type.
-typedef Eigen::MatrixX2<uint32_t> PyFeatureMatches;
+typedef Eigen::Matrix<uint32_t, Eigen::Dynamic, 2, Eigen::RowMajor>
+    PyFeatureMatches;
 
 PyFeatureMatches FeatureMatchesToMatrix(const FeatureMatches& matches) {
   PyFeatureMatches matrix(matches.size(), 2);

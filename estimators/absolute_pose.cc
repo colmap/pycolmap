@@ -72,7 +72,7 @@ py::object pose_refinement(
     const Rigid3d& init_cam_from_world,
     const std::vector<Eigen::Vector2d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
-    const Eigen::VectorX<bool>& inlier_mask,
+    const PyInlierMask& inlier_mask,
     Camera& camera,
     const AbsolutePoseRefinementOptions& refinement_options) {
   SetPRNGSeed(0);
@@ -83,7 +83,7 @@ py::object pose_refinement(
 
   Rigid3d refined_cam_from_world = init_cam_from_world;
   std::vector<char> inlier_mask_char(inlier_mask.size());
-  Eigen::Map<Eigen::VectorX<char>>(
+  Eigen::Map<Eigen::Vector<char, Eigen::Dynamic>>(
       inlier_mask_char.data(), inlier_mask.size()) = inlier_mask.cast<char>();
   if (!RefineAbsolutePose(refinement_options,
                           inlier_mask_char,
