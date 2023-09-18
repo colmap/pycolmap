@@ -1,8 +1,6 @@
 // Author: Paul-Edouard Sarlin (skydes)
 #include "colmap/exe/sfm.h"
 
-#include "colmap/base/camera_models.h"
-#include "colmap/base/reconstruction.h"
 #include "colmap/controllers/bundle_adjustment.h"
 #include "colmap/controllers/incremental_mapper.h"
 #include "colmap/scene/reconstruction.h"
@@ -125,27 +123,14 @@ std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
       database_path_, image_path_, output_path_, options, input_path_);
 }
 
-Reconstruction bundle_adjustment(const py::object input_path_,
-                                 const py::object output_path_,
-                                 const BundleAdjustmentOptions& ba_options) {
-  std::string input_path = py::str(input_path_).cast<std::string>();
-  std::string output_path = py::str(output_path_).cast<std::string>();
-
-  THROW_CHECK_DIR_EXISTS(output_path);
-
-  Reconstruction reconstruction;
-  reconstruction.Read(input_path);
-
-  OptionManager options;
-  *options.bundle_adjustment = ba_options;
-
-  BundleAdjustmentController ba_controller(options, &reconstruction);
-  ba_controller.Start();
-  ba_controller.Wait();
-
-  reconstruction.Write(output_path);
-
-  return reconstruction;
+void bundle_adjustment(std::shared_ptr<Reconstruction> reconstruction,
+                       const BundleAdjustmentOptions& options) {
+  py::gil_scoped_release release;
+  OptionManager option_manager;
+  *option_manager.bundle_adjustment = options;
+  BundleAdjustmentController controller(option_manager, reconstruction);
+  controller.Start();
+  PyWait(&controller);
 }
 
 void init_sfm(py::module& m) {
@@ -331,7 +316,6 @@ void init_sfm(py::module& m) {
 
   m.def("bundle_adjustment",
         &bundle_adjustment,
-        py::arg("input_path"),
-        py::arg("output_path"),
-        py::arg("options") = ba_options);
+        "reconstruction"_a,
+        "options"_a = ba_options);
 }
