@@ -17,6 +17,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "utils.h"
 
 py::object homography_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
@@ -35,12 +36,10 @@ py::object homography_matrix_estimation(
   }
 
   const Eigen::Matrix3d H = report.model;
-  const size_t num_inliers = report.support.num_inliers;
-  const auto& inlier_mask = report.inlier_mask;
-  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
-  return py::dict(
-      "H"_a = H, "num_inliers"_a = num_inliers, "inliers"_a = inlier_mask_bool);
+  return py::dict("H"_a = H,
+                  "num_inliers"_a = report.support.num_inliers,
+                  "inliers"_a = ToPythonMask(report.inlier_mask));
 }
 
 void bind_homography_estimation(py::module& m) {

@@ -22,6 +22,7 @@ using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
+#include "utils.h"
 
 py::object two_view_geometry_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
@@ -50,9 +51,10 @@ py::object two_view_geometry_estimation(
   }
   const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
 
-  std::vector<bool> inlier_mask(points2D1.size(), false);
+  Eigen::VectorX<bool> inlier_mask(points2D1.size());
+  inlier_mask.setConstant(false);
   for (auto m : inlier_matches) {
-    inlier_mask[m.point2D_idx1] = true;
+    inlier_mask(m.point2D_idx1) = true;
   }
   py::gil_scoped_acquire acquire;
   return py::dict("configuration_type"_a = two_view_geometry.config,

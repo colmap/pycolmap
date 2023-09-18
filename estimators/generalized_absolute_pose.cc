@@ -21,6 +21,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "utils.h"
 
 py::object rig_absolute_pose_estimation(
     const std::vector<Eigen::Vector2d>& points2D,
@@ -72,11 +73,10 @@ py::object rig_absolute_pose_estimation(
     return failure;
   }
 
-  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   py::dict success_dict("rig_from_world"_a = rig_from_world,
                         "num_inliers"_a = num_inliers,
-                        "inliers"_a = inlier_mask_bool);
+                        "inliers"_a = ToPythonMask(inlier_mask));
   if (return_covariance) success_dict["covariance"] = covariance;
   return success_dict;
 }

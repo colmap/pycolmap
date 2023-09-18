@@ -19,6 +19,7 @@ using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
+#include "utils.h"
 
 py::object absolute_pose_estimation(
     const std::vector<Eigen::Vector2d> points2D,
@@ -59,40 +60,31 @@ py::object absolute_pose_estimation(
     return failure;
   }
 
-  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   py::dict success_dict("cam_from_world"_a = cam_from_world,
                         "num_inliers"_a = num_inliers,
-                        "inliers"_a = inlier_mask_bool);
+                        "inliers"_a = ToPythonMask(inlier_mask));
   if (return_covariance) success_dict["covariance"] = covariance;
   return success_dict;
 }
 
 py::object pose_refinement(
-    const Rigid3d init_cam_from_world,
-    const std::vector<Eigen::Vector2d> points2D,
-    const std::vector<Eigen::Vector3d> points3D,
-    const std::vector<bool> inlier_mask,
-    const Camera camera,
-    const AbsolutePoseRefinementOptions refinement_options) {
+    const Rigid3d& init_cam_from_world,
+    const std::vector<Eigen::Vector2d>& points2D,
+    const std::vector<Eigen::Vector3d>& points3D,
+    const Eigen::VectorX<bool>& inlier_mask,
+    Camera& camera,
+    const AbsolutePoseRefinementOptions& refinement_options) {
   SetPRNGSeed(0);
   THROW_CHECK_EQ(points2D.size(), points3D.size());
   THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
   py::object failure = py::none();
   py::gil_scoped_release release;
 
-  // Absolute pose estimation.
   Rigid3d refined_cam_from_world = init_cam_from_world;
-  std::vector<char> inlier_mask_char;
-  for (size_t i = 0; i < inlier_mask.size(); ++i) {
-    if (inlier_mask[i]) {
-      inlier_mask_char.emplace_back(1);
-    } else {
-      inlier_mask_char.emplace_back(0);
-    }
-  }
-
-  // Absolute pose refinement.
+  std::vector<char> inlier_mask_char(inlier_mask.size());
+  Eigen::Map<Eigen::VectorX<char>>(
+      inlier_mask_char.data(), inlier_mask.size()) = inlier_mask.cast<char>();
   if (!RefineAbsolutePose(refinement_options,
                           inlier_mask_char,
                           points2D,

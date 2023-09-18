@@ -29,3 +29,10 @@ void VerifyGPUParams(const bool use_gpu) {
   }
 #endif
 }
+
+Eigen::VectorX<bool> ToPythonMask(const std::vector<char> mask_char) {
+  Eigen::VectorX<bool> mask_bool =
+      Eigen::Map<const Eigen::VectorX<char>>(mask_char.data(), mask_char.size())
+          .cast<bool>();
+  return mask_bool;
+}

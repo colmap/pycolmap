@@ -21,6 +21,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 #include "log_exceptions.h"
+#include "utils.h"
 
 py::object essential_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
@@ -64,7 +65,7 @@ py::object essential_matrix_estimation(
   // Recover data from report.
   const Eigen::Matrix3d E = report.model;
   const size_t num_inliers = report.support.num_inliers;
-  const auto inlier_mask = report.inlier_mask;
+  const auto& inlier_mask = report.inlier_mask;
 
   // Pose from essential matrix.
   std::vector<Eigen::Vector2d> inlier_world_points2D1;
@@ -88,12 +89,11 @@ py::object essential_matrix_estimation(
                           &points3D);
   cam2_from_cam1.rotation = Eigen::Quaterniond(cam2_from_cam1_rot_mat);
 
-  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   return py::dict("E"_a = E,
                   "cam2_from_cam1"_a = cam2_from_cam1,
                   "num_inliers"_a = num_inliers,
-                  "inliers"_a = inlier_mask_bool);
+                  "inliers"_a = ToPythonMask(inlier_mask));
 }
 
 void bind_essential_matrix_estimation(py::module& m) {
