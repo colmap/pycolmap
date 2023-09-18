@@ -25,33 +25,31 @@ using namespace pybind11::literals;
 #include "utils.h"
 
 py::object two_view_geometry_estimation(
-    const std::vector<Eigen::Vector2d> points2D1,
-    const std::vector<Eigen::Vector2d> points2D2,
-    Camera& camera1,
-    Camera& camera2,
+    const Camera& camera1,
+    const std::vector<Eigen::Vector2d>& points1,
+    const Camera& camera2,
+    const std::vector<Eigen::Vector2d>& points2,
     TwoViewGeometryOptions options) {
   SetPRNGSeed(0);
-  THROW_CHECK_EQ(points2D1.size(), points2D2.size());
+  THROW_CHECK_EQ(points1.size(), points2.size());
   py::object failure = py::none();
   py::gil_scoped_release release;
 
   FeatureMatches matches;
-  matches.reserve(points2D1.size());
-
-  for (size_t i = 0; i < points2D1.size(); i++) {
+  matches.reserve(points1.size());
+  for (size_t i = 0; i < points1.size(); i++) {
     matches.emplace_back(i, i);
   }
 
   auto two_view_geometry = EstimateCalibratedTwoViewGeometry(
-      camera1, points2D1, camera2, points2D2, matches, options);
+      camera1, points1, camera2, points2, matches, options);
 
   if (!EstimateTwoViewGeometryPose(
-          camera1, points2D1, camera2, points2D2, &two_view_geometry)) {
+          camera1, points1, camera2, points2, &two_view_geometry)) {
     return failure;
   }
-  const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
-
-  Eigen::VectorX<bool> inlier_mask(points2D1.size());
+  const FeatureMatches& inlier_matches = two_view_geometry.inlier_matches;
+  Eigen::VectorX<bool> inlier_mask(points1.size());
   inlier_mask.setConstant(false);
   for (auto m : inlier_matches) {
     inlier_mask(m.point2D_idx1) = true;
@@ -64,7 +62,7 @@ py::object two_view_geometry_estimation(
 }
 
 void bind_two_view_geometry_estimation(py::module& m) {
-  auto PyEstimationOptions =
+  auto PyTwoViewGeometryOptions =
       py::class_<TwoViewGeometryOptions>(m, "TwoViewGeometryOptions")
           .def(py::init<>())
           .def_readwrite("min_num_inliers",
@@ -87,8 +85,8 @@ void bind_two_view_geometry_estimation(py::module& m) {
           .def_readwrite("multiple_models",
                          &TwoViewGeometryOptions::multiple_models)
           .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
-  make_dataclass(PyEstimationOptions);
-  auto est_options = PyEstimationOptions().cast<TwoViewGeometryOptions>();
+  make_dataclass(PyTwoViewGeometryOptions);
+  auto tvg_options = PyTwoViewGeometryOptions().cast<TwoViewGeometryOptions>();
 
   py::enum_<TwoViewGeometry::ConfigurationType>(m, "TwoViewGeometry")
       .value("UNDEFINED", TwoViewGeometry::UNDEFINED)
@@ -103,10 +101,10 @@ void bind_two_view_geometry_estimation(py::module& m) {
 
   m.def("two_view_geometry_estimation",
         &two_view_geometry_estimation,
-        "points2D1"_a,
-        "points2D2"_a,
         "camera1"_a,
+        "points1"_a,
         "camera2"_a,
-        "estimation_options"_a = est_options,
+        "points2"_a,
+        "estimation_options"_a = tvg_options,
         "Generic two-view geometry estimation");
 }
