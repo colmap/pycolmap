@@ -20,14 +20,7 @@ void init_sim3(py::module& m) {
       .def(py::init<>())
       .def(
           py::init<double, const Eigen::Quaterniond&, const Eigen::Vector3d&>())
-      .def_static("estimate",
-                  [](std::vector<Eigen::Vector3d> src,
-                     std::vector<Eigen::Vector3d> dst) {
-                    Sim3d tgt_from_src;
-                    bool success = tgt_from_src.Estimate(src, dst);
-                    THROW_CHECK(success);
-                    return tgt_from_src;
-                  })
+      .def_static("from_matrix", &Sim3d::FromMatrix)
       .def_readwrite("scale", &Sim3d::scale)
       .def_readwrite("rotation", &Sim3d::rotation)
       .def_readwrite("translation", &Sim3d::translation)
