@@ -72,16 +72,7 @@ py::object rig_absolute_pose_estimation(
     return failure;
   }
 
-  // Convert vector<char> to vector<int>.
-  std::vector<bool> inlier_mask_bool;
-  for (auto it : inlier_mask) {
-    if (it) {
-      inlier_mask_bool.push_back(true);
-    } else {
-      inlier_mask_bool.push_back(false);
-    }
-  }
-
+  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   py::dict success_dict("rig_from_world"_a = rig_from_world,
                         "num_inliers"_a = num_inliers,

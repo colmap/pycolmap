@@ -50,18 +50,15 @@ py::object two_view_geometry_estimation(
   }
   const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
 
-  // Convert vector<char> to vector<int>.
-  std::vector<bool> inliers(points2D1.size(), false);
+  std::vector<bool> inlier_mask(points2D1.size(), false);
   for (auto m : inlier_matches) {
-    inliers[m.point2D_idx1] = true;
+    inlier_mask[m.point2D_idx1] = true;
   }
-
-  // Success output dictionary.
   py::gil_scoped_acquire acquire;
   return py::dict("configuration_type"_a = two_view_geometry.config,
                   "cam2_from_cam1"_a = two_view_geometry.cam2_from_cam1,
                   "num_inliers"_a = inlier_matches.size(),
-                  "inliers"_a = inliers);
+                  "inliers"_a = inlier_mask);
 }
 
 void bind_two_view_geometry_estimation(py::module& m) {

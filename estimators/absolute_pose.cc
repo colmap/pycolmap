@@ -59,21 +59,11 @@ py::object absolute_pose_estimation(
     return failure;
   }
 
-  // Convert vector<char> to vector<int>.
-  std::vector<bool> inliers;
-  for (auto it : inlier_mask) {
-    if (it) {
-      inliers.push_back(true);
-    } else {
-      inliers.push_back(false);
-    }
-  }
-
-  // Success output dictionary.
+  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   py::dict success_dict("cam_from_world"_a = cam_from_world,
                         "num_inliers"_a = num_inliers,
-                        "inliers"_a = inliers);
+                        "inliers"_a = inlier_mask_bool);
   if (return_covariance) success_dict["covariance"] = covariance;
   return success_dict;
 }

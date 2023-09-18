@@ -32,33 +32,18 @@ py::object fundamental_matrix_estimation(
   LORANSAC<FundamentalMatrixSevenPointEstimator,
            FundamentalMatrixEightPointEstimator>
       ransac(options);
-
-  // Fundamental matrix estimation.
   const auto report = ransac.Estimate(points2D1, points2D2);
-
   if (!report.success) {
     return failure;
   }
 
-  // Recover data from report.
   const Eigen::Matrix3d F = report.model;
   const size_t num_inliers = report.support.num_inliers;
-  const auto inlier_mask = report.inlier_mask;
-
-  // Convert vector<char> to vector<int>.
-  std::vector<bool> inliers;
-  for (auto it : inlier_mask) {
-    if (it) {
-      inliers.push_back(true);
-    } else {
-      inliers.push_back(false);
-    }
-  }
-
-  // Success output dictionary.
+  const auto& inlier_mask = report.inlier_mask;
+  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   return py::dict(
-      "F"_a = F, "num_inliers"_a = num_inliers, "inliers"_a = inliers);
+      "F"_a = F, "num_inliers"_a = num_inliers, "inliers"_a = inlier_mask_bool);
 }
 
 void bind_fundamental_matrix_estimation(py::module& m) {

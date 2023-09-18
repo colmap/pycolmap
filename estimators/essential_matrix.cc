@@ -88,22 +88,12 @@ py::object essential_matrix_estimation(
                           &points3D);
   cam2_from_cam1.rotation = Eigen::Quaterniond(cam2_from_cam1_rot_mat);
 
-  // Convert vector<char> to vector<int>.
-  std::vector<bool> inliers;
-  for (auto it : inlier_mask) {
-    if (it) {
-      inliers.push_back(true);
-    } else {
-      inliers.push_back(false);
-    }
-  }
-
-  // Success output dictionary.
+  std::vector<bool> inlier_mask_bool(inlier_mask.begin(), inlier_mask.end());
   py::gil_scoped_acquire acquire;
   return py::dict("E"_a = E,
                   "cam2_from_cam1"_a = cam2_from_cam1,
                   "num_inliers"_a = num_inliers,
-                  "inliers"_a = inliers);
+                  "inliers"_a = inlier_mask_bool);
 }
 
 void bind_essential_matrix_estimation(py::module& m) {
