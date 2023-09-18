@@ -11,8 +11,6 @@
 #include <fstream>
 #include <iostream>
 
-#include <experimental/optional>
-
 using namespace colmap;
 
 #include <pybind11/eigen.h>
@@ -111,12 +109,12 @@ void bind_two_view_geometry_estimation(py::module& m) {
          const std::vector<Eigen::Vector2d>& points1,
          const Camera& camera2,
          const std::vector<Eigen::Vector2d>& points2,
-         const std::experimental::optional<PyFeatureMatches>& matches_or_none,
+         const PyFeatureMatches* matches_ptr,
          const TwoViewGeometryOptions& options) {
         py::gil_scoped_release release;
         FeatureMatches matches;
-        if (matches_or_none) {
-          matches = FeatureMatchesFromMatrix(matches_or_none.value());
+        if (matches_ptr != nullptr) {
+          matches = FeatureMatchesFromMatrix(*matches_ptr);
         } else {
           THROW_CHECK_EQ(points1.size(), points2.size());
           matches.reserve(points1.size());
@@ -132,7 +130,7 @@ void bind_two_view_geometry_estimation(py::module& m) {
       "camera2"_a,
       "points2"_a,
       "matches"_a = py::none(),
-      "estimation_options"_a = tvg_options);
+      "options"_a = tvg_options);
 
   m.def(
       "estimate_two_view_geometry",
@@ -140,12 +138,12 @@ void bind_two_view_geometry_estimation(py::module& m) {
          const std::vector<Eigen::Vector2d>& points1,
          const Camera& camera2,
          const std::vector<Eigen::Vector2d>& points2,
-         const std::experimental::optional<PyFeatureMatches>& matches_or_none,
+         const PyFeatureMatches* matches_ptr,
          const TwoViewGeometryOptions& options) {
         py::gil_scoped_release release;
         FeatureMatches matches;
-        if (matches_or_none) {
-          matches = FeatureMatchesFromMatrix(matches_or_none.value());
+        if (matches_ptr != nullptr) {
+          matches = FeatureMatchesFromMatrix(*matches_ptr);
         } else {
           THROW_CHECK_EQ(points1.size(), points2.size());
           matches.reserve(points1.size());
@@ -161,7 +159,7 @@ void bind_two_view_geometry_estimation(py::module& m) {
       "camera2"_a,
       "points2"_a,
       "matches"_a = py::none(),
-      "estimation_options"_a = tvg_options);
+      "options"_a = tvg_options);
 
   m.def("estimate_two_view_geometry_pose",
         &EstimateTwoViewGeometryPose,
