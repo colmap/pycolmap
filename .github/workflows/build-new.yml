@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pyversion: [ "cp37-cp37m", "cp38-cp38", "cp39-cp39", "cp310-cp310" ]
+        platform: [ manylinux2014_x86_64 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,28 +24,22 @@ jobs:
           submodules: recursive
       - name: Build the Linux wheels
         run: |
-          # must be run in docker, cannot be run as freestanding script for toolchain issues
-          # run on old CentOS. but it's CentOS, so it's yum(RPM) not apt. very old glibc. glibc API is back-compatible but not forward. See https://github.com/pypa/manylinux
-          # see https://github.com/varunagrawal/docker-images/blob/master/gtsam-manylinux/Dockerfile for an example
-          # container, but it does not have some necesssary boost packages --> varunagrawal/gtsam-manylinux:latest
-          sudo docker run --rm -e PLAT=manylinux2014_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux2014_x86_64 /io/package/build-wheels-linux.sh ${{ matrix.pyversion }}
-          # sudo docker run --rm -e PLAT=manylinux_2_24_x86_64 -e PYTHON_VERSION=${{ matrix.pyversion }} -v `pwd`:/io quay.io/pypa/manylinux_2_24_x86_64 /io/package/build-wheels-linux-new.sh ${{ matrix.pyversion }}
+          sudo docker run --rm -e PLAT=${{ matrix.platform }} -v `pwd`:/io quay.io/pypa/${{ matrix.platform }} /io/package/build-wheels-linux.sh
           # cleanup for custom runner
           sudo chown -R $(whoami):$(whoami) .
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
           # we strip the version number from the artifact name
-          name: pycolmap-${{ matrix.pyversion }}-manylinux2014_x86_64
-          path: wheelhouse/pycolmap-*-${{ matrix.pyversion }}-manylinux2014_x86_64.whl
+          name: pycolmap-${{ matrix.platform }}
+          path: wheelhouse/pycolmap-*.whl
 
   mac-build:
     name: Wrapper macOS Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-11 ]
-        pyversion: [ "python@3.7", "python@3.8", "python@3.9", "python@3.10" ]
+        os: [ macos-11, macos-12 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -53,11 +47,11 @@ jobs:
           submodules: recursive
       - name: Build the macOS wheels
         run: |
-          ./package/build-wheels-macos.sh ${{ matrix.pyversion }}
+          ./package/build-wheels-macos.sh
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
-          name: pycolmap-${{ matrix.pyversion }}-${{ matrix.os }}
+          name: pycolmap-${{ matrix.os }}
           path: ./wheelhouse/pycolmap-*.whl
 
   pypi-publish:

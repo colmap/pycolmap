@@ -1,93 +1,76 @@
 #!/bin/bash
-
-# Installation based off of https://colmap.github.io/install.html (COLMAP)
-# and https://github.com/mihaidusmanu/pycolmap#getting-started (pycolmap)
-# and http://ceres-solver.org/installation.html (Ceres)
-# However, the OS is centOS 7, instead of Ubuntu.
-
-# Author: John Lambert (johnwlambert)
+PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310")
 
 uname -a
 echo "Current CentOS Version:"
 cat /etc/centos-release
 
-yum -y install wget
-
 ls -ltrh /io/
 
-# we cannot simply use `pip` or `python`, since points to old 2.7 version
-PYBIN="/opt/python/$PYTHON_VERSION/bin"
-PYVER_NUM=$($PYBIN/python -c "import sys;print(sys.version.split(\" \")[0])")
-PYTHONVER="$(basename $(dirname $PYBIN))"
-
-echo "Python bin path: $PYBIN"
-echo "Python version number: $PYVER_NUM"
-echo "Python version: $PYTHONVER"
-
-export PATH=$PYBIN:$PATH
-
-${PYBIN}/pip install auditwheel
-
-PYTHON_EXECUTABLE=${PYBIN}/python
-# We use distutils to get the include directory and the library path directly from the selected interpreter
-# We provide these variables to CMake to hint what Python development files we wish to use in the build.
-PYTHON_INCLUDE_DIR=$(${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
-PYTHON_LIBRARY=$(${PYTHON_EXECUTABLE} -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
-
 CURRDIR=$(pwd)
-
-echo "Num. processes to use for building: ${nproc}"
-
-# ------ Install boost (build it staticly) ------
-cd $CURRDIR
-yum install -y libicu libicu-devel centos-release-scl-rh devtoolset-7-gcc-c++
-
-# Download and install Boost-1.65.1
-# colmap needs only program_options filesystem graph system unit_test_framework
-mkdir -p boost && \
-    cd boost && \
-    wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.65.1/source/boost_1_65_1.tar.gz && \
-    tar xzf boost_1_65_1.tar.gz && \
-    cd boost_1_65_1 && \
-    ./bootstrap.sh --with-libraries=serialization,filesystem,thread,system,atomic,date_time,timer,chrono,program_options,regex,graph,test && \
-    ./b2 -j$(nproc) cxxflags="-fPIC" runtime-link=static variant=release link=static install
-
-# Boost should now be visible under /usr/local
-ls -ltrh /usr/local
+echo "Num. processes to use for building: $(nproc)"
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
 yum install -y \
+    wget \
     git \
-    cmake \
     gcc gcc-c++ make \
     freeimage-devel \
     metis-devel \
-    glog-devel \
-    gflags-devel \
-    glew-devel
+    glew-devel \
+    suitesparse-devel \
+    atlas-devel \
+    lapack-devel \
+    blas-devel \
+    flann \
+    flann-devel \
+    lz4 \
+    lz4-devel
 
-yum install -y suitesparse-devel atlas-devel lapack-devel blas-devel flann flann-devel lz4 lz4-devel
+# ------ Install boost ------
+cd $CURRDIR
+#yum install -y centos-release-scl-rh devtoolset-7-gcc-c++
+mkdir -p boost && cd boost
+export BOOST_FILENAME=boost_1_71_0
+wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
+tar xzf ${BOOST_FILENAME}.tar.gz
+cd ${BOOST_FILENAME}
+./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
+./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
+
+# ------ Install gflags ------
+cd $CURRDIR
+git clone --branch v2.2.2 --depth 1 https://github.com/gflags/gflags.git
+cd glflags
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+make install
+
+# ------ Install glog ------
+cd $CURRDIR
+git clone --branch v0.6.0 --depth 1 https://github.com/google/glog.git
+cd glog
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+make install
 
 # Disable CGAL since it pulls many dependencies and increases the wheel size
 #yum install -y yum-utils
 #yum-config-manager --add-repo=http://springdale.princeton.edu/data/springdale/7/x86_64/os/Computational/
 #yum install -y --nogpgcheck CGAL-devel
 
+# ------ Install Eigen ------
 cd $CURRDIR
-# Using Eigen 3.3, not Eigen 3.4
-wget https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.tar.gz
-tar -xvzf eigen-3.3.9.tar.gz
-export EIGEN_DIR="$CURRDIR/eigen-3.3.9"
-
-# While Eigen is a header-only library, it still has to be built!
-# Creates Eigen3Config.cmake from Eigen3Config.cmake.in
+EIGEN_VERSION="3.3.9"
+export EIGEN_DIR="$CURRDIR/eigen-${EIGEN_VERSION}"
+wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+tar -xvzf eigen-${EIGEN_VERSION}.tar.gz
 cd $EIGEN_DIR
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
-
-ls -ltrh "$EIGEN_DIR/cmake/"
 
 # ------ Install CERES solver ------
 cd $CURRDIR
@@ -102,10 +85,6 @@ cmake .. -DBUILD_TESTING=OFF \
 make -j$(nproc)
 make install
 
-echo "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}"
-echo "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}"
-echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
-
 # ------ Build FreeImage from source and install ------
 #cd $CURRDIR
 #wget http://downloads.sourceforge.net/freeimage/FreeImage3180.zip
@@ -118,12 +97,14 @@ echo "PYTHON_LIBRARY:${PYTHON_LIBRARY}"
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout dev
+git checkout 0d9ab40f6037b5ede71f3af3b8d1f5091f68855d
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DBoost_USE_STATIC_LIBS=ON \
+         -DBoost_USE_STATIC_LIBS=OFF \
          -DBOOST_ROOT=/usr/local \
+         -DCUDA_ENABLED=OFF \
+         -DCGAL_ENABLED=OFF \
          -DGUI_ENABLED=OFF \
          -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
 
@@ -137,14 +118,19 @@ make -j$(nproc) install
 
 # ------ Build pycolmap wheel ------
 cd /io/
-cat setup.py
+WHEEL_DIR="wheels/"
+for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
+    PYTHON_EXEC="/opt/python/${PYTHON_VERSION}/bin/python"
+    EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" ${PYTHON_EXEC} -m pip wheel --no-deps -w ${WHEEL_DIR} .
+done
 
-PLAT=manylinux2014_x86_64
-EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" "${PYBIN}/python" setup.py bdist_wheel --plat-name=$PLAT
+PYTHON_DEFAULT="/opt/python/${PYTHON_VERSIONS[-1]}/bin/python"
+${PYTHON_DEFAULT} -m pip install auditwheel
 
 # Bundle external shared libraries into the wheels
-mkdir -p /io/wheelhouse
-for whl in ./dist/*.whl; do
-    auditwheel repair "$whl" -w /io/wheelhouse/ --no-update-tags
+OUT_DIR="/io/wheelhouse"
+mkdir -p ${OUT_DIR}
+for whl in ${WHEEL_DIR}/*.whl; do
+    auditwheel repair "$whl" -w ${OUT_DIR} --plat ${PLAT}
 done
-ls -ltrh /io/wheelhouse/
+ls -ltrh ${OUT_DIR}
