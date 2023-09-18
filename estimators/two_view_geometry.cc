@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <iostream>
+
 #include <experimental/optional>
 
 using namespace colmap;
