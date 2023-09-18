@@ -33,8 +33,7 @@ void match_features(py::object database_path_,
                     SiftMatchingOptions sift_options,
                     const Opts& matching_options,
                     const TwoViewGeometryOptions& verification_options,
-                    const Device device,
-                    bool verbose) {
+                    const Device device) {
   const std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
   try {
@@ -51,20 +50,8 @@ void match_features(py::object database_path_,
   py::gil_scoped_release release;
   std::unique_ptr<Thread> matcher = MatcherFactory(
       matching_options, sift_options, verification_options, database_path);
-
-  std::stringstream oss;
-  std::streambuf* oldcerr = nullptr;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    oldcout = std::cout.rdbuf(oss.rdbuf());
-  }
-
   matcher->Start();
   PyWait(matcher.get());
-
-  if (!verbose) {
-    std::cout.rdbuf(oldcout);
-  }
 }
 
 void verify_matches(const py::object database_path_,
@@ -82,6 +69,7 @@ void verify_matches(const py::object database_path_,
   ImagePairsMatchingOptions matcher_options;
   matcher_options.match_list_path = pairs_path;
 
+  py::gil_scoped_release release;
   std::unique_ptr<Thread> matcher = CreateImagePairsFeatureMatcher(
       matcher_options, sift_options, verification_options, database_path);
   matcher->Start();
@@ -245,7 +233,6 @@ void init_match_features(py::module& m) {
         "matching_options"_a = exhaustive_options,
         "verification_options"_a = verification_options,
         "device"_a = Device::AUTO,
-        "verbose"_a = true,
         "Exhaustive feature matching");
 
   m.def("match_sequential",
@@ -255,7 +242,6 @@ void init_match_features(py::module& m) {
         "matching_options"_a = sequential_options,
         "verification_options"_a = verification_options,
         "device"_a = Device::AUTO,
-        "verbose"_a = true,
         "Sequential feature matching");
 
   m.def("match_spatial",
@@ -265,7 +251,6 @@ void init_match_features(py::module& m) {
         "matching_options"_a = spatial_options,
         "verification_options"_a = verification_options,
         "device"_a = Device::AUTO,
-        "verbose"_a = true,
         "Spatial feature matching");
 
   m.def("match_vocabtree",
@@ -275,7 +260,6 @@ void init_match_features(py::module& m) {
         "matching_options"_a = vocabtree_options,
         "verification_options"_a = verification_options,
         "device"_a = Device::AUTO,
-        "verbose"_a = true,
         "Vocab tree feature matching");
 
   m.def("verify_matches",

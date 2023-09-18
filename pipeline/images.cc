@@ -24,6 +24,7 @@ using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
+#include <glog/logging.h>
 
 void import_images(const py::object database_path_,
                    const py::object image_path_,
@@ -121,8 +122,7 @@ void undistort_images(py::object output_path_,
                       std::string output_type,
                       CopyType copy_type,
                       int num_patch_match_src_images,
-                      UndistortCameraOptions undistort_camera_options,
-                      bool verbose) {
+                      UndistortCameraOptions undistort_camera_options) {
   std::string output_path = py::str(output_path_).cast<std::string>();
   std::string input_path = py::str(input_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(input_path);
@@ -130,17 +130,11 @@ void undistort_images(py::object output_path_,
   THROW_CHECK_DIR_EXISTS(image_path);
 
   CreateDirIfNotExists(output_path);
-  if (verbose) {
-    PrintHeading1("Reading reconstruction");
-  }
   Reconstruction reconstruction;
   reconstruction.Read(input_path);
-  if (verbose) {
-    std::cout << StringPrintf(" => Reconstruction with %d images and %d points",
-                              reconstruction.NumImages(),
-                              reconstruction.NumPoints3D())
-              << std::endl;
-  }
+  LOG(INFO) << StringPrintf(" => Reconstruction with %d images and %d points",
+                            reconstruction.NumImages(),
+                            reconstruction.NumPoints3D());
 
   std::vector<image_t> image_ids;
   for (const auto& image_name : image_list) {
@@ -148,10 +142,11 @@ void undistort_images(py::object output_path_,
     if (image != nullptr) {
       image_ids.push_back(image->ImageId());
     } else {
-      std::cout << "WARN: Cannot find image " << image_name << std::endl;
+      LOG(WARNING) << "Cannot find image " << image_name;
     }
   }
 
+  py::gil_scoped_release release;
   std::unique_ptr<Thread> undistorter;
   if (output_type == "COLMAP") {
     undistorter.reset(new COLMAPUndistorter(undistort_camera_options,
@@ -173,20 +168,8 @@ void undistort_images(py::object output_path_,
         std::string("Invalid `output_type` - supported values are ") +
             "{'COLMAP', 'PMVS', 'CMP-MVS'}.");
   }
-
-  std::stringstream oss;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    oldcout = std::cout.rdbuf(oss.rdbuf());
-  }
-
-  py::gil_scoped_release release;
   undistorter->Start();
   PyWait(undistorter.get());
-
-  if (!verbose) {
-    std::cout.rdbuf(oldcout);
-  }
 }
 
 void init_images(py::module& m) {
@@ -318,6 +301,5 @@ void init_images(py::module& m) {
         "copy_policy"_a = CopyType::COPY,
         "num_patch_match_src_images"_a = 20,
         "undistort_options"_a = undistort_options,
-        "verbose"_a = false,
         "Undistort images");
 }
