@@ -22,19 +22,15 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-py::dict essential_matrix_estimation(
+py::object essential_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     Camera& camera1,
     Camera& camera2,
     const RANSACOptions options) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D1.size(), points2D2.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict("success"_a = false);
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   // Image to world.
@@ -62,7 +58,7 @@ py::dict essential_matrix_estimation(
   const auto report = ransac.Estimate(world_points2D1, world_points2D2);
 
   if (!report.success) {
-    return failure_dict;
+    return failure;
   }
 
   // Recover data from report.
@@ -104,12 +100,10 @@ py::dict essential_matrix_estimation(
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  py::dict success_dict("success"_a = true,
-                        "E"_a = E,
-                        "cam2_from_cam1"_a = cam2_from_cam1,
-                        "num_inliers"_a = num_inliers,
-                        "inliers"_a = inliers);
-  return success_dict;
+  return py::dict("E"_a = E,
+                  "cam2_from_cam1"_a = cam2_from_cam1,
+                  "num_inliers"_a = num_inliers,
+                  "inliers"_a = inliers);
 }
 
 void bind_essential_matrix_estimation(py::module& m) {

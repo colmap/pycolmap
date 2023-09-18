@@ -18,18 +18,13 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-py::dict homography_matrix_estimation(
+py::object homography_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     const RANSACOptions options) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D1.size(), points2D2.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict;
-  failure_dict["success"] = false;
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   // Estimate planar or panoramic model.
@@ -40,7 +35,7 @@ py::dict homography_matrix_estimation(
   const auto report = H_ransac.Estimate(points2D1, points2D2);
 
   if (!report.success) {
-    return failure_dict;
+    return failure;
   }
 
   // Recover data from report.
@@ -60,13 +55,8 @@ py::dict homography_matrix_estimation(
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  py::dict success_dict;
-  success_dict["success"] = true;
-  success_dict["H"] = H;
-  success_dict["num_inliers"] = num_inliers;
-  success_dict["inliers"] = inliers;
-
-  return success_dict;
+  return py::dict(
+      "H"_a = H, "num_inliers"_a = num_inliers, "inliers"_a = inliers);
 }
 
 void bind_homography_estimation(py::module& m) {

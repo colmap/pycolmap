@@ -23,19 +23,15 @@ using namespace pybind11::literals;
 #include "helpers.h"
 #include "log_exceptions.h"
 
-py::dict two_view_geometry_estimation(
+py::object two_view_geometry_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     Camera& camera1,
     Camera& camera2,
     TwoViewGeometryOptions options) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D1.size(), points2D2.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict("success"_a = false);
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   FeatureMatches matches;
@@ -50,7 +46,7 @@ py::dict two_view_geometry_estimation(
 
   if (!EstimateTwoViewGeometryPose(
           camera1, points2D1, camera2, points2D2, &two_view_geometry)) {
-    return failure_dict;
+    return failure;
   }
   const FeatureMatches inlier_matches = two_view_geometry.inlier_matches;
 
@@ -62,12 +58,10 @@ py::dict two_view_geometry_estimation(
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  py::dict success_dict("success"_a = true,
-                        "configuration_type"_a = two_view_geometry.config,
-                        "cam2_from_cam1"_a = two_view_geometry.cam2_from_cam1,
-                        "num_inliers"_a = inlier_matches.size(),
-                        "inliers"_a = inliers);
-  return success_dict;
+  return py::dict("configuration_type"_a = two_view_geometry.config,
+                  "cam2_from_cam1"_a = two_view_geometry.cam2_from_cam1,
+                  "num_inliers"_a = inlier_matches.size(),
+                  "inliers"_a = inliers);
 }
 
 void bind_two_view_geometry_estimation(py::module& m) {

@@ -20,18 +20,13 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-py::dict fundamental_matrix_estimation(
+py::object fundamental_matrix_estimation(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     const RANSACOptions options) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D1.size(), points2D2.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict;
-  failure_dict["success"] = false;
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   LORANSAC<FundamentalMatrixSevenPointEstimator,
@@ -42,7 +37,7 @@ py::dict fundamental_matrix_estimation(
   const auto report = ransac.Estimate(points2D1, points2D2);
 
   if (!report.success) {
-    return failure_dict;
+    return failure;
   }
 
   // Recover data from report.
@@ -62,13 +57,8 @@ py::dict fundamental_matrix_estimation(
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  py::dict success_dict;
-  success_dict["success"] = true;
-  success_dict["F"] = F;
-  success_dict["num_inliers"] = num_inliers;
-  success_dict["inliers"] = inliers;
-
-  return success_dict;
+  return py::dict(
+      "F"_a = F, "num_inliers"_a = num_inliers, "inliers"_a = inliers);
 }
 
 void bind_fundamental_matrix_estimation(py::module& m) {

@@ -22,7 +22,7 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-py::dict rig_absolute_pose_estimation(
+py::object rig_absolute_pose_estimation(
     const std::vector<Eigen::Vector2d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
     const std::vector<size_t>& camera_idxs,
@@ -39,7 +39,7 @@ py::dict rig_absolute_pose_estimation(
   THROW_CHECK_LT(*std::max_element(camera_idxs.begin(), camera_idxs.end()),
                  cameras.size());
 
-  py::dict failure_dict("success"_a = false);
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   Rigid3d rig_from_world;
@@ -54,7 +54,7 @@ py::dict rig_absolute_pose_estimation(
                                        &rig_from_world,
                                        &num_inliers,
                                        &inlier_mask)) {
-    return failure_dict;
+    return failure;
   }
 
   // Absolute pose refinement.
@@ -69,7 +69,7 @@ py::dict rig_absolute_pose_estimation(
           &rig_from_world,
           &cameras,
           return_covariance ? &covariance : nullptr)) {
-    return failure_dict;
+    return failure;
   }
 
   // Convert vector<char> to vector<int>.
@@ -83,8 +83,7 @@ py::dict rig_absolute_pose_estimation(
   }
 
   py::gil_scoped_acquire acquire;
-  py::dict success_dict("success"_a = true,
-                        "rig_from_world"_a = rig_from_world,
+  py::dict success_dict("rig_from_world"_a = rig_from_world,
                         "num_inliers"_a = num_inliers,
                         "inliers"_a = inlier_mask_bool);
   if (return_covariance) success_dict["covariance"] = covariance;

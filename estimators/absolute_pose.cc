@@ -20,7 +20,7 @@ using namespace pybind11::literals;
 #include "helpers.h"
 #include "log_exceptions.h"
 
-py::dict absolute_pose_estimation(
+py::object absolute_pose_estimation(
     const std::vector<Eigen::Vector2d> points2D,
     const std::vector<Eigen::Vector3d> points3D,
     Camera& camera,
@@ -28,12 +28,8 @@ py::dict absolute_pose_estimation(
     const AbsolutePoseRefinementOptions refinement_options,
     const bool return_covariance) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D.size(), points3D.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict("success"_a = false);
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   // Absolute pose estimation.
@@ -48,7 +44,7 @@ py::dict absolute_pose_estimation(
                             &camera,
                             &num_inliers,
                             &inlier_mask)) {
-    return failure_dict;
+    return failure;
   }
 
   // Absolute pose refinement.
@@ -60,7 +56,7 @@ py::dict absolute_pose_estimation(
                           &cam_from_world,
                           &camera,
                           return_covariance ? &covariance : nullptr)) {
-    return failure_dict;
+    return failure;
   }
 
   // Convert vector<char> to vector<int>.
@@ -75,15 +71,14 @@ py::dict absolute_pose_estimation(
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  py::dict success_dict("success"_a = true,
-                        "cam_from_world"_a = cam_from_world,
+  py::dict success_dict("cam_from_world"_a = cam_from_world,
                         "num_inliers"_a = num_inliers,
                         "inliers"_a = inliers);
   if (return_covariance) success_dict["covariance"] = covariance;
   return success_dict;
 }
 
-py::dict pose_refinement(
+py::object pose_refinement(
     const Rigid3d init_cam_from_world,
     const std::vector<Eigen::Vector2d> points2D,
     const std::vector<Eigen::Vector3d> points3D,
@@ -91,13 +86,9 @@ py::dict pose_refinement(
     const Camera camera,
     const AbsolutePoseRefinementOptions refinement_options) {
   SetPRNGSeed(0);
-
-  // Check that both vectors have the same size.
   THROW_CHECK_EQ(points2D.size(), points3D.size());
   THROW_CHECK_EQ(inlier_mask.size(), points2D.size());
-
-  // Failure output dictionary.
-  py::dict failure_dict("success"_a = false);
+  py::object failure = py::none();
   py::gil_scoped_release release;
 
   // Absolute pose estimation.
@@ -118,13 +109,12 @@ py::dict pose_refinement(
                           points3D,
                           &refined_cam_from_world,
                           const_cast<Camera*>(&camera))) {
-    return failure_dict;
+    return failure;
   }
 
   // Success output dictionary.
   py::gil_scoped_acquire acquire;
-  return py::dict("success"_a = true,
-                  "cam_from_world"_a = refined_cam_from_world);
+  return py::dict("cam_from_world"_a = refined_cam_from_world);
 }
 
 void bind_absolute_pose_estimation(py::module& m,
