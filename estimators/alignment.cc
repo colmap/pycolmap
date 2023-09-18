@@ -24,66 +24,6 @@ using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 
-inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
-                                           const Reconstruction& tgt,
-                                           const double min_inlier_observations,
-                                           const double max_reproj_error) {
-  THROW_CHECK_GE(min_inlier_observations, 0.0);
-  THROW_CHECK_LE(min_inlier_observations, 1.0);
-  Sim3d tgt_from_src;
-  THROW_CHECK(AlignReconstructions(
-      src, tgt, min_inlier_observations, max_reproj_error, &tgt_from_src));
-  return tgt_from_src;
-}
-
-inline Sim3d AlignReconstructionsWithPoses(const Reconstruction& src,
-                                           const Reconstruction& tgt,
-                                           const double max_proj_center_error) {
-  THROW_CHECK_GT(max_proj_center_error, 0.0);
-  Sim3d tgt_from_src;
-  THROW_CHECK(
-      AlignReconstructions(src, tgt, max_proj_center_error, &tgt_from_src));
-  return tgt_from_src;
-}
-
-inline Sim3d AlignReconstructionsWithPoints(
-    const Reconstruction& src,
-    const Reconstruction& tgt,
-    const size_t min_common_observations,
-    const double max_error,
-    const double min_inlier_ratio) {
-  THROW_CHECK_GT(min_common_observations, 0);
-  THROW_CHECK_GT(max_error, 0.0);
-  THROW_CHECK_GE(min_inlier_ratio, 0.0);
-  THROW_CHECK_LE(min_inlier_ratio, 1.0);
-  Sim3d tgt_from_src;
-  THROW_CHECK(AlignReconstructionsViaPoints(src,
-                                            tgt,
-                                            min_common_observations,
-                                            max_error,
-                                            min_inlier_ratio,
-                                            &tgt_from_src));
-  return tgt_from_src;
-}
-
-inline Sim3d AlignReconstructionToLocationsWrapper(
-    const Reconstruction& src,
-    const std::vector<std::string>& image_names,
-    const std::vector<Eigen::Vector3d>& locations,
-    const int min_common_images,
-    const RANSACOptions& ransac_options) {
-  THROW_CHECK_GE(min_common_images, 3);
-  THROW_CHECK_EQ(image_names.size(), locations.size());
-  Sim3d locationsFromSrc;
-  THROW_CHECK(AlignReconstructionToLocations(src,
-                                             image_names,
-                                             locations,
-                                             min_common_images,
-                                             ransac_options,
-                                             &locationsFromSrc));
-  return locationsFromSrc;
-}
-
 void bind_alignment(py::module& m) {
   py::class_<ImageAlignmentError>(m, "ImageAlignmentError")
       .def(py::init<>())
@@ -93,39 +33,94 @@ void bind_alignment(py::module& m) {
       .def_readwrite("proj_center_error",
                      &ImageAlignmentError::proj_center_error);
 
-  m.def("align_reconstructions_with_poses",
-        py::overload_cast<const Reconstruction&,
-                          const Reconstruction&,
-                          const double,
-                          const double>(&AlignReconstructionsWithPoses),
-        "src"_a,
-        "tgt"_a,
-        "min_inlier_observations"_a = 0.3,
-        "max_reproj_error"_a = 8.0);
+  m.def(
+      "align_reconstructions_via_reprojections",
+      [](const Reconstruction& src_reconstruction,
+         const Reconstruction& tgt_reconstruction,
+         const double min_inlier_observations,
+         const double max_reproj_error) {
+        THROW_CHECK_GE(min_inlier_observations, 0.0);
+        THROW_CHECK_LE(min_inlier_observations, 1.0);
+        Sim3d tgt_from_src;
+        THROW_CHECK(
+            AlignReconstructionsViaReprojections(src_reconstruction,
+                                                 tgt_reconstruction,
+                                                 min_inlier_observations,
+                                                 max_reproj_error,
+                                                 &tgt_from_src));
+        return tgt_from_src;
+      },
+      "src_reconstruction"_a,
+      "tgt_reconstruction"_a,
+      "min_inlier_observations"_a = 0.3,
+      "max_reproj_error"_a = 8.0);
 
-  m.def("align_reconstructions_with_poses",
-        py::overload_cast<const Reconstruction&,
-                          const Reconstruction&,
-                          const double>(&AlignReconstructionsWithPoses),
-        "src"_a,
-        "tgt"_a,
-        "max_proj_center_error"_a);
+  m.def(
+      "align_reconstructions_via_proj_centers",
+      [](const Reconstruction& src_reconstruction,
+         const Reconstruction& tgt_reconstruction,
+         const double max_proj_center_error) {
+        THROW_CHECK_GT(max_proj_center_error, 0.0);
+        Sim3d tgt_from_src;
+        THROW_CHECK(AlignReconstructionsViaProjCenters(src_reconstruction,
+                                                       tgt_reconstruction,
+                                                       max_proj_center_error,
+                                                       &tgt_from_src));
+        return tgt_from_src;
+      },
+      "src_reconstruction"_a,
+      "tgt_reconstruction"_a,
+      "max_proj_center_error"_a);
 
-  m.def("align_reconstructions_with_points",
-        &AlignReconstructionsWithPoints,
-        "src"_a,
-        "tgt"_a,
-        "min_common_observations"_a = 3,
-        "max_error"_a = 0.005,
-        "min_inlier_ratio"_a = 0.9);
+  m.def(
+      "align_reconstructions_via_points",
+      [](const Reconstruction& src_reconstruction,
+         const Reconstruction& tgt_reconstruction,
+         const size_t min_common_observations,
+         const double max_error,
+         const double min_inlier_ratio) {
+        THROW_CHECK_GT(min_common_observations, 0);
+        THROW_CHECK_GT(max_error, 0.0);
+        THROW_CHECK_GE(min_inlier_ratio, 0.0);
+        THROW_CHECK_LE(min_inlier_ratio, 1.0);
+        Sim3d tgt_from_src;
+        THROW_CHECK(AlignReconstructionsViaPoints(src_reconstruction,
+                                                  tgt_reconstruction,
+                                                  min_common_observations,
+                                                  max_error,
+                                                  min_inlier_ratio,
+                                                  &tgt_from_src));
+        return tgt_from_src;
+      },
+      "src_reconstruction"_a,
+      "tgt_reconstruction"_a,
+      "min_common_observations"_a = 3,
+      "max_error"_a = 0.005,
+      "min_inlier_ratio"_a = 0.9);
 
-  m.def("align_reconstrution_to_locations",
-        &AlignReconstructionToLocationsWrapper,
-        "src"_a,
-        "image_names"_a,
-        "locations"_a,
-        "min_common_points"_a,
-        "ransac_options"_a);
+  m.def(
+      "align_reconstrution_to_locations",
+      [](const Reconstruction& src,
+         const std::vector<std::string>& image_names,
+         const std::vector<Eigen::Vector3d>& locations,
+         const int min_common_images,
+         const RANSACOptions& ransac_options) {
+        THROW_CHECK_GE(min_common_images, 3);
+        THROW_CHECK_EQ(image_names.size(), locations.size());
+        Sim3d locationsFromSrc;
+        THROW_CHECK(AlignReconstructionToLocations(src,
+                                                   image_names,
+                                                   locations,
+                                                   min_common_images,
+                                                   ransac_options,
+                                                   &locationsFromSrc));
+        return locationsFromSrc;
+      },
+      "src"_a,
+      "image_names"_a,
+      "locations"_a,
+      "min_common_points"_a,
+      "ransac_options"_a);
 
   m.def(
       "compare_reconstructions",
