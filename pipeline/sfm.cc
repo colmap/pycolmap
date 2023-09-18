@@ -1,5 +1,6 @@
 // Author: Paul-Edouard Sarlin (skydes)
 #include "colmap/exe/sfm.h"
+
 #include "colmap/base/camera_models.h"
 #include "colmap/base/reconstruction.h"
 #include "colmap/controllers/bundle_adjustment.h"
@@ -52,7 +53,6 @@ std::shared_ptr<Reconstruction> triangulate_points(
   return reconstruction;
 }
 
-// Copied from colmap/exe/sfm.cc
 std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
@@ -111,33 +111,6 @@ std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
   return reconstructions;
 }
 
-// Copied from colmap/exe/sfm.cc
-Reconstruction bundle_adjustment(
-    const py::object input_path_,
-    const py::object output_path_,
-    const BundleAdjustmentOptions& ba_options
-) {
-    std::string input_path = py::str(input_path_).cast<std::string>();
-    std::string output_path = py::str(output_path_).cast<std::string>();
-
-    THROW_CHECK_DIR_EXISTS(input_path);
-    THROW_CHECK_DIR_EXISTS(output_path);
-
-    Reconstruction reconstruction;
-    reconstruction.Read(input_path);
-
-    OptionManager options;
-    *options.bundle_adjustment = ba_options;
-
-    BundleAdjustmentController ba_controller(options, &reconstruction);
-    ba_controller.Start();
-    ba_controller.Wait();
-
-    reconstruction.Write(output_path);
-
-    return reconstruction;
-}
-
 std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
     const py::object database_path_,
     const py::object image_path_,
@@ -150,6 +123,29 @@ std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
   options.min_num_matches = min_num_matches;
   return incremental_mapping(
       database_path_, image_path_, output_path_, options, input_path_);
+}
+
+Reconstruction bundle_adjustment(const py::object input_path_,
+                                 const py::object output_path_,
+                                 const BundleAdjustmentOptions& ba_options) {
+  std::string input_path = py::str(input_path_).cast<std::string>();
+  std::string output_path = py::str(output_path_).cast<std::string>();
+
+  THROW_CHECK_DIR_EXISTS(output_path);
+
+  Reconstruction reconstruction;
+  reconstruction.Read(input_path);
+
+  OptionManager options;
+  *options.bundle_adjustment = ba_options;
+
+  BundleAdjustmentController ba_controller(options, &reconstruction);
+  ba_controller.Start();
+  ba_controller.Wait();
+
+  reconstruction.Write(output_path);
+
+  return reconstruction;
 }
 
 void init_sfm(py::module& m) {
@@ -214,7 +210,7 @@ void init_sfm(py::module& m) {
           .def_readwrite("fix_existing_images", &Opts::fix_existing_images);
   make_dataclass(PyIncrementalMapperOptions);
   auto mapper_options = PyIncrementalMapperOptions().cast<Opts>();
-  
+
   using BAOpts = BundleAdjustmentOptions;
   auto PyBALossFunctionType =
       py::enum_<BAOpts::LossFunctionType>(m, "LossFunctionType")
@@ -224,24 +220,32 @@ void init_sfm(py::module& m) {
   AddStringToEnumConstructor(PyBALossFunctionType);
   using CSOpts = ceres::Solver::Options;
   auto PyCeresSolverOptions =
-      py::class_<CSOpts>(m,
-                         "CeresSolverOptions",
-                         // If ceres::Solver::Options is registered by pycolmap AND a downstream
-                         // library, importing the downstream library results in error:
-                         //   ImportError: generic_type: type "CeresSolverOptions" is already registered!
-                         // Adding a `py::module_local()` fixes this.
-                         // https://github.com/pybind/pybind11/issues/439#issuecomment-1338251822
-                         py::module_local())
+      py::class_<CSOpts>(
+          m,
+          "CeresSolverOptions",
+          // If ceres::Solver::Options is registered by pycolmap AND a
+          // downstream library, importing the downstream library results in
+          // error:
+          //   ImportError: generic_type: type "CeresSolverOptions" is already
+          //   registered!
+          // Adding a `py::module_local()` fixes this.
+          // https://github.com/pybind/pybind11/issues/439#issuecomment-1338251822
+          py::module_local())
           .def(py::init<>())
           .def_readwrite("function_tolerance", &CSOpts::function_tolerance)
           .def_readwrite("gradient_tolerance", &CSOpts::gradient_tolerance)
           .def_readwrite("parameter_tolerance", &CSOpts::parameter_tolerance)
-          .def_readwrite("minimizer_progress_to_stdout", &CSOpts::minimizer_progress_to_stdout)
-          .def_readwrite("minimizer_progress_to_stdout", &CSOpts::minimizer_progress_to_stdout)
+          .def_readwrite("minimizer_progress_to_stdout",
+                         &CSOpts::minimizer_progress_to_stdout)
+          .def_readwrite("minimizer_progress_to_stdout",
+                         &CSOpts::minimizer_progress_to_stdout)
           .def_readwrite("max_num_iterations", &CSOpts::max_num_iterations)
-          .def_readwrite("max_linear_solver_iterations", &CSOpts::max_linear_solver_iterations)
-          .def_readwrite("max_num_consecutive_invalid_steps", &CSOpts::max_num_consecutive_invalid_steps)
-          .def_readwrite("max_consecutive_nonmonotonic_steps", &CSOpts::max_consecutive_nonmonotonic_steps)
+          .def_readwrite("max_linear_solver_iterations",
+                         &CSOpts::max_linear_solver_iterations)
+          .def_readwrite("max_num_consecutive_invalid_steps",
+                         &CSOpts::max_num_consecutive_invalid_steps)
+          .def_readwrite("max_consecutive_nonmonotonic_steps",
+                         &CSOpts::max_consecutive_nonmonotonic_steps)
           .def_readwrite("num_threads", &CSOpts::num_threads);
   make_dataclass(PyCeresSolverOptions);
   auto PyBundleAdjustmentOptions =
@@ -249,16 +253,19 @@ void init_sfm(py::module& m) {
           .def(py::init<>())
           .def_readwrite("loss_function_type",
                          &BAOpts::loss_function_type,
-                         "Loss function types: Trivial (non-robust) and Cauchy (robust) loss.")
+                         "Loss function types: Trivial (non-robust) and Cauchy "
+                         "(robust) loss.")
           .def_readwrite("loss_function_scale",
                          &BAOpts::loss_function_scale,
-                         "Scaling factor determines residual at which robustification takes place.")
+                         "Scaling factor determines residual at which "
+                         "robustification takes place.")
           .def_readwrite("refine_focal_length",
                          &BAOpts::refine_focal_length,
                          "Whether to refine the focal length parameter group.")
-          .def_readwrite("refine_principal_point",
-                         &BAOpts::refine_principal_point,
-                         "Whether to refine the principal point parameter group.")
+          .def_readwrite(
+              "refine_principal_point",
+              &BAOpts::refine_principal_point,
+              "Whether to refine the principal point parameter group.")
           .def_readwrite("refine_extra_params",
                          &BAOpts::refine_extra_params,
                          "Whether to refine the extra parameter group.")
@@ -270,10 +277,11 @@ void init_sfm(py::module& m) {
                          "Whether to print a final summary.")
           .def_readwrite("min_num_residuals_for_multi_threading",
                          &BAOpts::min_num_residuals_for_multi_threading,
-                         "Minimum number of residuals to enable multi-threading. Note that "
-                         "single-threaded is typically better for small bundle adjustment problems "
-                         "due to the overhead of threading. "
-                         )
+                         "Minimum number of residuals to enable "
+                         "multi-threading. Note that "
+                         "single-threaded is typically better for small bundle "
+                         "adjustment problems "
+                         "due to the overhead of threading. ")
           .def_readwrite("solver_options",
                          &BAOpts::solver_options,
                          "Ceres-Solver options.");
@@ -326,5 +334,4 @@ void init_sfm(py::module& m) {
         py::arg("input_path"),
         py::arg("output_path"),
         py::arg("options") = ba_options);
-  
 }
