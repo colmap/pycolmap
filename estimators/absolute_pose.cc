@@ -83,7 +83,7 @@ py::object pose_refinement(
 
   Rigid3d refined_cam_from_world = init_cam_from_world;
   std::vector<char> inlier_mask_char(inlier_mask.size());
-  Eigen::Map<Eigen::Vector<char, Eigen::Dynamic>>(
+  Eigen::Map<Eigen::Matrix<char, Eigen::Dynamic, 1>>(
       inlier_mask_char.data(), inlier_mask.size()) = inlier_mask.cast<char>();
   if (!RefineAbsolutePose(refinement_options,
                           inlier_mask_char,
