@@ -83,38 +83,6 @@ py::dict absolute_pose_estimation(
   return success_dict;
 }
 
-py::dict absolute_pose_estimation(const std::vector<Eigen::Vector2d> points2D,
-                                  const std::vector<Eigen::Vector3d> points3D,
-                                  Camera& camera,
-                                  const double max_error_px,
-                                  const double min_inlier_ratio,
-                                  const int min_num_trials,
-                                  const int max_num_trials,
-                                  const double confidence,
-                                  const bool return_covariance) {
-  // Absolute pose estimation parameters.
-  AbsolutePoseEstimationOptions abs_pose_options;
-  abs_pose_options.estimate_focal_length = false;
-  abs_pose_options.ransac_options.max_error = max_error_px;
-  abs_pose_options.ransac_options.min_inlier_ratio = min_inlier_ratio;
-  abs_pose_options.ransac_options.min_num_trials = min_num_trials;
-  abs_pose_options.ransac_options.max_num_trials = max_num_trials;
-  abs_pose_options.ransac_options.confidence = confidence;
-
-  // Refine absolute pose parameters.
-  AbsolutePoseRefinementOptions abs_pose_refinement_options;
-  abs_pose_refinement_options.refine_focal_length = false;
-  abs_pose_refinement_options.refine_extra_params = false;
-  abs_pose_refinement_options.print_summary = false;
-
-  return absolute_pose_estimation(points2D,
-                                  points3D,
-                                  camera,
-                                  abs_pose_options,
-                                  abs_pose_refinement_options,
-                                  return_covariance);
-}
-
 py::dict pose_refinement(
     const Rigid3d init_cam_from_world,
     const std::vector<Eigen::Vector2d> points2D,
@@ -215,38 +183,12 @@ void bind_absolute_pose_estimation(py::module& m,
       PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();
 
   m.def("absolute_pose_estimation",
-        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector3d>,
-                                 Camera&,
-                                 const AbsolutePoseEstimationOptions,
-                                 const AbsolutePoseRefinementOptions,
-                                 bool)>(&absolute_pose_estimation),
+        &absolute_pose_estimation,
         "points2D"_a,
         "points3D"_a,
         "camera"_a,
         "estimation_options"_a = est_options,
         "refinement_options"_a = ref_options,
-        "return_covariance"_a = false,
-        "Absolute pose estimation with non-linear refinement.");
-
-  m.def("absolute_pose_estimation",
-        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector3d>,
-                                 Camera&,
-                                 const double,
-                                 const double,
-                                 const int,
-                                 const int,
-                                 const double,
-                                 const bool)>(&absolute_pose_estimation),
-        "points2D"_a,
-        "points3D"_a,
-        "camera"_a,
-        "max_error_px"_a = est_options.ransac_options.max_error,
-        "min_inlier_ratio"_a = est_options.ransac_options.min_inlier_ratio,
-        "min_num_trials"_a = est_options.ransac_options.min_num_trials,
-        "max_num_trials"_a = est_options.ransac_options.max_num_trials,
-        "confidence"_a = est_options.ransac_options.confidence,
         "return_covariance"_a = false,
         "Absolute pose estimation with non-linear refinement.");
 

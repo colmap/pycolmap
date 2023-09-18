@@ -71,50 +71,13 @@ py::dict fundamental_matrix_estimation(
   return success_dict;
 }
 
-py::dict fundamental_matrix_estimation(
-    const std::vector<Eigen::Vector2d> points2D1,
-    const std::vector<Eigen::Vector2d> points2D2,
-    const double max_error_px,
-    const double min_inlier_ratio,
-    const int min_num_trials,
-    const int max_num_trials,
-    const double confidence) {
-  RANSACOptions ransac_options;
-  ransac_options.max_error = max_error_px;
-  ransac_options.min_inlier_ratio = min_inlier_ratio;
-  ransac_options.min_num_trials = min_num_trials;
-  ransac_options.max_num_trials = max_num_trials;
-  ransac_options.confidence = confidence;
-  return fundamental_matrix_estimation(points2D1, points2D2, ransac_options);
-}
-
 void bind_fundamental_matrix_estimation(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("fundamental_matrix_estimation",
-        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector2d>,
-                                 const RANSACOptions)>(
-            &fundamental_matrix_estimation),
+        &fundamental_matrix_estimation,
         "points2D1"_a,
         "points2D2"_a,
         "estimation_options"_a = est_options,
-        "LORANSAC + 7-point algorithm.");
-
-  m.def("fundamental_matrix_estimation",
-        static_cast<py::dict (*)(const std::vector<Eigen::Vector2d>,
-                                 const std::vector<Eigen::Vector2d>,
-                                 const double,
-                                 const double,
-                                 const int,
-                                 const int,
-                                 const double)>(&fundamental_matrix_estimation),
-        "points2D1"_a,
-        "points2D2"_a,
-        "max_error_px"_a = est_options.max_error,
-        "min_inlier_ratio"_a = est_options.min_inlier_ratio,
-        "min_num_trials"_a = est_options.min_num_trials,
-        "max_num_trials"_a = est_options.max_num_trials,
-        "confidence"_a = est_options.confidence,
         "LORANSAC + 7-point algorithm.");
 }
