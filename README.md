@@ -69,13 +69,11 @@ pycolmap.stereo_fusion(mvs_path / "dense.ply", mvs_path)
 ```
 
 PyCOLMAP can leverage the GPU for feature extraction, matching, and multi-view stereo if COLMAP was compiled with CUDA support.
-
 Similarly, PyCOLMAP can run Delauney Triangulation if COLMAP was compiled with CGAL support.
 This requires to build the package from source and is not available with the PyPI wheels.
 
 All of the above steps are easily configurable with python dicts which are recursively merged into
-their respective defaults, e.g.
-
+their respective defaults, for example:
 ```python
 pycolmap.extract_features(database_path, image_dir, sift_options={"max_num_features": 512})
 # equivalent to
@@ -127,14 +125,15 @@ The object API mirrors the COLMAP C++ library. The bindings support many other o
 - projecting a 3D point into an image with arbitrary camera model:
 
 ```python
-uv = camera.world_to_image(image.project(point3D.xyz))
+uv = camera.img_from_cam(image.cam_from_world * point3D.xyz)
 ```
 
 - aligning two 3D reconstructions by their camera poses:
 
 ```python
-tfm = reconstruction1.align_poses(reconstruction2)  # transforms reconstruction1 in-place
-print(tfm.rotation, tfm.translation)
+rec2_from_rec1 = pycolmap.align_reconstructions_via_reprojections(reconstruction1, reconstrution2)
+reconstruction1.transform(rec2_from_rec1)
+print(rec2_from_rec1.scale, rec2_from_rec1.rotation, rec2_from_rec1.translation)
 ```
 
 
@@ -168,7 +167,7 @@ reconstruction.export_VRML("rec.images.wrl", "rec.points3D.wrl",
 
 We provide robust RANSAC-based estimators for absolute camera pose (single-camera and multi-camera-rig), essential matrix, fundamental matrix, homography, and two-view relative pose for calibrated cameras.
 
-All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/src/optim/ransac.h`](https://github.com/colmap/colmap/blob/dev/src/optim/ransac.h#L47-L76) and their default values are:
+All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/optim/ransac.h`](https://github.com/colmap/colmap/blob/main/src/colmap/optim/ransac.h#L45-L74) and their default values are:
 
 ```python
 ransac_options = pycolmap.RANSACOptions(
@@ -189,20 +188,19 @@ For instance, to estimate the absolute pose of a query camera given 2D-3D corres
 # - points3D: Nx3 array; world coordinates
 # - camera: pycolmap.Camera
 # Optional parameters:
-# - max_error_px: float; RANSAC inlier threshold in pixels (default=12.0)
 # - estimation_options: dict or pycolmap.AbsolutePoseEstimationOptions
 # - refinement_options: dict or pycolmap.AbsolutePoseRefinementOptions
-answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera, max_error_px=12.0)
-# Returns: dictionary of estimation outputs
+answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera)
+# Returns: dictionary of estimation outputs or None if failure
 ```
 
-2D and 3D points are passed as Numpy arrays or lists. The options are defined in [`estimators/absolute_pose.cc`](./estimators/absolute_pose.cc#L187-L220) and can be passed as regular (nested) Python dictionaries:
+2D and 3D points are passed as Numpy arrays or lists. The options are defined in [`estimators/absolute_pose.cc`](./estimators/absolute_pose.cc#L104-L152) and can be passed as regular (nested) Python dictionaries:
 
 ```python
 pycolmap.absolute_pose_estimation(
     points2D, points3D, camera,
-    estimation_options={'ransac': {'max_error': 12.0}},
-    refinement_options={'refine_focal_length': True},
+    estimation_options=dict(ransac=dict(max_error=12.0)),
+    refinement_options=dict(refine_focal_length=True),
 )
 ```
 
@@ -210,40 +208,37 @@ pycolmap.absolute_pose_estimation(
 
 ```python
 # Parameters:
-# - tvec: List of 3 floats, translation component of the pose (world to camera)
-# - qvec: List of 4 floats, quaternion component of the pose (world to camera)
+# - cam_from_world: pycolmap.Rigid3d, initial pose
 # - points2D: Nx2 array; pixel coordinates
 # - points3D: Nx3 array; world coordinates
 # - inlier_mask: array of N bool; inlier_mask[i] is true if correpondence i is an inlier
 # - camera: pycolmap.Camera
 # Optional parameters:
 # - refinement_options: dict or pycolmap.AbsolutePoseRefinementOptions
-answer = pycolmap.pose_refinement(tvec, qvec, points2D, points3D, inlier_mask, camera)
-# Returns: dictionary of refinement outputs
+answer = pycolmap.pose_refinement(cam_from_world, points2D, points3D, inlier_mask, camera)
+# Returns: dictionary of refinement outputs or None if failure
 ```
 
 ### Essential matrix estimation
 
 ```python
 # Parameters:
-# - points2D1: Nx2 array; pixel coordinates in image 1
-# - points2D2: Nx2 array; pixel coordinates in image 2
+# - points1: Nx2 array; 2D pixel coordinates in image 1
+# - points2: Nx2 array; 2D pixel coordinates in image 2
 # - camera1: pycolmap.Camera of image 1
 # - camera2: pycolmap.Camera of image 2
 # Optional parameters:
-# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
-# - options: dict or pycolmap.RANSACOptions
-answer = pycolmap.essential_matrix_estimation(points2D1, points2D2, camera1, camera2)
-# Returns: dictionary of estimation outputs
+# - options: dict or pycolmap.RANSACOptions (default inlier threshold is 4px)
+answer = pycolmap.essential_matrix_estimation(points1, points2, camera1, camera2)
+# Returns: dictionary of estimation outputs or None if failure
 ```
 
 ### Fundamental matrix estimation
 
 ```python
 answer = pycolmap.fundamental_matrix_estimation(
-    points2D1,
-    points2D2,
-    [max_error_px],  # optional RANSAC inlier threshold in pixels
+    points1,
+    points2,
     [options],       # optional dict or pycolmap.RANSACOptions
 )
 ```
@@ -252,8 +247,8 @@ answer = pycolmap.fundamental_matrix_estimation(
 
 ```python
 answer = pycolmap.homography_matrix_estimation(
-    points2D1,
-    points2D2,
+    points1,
+    points2,
     [max_error_px],  # optional RANSAC inlier threshold in pixels
     [options],       # optional dict or pycolmap.RANSACOptions
 )
@@ -265,18 +260,18 @@ COLMAP can also estimate a relative pose between two calibrated cameras by estim
 
 ```python
 # Parameters:
-# - points2D1: Nx2 array; pixel coordinates in image 1
-# - points2D2: Nx2 array; pixel coordinates in image 2
 # - camera1: pycolmap.Camera of image 1
+# - points1: Nx2 array; 2D pixel coordinates in image 1
 # - camera2: pycolmap.Camera of image 2
+# - points2: Nx2 array; 2D pixel coordinates in image 2
 # Optional parameters:
-# - max_error_px: float; RANSAC inlier threshold in pixels (default=4.0)
+# - matches: Nx2 integer array; correspondences across images
 # - options: dict or pycolmap.TwoViewGeometryOptions
-answer = pycolmap.homography_matrix_estimation(points2D1, points2D2)
-# Returns: dictionary of estimation outputs
+answer = pycolmap.estimate_calibrated_two_view_geometry(camera1, points1, camera2, points2)
+# Returns: pycolmap.TwoViewGeometry
 ```
 
- The options are defined in [`estimators/two_view_geometry.cc`](estimators/two_view_geometry.cc#L102-L117) and control how each model is selected. The return dictionary contains the relative pose, inlier mask, as well as the type of camera configuration, such as degenerate or planar. This type is an instance of the enum `pycolmap.TwoViewGeometry` whose values are explained in [`colmap/src/estimators/two_view_geometry.h`](https://github.com/colmap/colmap/blob/dev/src/estimators/two_view_geometry.h#L47-L67).
+The `TwoViewGeometryOptions` control how each model is selected. The output structure contains the geometric model, inlier matches, the relative pose (if `options.compute_relative_pose=True`), and the type of camera configuration, which is an instance of the enum `pycolmap.TwoViewGeometryConfiguration`.
 
 ### Camera argument
 
@@ -336,7 +331,7 @@ sift = pycolmap.Sift()
 keypoints, scores, descriptors = sift.extract(img)
 # Returns:
 # - keypoints: Nx4 array; format: x (j), y (i), sigma, angle
-# - scores: N array; DoG scores
+# - scores: N array; DoG scores (currently unreliable ❗️)
 # - descriptors: Nx128 array; L2-normalized descriptors
 ```
 
