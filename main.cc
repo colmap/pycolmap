@@ -32,6 +32,8 @@ using namespace pybind11::literals;
 void init_reconstruction(py::module&);
 void init_quaternion(py::module&);
 
+class glog_dummy {};  // dummy class
+
 PYBIND11_MODULE(pycolmap, m) {
   m.doc() = "COLMAP plugin";
 #ifdef VERSION_INFO
@@ -40,6 +42,12 @@ PYBIND11_MODULE(pycolmap, m) {
   m.attr("__version__") = py::str("dev");
 #endif
 
+  py::class_<glog_dummy>(m, "glog")
+      .def_readwrite_static("minloglevel", &FLAGS_minloglevel)
+      .def_readwrite_static("stderrthreshold", &FLAGS_stderrthreshold)
+      .def_readwrite_static("log_dir", &FLAGS_log_dir)
+      .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
+      .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr);
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
   FLAGS_logtostderr = true;
