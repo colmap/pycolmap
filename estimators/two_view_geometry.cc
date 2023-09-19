@@ -85,23 +85,21 @@ void bind_two_view_geometry_estimation(py::module& m) {
       .value("WATERMARK", TwoViewGeometry::WATERMARK)
       .value("MULTIPLE", TwoViewGeometry::MULTIPLE);
 
-  py::class_<TwoViewGeometry>(m, "TwoViewGeometry")
-      .def(py::init<>())
-      .def_readwrite("config", &TwoViewGeometry::config)
-      .def_readwrite("E", &TwoViewGeometry::E)
-      .def_readwrite("F", &TwoViewGeometry::F)
-      .def_readwrite("H", &TwoViewGeometry::H)
-      .def_readwrite("cam2_from_cam1", &TwoViewGeometry::cam2_from_cam1)
-      .def_property(
-          "inlier_matches",
-          [](const TwoViewGeometry& self) {
-            return FeatureMatchesToMatrix(self.inlier_matches);
-          },
-          [](TwoViewGeometry& self, const PyFeatureMatches& matches) {
-            self.inlier_matches = FeatureMatchesFromMatrix(matches);
-          })
-      .def_readwrite("tri_angle", &TwoViewGeometry::tri_angle)
-      .def("invert", &TwoViewGeometry::Invert);
+  auto PyTwoViewGeometry =
+      py::class_<TwoViewGeometry>(m, "TwoViewGeometry")
+          .def_readonly("config", &TwoViewGeometry::config)
+          .def_readonly("E", &TwoViewGeometry::E)
+          .def_readonly("F", &TwoViewGeometry::F)
+          .def_readonly("H", &TwoViewGeometry::H)
+          .def_readonly("cam2_from_cam1", &TwoViewGeometry::cam2_from_cam1)
+          .def_property_readonly(
+              "inlier_matches",
+              [](const TwoViewGeometry& self) {
+                return FeatureMatchesToMatrix(self.inlier_matches);
+              })
+          .def_readonly("tri_angle", &TwoViewGeometry::tri_angle)
+          .def("invert", &TwoViewGeometry::Invert);
+  make_dataclass(PyTwoViewGeometry);
 
   m.def(
       "estimate_calibrated_two_view_geometry",
