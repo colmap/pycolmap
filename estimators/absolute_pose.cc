@@ -90,7 +90,7 @@ py::object pose_refinement(
                           points2D,
                           points3D,
                           &refined_cam_from_world,
-                          const_cast<Camera*>(&camera))) {
+                          &camera)) {
     return failure;
   }
 
