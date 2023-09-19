@@ -109,20 +109,6 @@ std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
   return reconstructions;
 }
 
-std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
-    const py::object database_path_,
-    const py::object image_path_,
-    const py::object output_path_,
-    const int num_threads,
-    const int min_num_matches,
-    const py::object input_path_) {
-  IncrementalMapperOptions options;
-  options.num_threads = num_threads;
-  options.min_num_matches = min_num_matches;
-  return incremental_mapping(
-      database_path_, image_path_, output_path_, options, input_path_);
-}
-
 void bundle_adjustment(std::shared_ptr<Reconstruction> reconstruction,
                        const BundleAdjustmentOptions& options) {
   py::gil_scoped_release release;
@@ -285,32 +271,11 @@ void init_sfm(py::module& m) {
         "Triangulate 3D points from known camera poses");
 
   m.def("incremental_mapping",
-        static_cast<std::map<size_t, std::shared_ptr<Reconstruction>> (*)(
-            const py::object,
-            const py::object,
-            const py::object,
-            const IncrementalMapperOptions&,
-            const py::object)>(&incremental_mapping),
+        &incremental_mapping,
         "database_path"_a,
         "image_path"_a,
         "output_path"_a,
         "options"_a = mapper_options,
-        "input_path"_a = py::str(""),
-        "Triangulate 3D points from known poses");
-
-  m.def("incremental_mapping",
-        static_cast<std::map<size_t, std::shared_ptr<Reconstruction>> (*)(
-            const py::object,
-            const py::object,
-            const py::object,
-            const int,
-            const int,
-            const py::object)>(&incremental_mapping),
-        "database_path"_a,
-        "image_path"_a,
-        "output_path"_a,
-        "num_threads"_a = mapper_options.num_threads,
-        "min_num_matches"_a = mapper_options.min_num_matches,
         "input_path"_a = py::str(""),
         "Triangulate 3D points from known poses");
 
