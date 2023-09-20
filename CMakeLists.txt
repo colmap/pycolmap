@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(PyCOLMAP)
 
 set(CMAKE_CUDA_ARCHITECTURES "native")
-find_package(COLMAP REQUIRED)
+find_package(colmap REQUIRED)
 
 if(${CERES_VERSION} VERSION_LESS "2.2.0")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
