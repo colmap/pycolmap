@@ -333,10 +333,9 @@ sift = pycolmap.Sift()
 
 # Parameters:
 # - image: HxW float array
-keypoints, scores, descriptors = sift.extract(img)
+keypoints, descriptors = sift.extract(img)
 # Returns:
-# - keypoints: Nx4 array; format: x (j), y (i), sigma, angle
-# - scores: N array; DoG scores
+# - keypoints: Nx4 array; format: x (j), y (i), scale, orientation
 # - descriptors: Nx128 array; L2-normalized descriptors
 ```
 
