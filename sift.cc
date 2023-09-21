@@ -24,8 +24,7 @@ using pyimage_t =
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
     descriptors_t;
 typedef Eigen::Matrix<float, Eigen::Dynamic, kdim, Eigen::RowMajor> keypoints_t;
-typedef Eigen::VectorXf scores_t;
-typedef std::tuple<keypoints_t, scores_t, descriptors_t> sift_output_t;
+typedef std::tuple<keypoints_t, descriptors_t> sift_output_t;
 
 static std::map<int, std::unique_ptr<std::mutex>> sift_gpu_mutexes;
 
@@ -75,15 +74,13 @@ class Sift {
     }
 
     descriptors_t descriptors = descriptors_.cast<float>();
-    ;
     descriptors /= 512.0f;
 
-    scores_t scores = Eigen::VectorXf::Ones(num_features);
-    return std::make_tuple(keypoints, scores, descriptors);
+    return std::make_tuple(keypoints, descriptors);
   }
 
   sift_output_t Extract(Eigen::Ref<const pyimage_t<float>> image) {
-    pyimage_t<uint8_t> image_f = (image * 255.0f).cast<uint8_t>();
+    const pyimage_t<uint8_t> image_f = (image * 255.0f).cast<uint8_t>();
     return Extract(image_f);
   }
 
