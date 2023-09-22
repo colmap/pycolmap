@@ -121,7 +121,12 @@ cd /io/
 WHEEL_DIR="wheels/"
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     PYTHON_EXEC="/opt/python/${PYTHON_VERSION}/bin/python"
-    EIGEN3_INCLUDE_DIRS="$EIGEN_DIR" ${PYTHON_EXEC} -m pip wheel --no-deps -w ${WHEEL_DIR} .
+    ${PYTHON_EXEC} -m pip install --upgrade pip
+    ${PYTHON_EXEC} -m pip wheel \
+        --no-deps \
+        -w ${WHEEL_DIR} \
+        --config-settings=cmake.define.EIGEN3_INCLUDE_DIRS="${EIGEN_DIR}" \
+        .
 done
 
 PYTHON_DEFAULT="/opt/python/${PYTHON_VERSIONS[-1]}/bin/python"
