@@ -13,7 +13,8 @@ authors = [
   { name = "Paul-Edouard Sarlin", email = "psarlin@ethz.ch" },
   { name = "Philipp Lindenberger", email = "plindenbe@ethz.ch" },
 ]
-repository = "https://github.com/colmap/pycolmap"
+license = {file = "LICENSE"}
+urls = {Repository = "https://github.com/colmap/pycolmap"}
 requires-python = ">=3.7"
 classifiers = [
   "License :: OSI Approved :: BSD License",
