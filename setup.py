@@ -40,6 +40,7 @@ class CMakeBuild(build_ext):
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
             '-DPYTHON_EXECUTABLE=' + sys.executable,
             '-DVERSION_INFO={}'.format(self.distribution.get_version()),
+            '-DCUDA_ARCHITECTURES=native'
         ]
         eigen_dir = os.environ.get('EIGEN3_INCLUDE_DIRS')
         if eigen_dir is not None:
