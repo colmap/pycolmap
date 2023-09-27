@@ -13,21 +13,19 @@ The wheels are automatically built and pushed to [pypi](https://pypi.org/project
 
 ### Building from source
 
-Alternatively, we explain below how to compile PyCOLMAP from source. COLMAP should first be installed as a library following [the official guide](https://colmap.github.io/install.html).
-**⚠️ PyCOLMAP is currently in unstable development! To avoid issues, use tag v0.4.0 and COLMAP commit [colmap/colmap@`d812bcb`](https://github.com/colmap/colmap/commit/d812bcbf5a9a13c52292b711a5c1d4a55dfe5812).**
-In the master branch, the latest supported COLMAP commit is [colmap/colmap@`0d9ab40`](https://github.com/colmap/colmap/commit/0d9ab40f6037b5ede71f3af3b8d1f5091f68855d). Using a previous COLMAP build might not work.
+Alternatively, PyCOLMAP can be built from source. Here is how to build the most recent stable version (v0.4.0):
 
-Then clone the repository and its submodules:
+1. Install COLMAP 3.8 as a library following [the official guide](https://colmap.github.io/install.html). _Make sure to use the tag 3.8._
 
-```
-git clone --recursive git@github.com:colmap/pycolmap.git
-```
-
-And finally build PyCOLMAP:
+2. Clone and build the PyCOLMAP repository and its submodules:
 ```bash
+git clone -b v0.4.0 --recursive git@github.com:colmap/pycolmap.git
 cd pycolmap
 pip install .
 ```
+
+> [!IMPORTANT]
+> The master branch is in active development and its API is unstable. It is currently only compatible with the COLMAP commit [colmap/colmap@`0d9ab40`](https://github.com/colmap/colmap/commit/0d9ab40f6037b5ede71f3af3b8d1f5091f68855d). Using an earlier commit might not work.
 
 ### Windows
 
@@ -328,10 +326,9 @@ sift = pycolmap.Sift()
 
 # Parameters:
 # - image: HxW float array
-keypoints, scores, descriptors = sift.extract(img)
+keypoints, descriptors = sift.extract(img)
 # Returns:
-# - keypoints: Nx4 array; format: x (j), y (i), sigma, angle
-# - scores: N array; DoG scores (currently unreliable ❗️)
+# - keypoints: Nx4 array; format: x (j), y (i), scale, orientation
 # - descriptors: Nx128 array; L2-normalized descriptors
 ```
 

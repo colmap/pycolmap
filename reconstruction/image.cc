@@ -90,7 +90,7 @@ void init_image(py::module& m) {
           &Image::CameraId,
           [](Image& self, const camera_t camera_id) {
             THROW_CHECK_NE(camera_id, kInvalidCameraId);
-            self.SetCameraId(kInvalidCameraId);
+            self.SetCameraId(camera_id);
           },
           "Unique identifier of the camera.")
       .def_property("name",

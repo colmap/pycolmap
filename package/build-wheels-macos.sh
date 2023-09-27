@@ -15,6 +15,7 @@ echo "Number of logical CPUs is: ${NUM_LOGICAL_CPUS}"
 
 # Updating requires Xcode 14.0, which cannot be installed on macOS 11.
 brew remove swiftlint
+brew remove node@18
 
 brew update
 brew upgrade
