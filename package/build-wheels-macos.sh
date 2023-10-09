@@ -18,8 +18,6 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew upgrade
-brew install wget cmake
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     brew install --force "python@${PYTHON_VERSION}"
@@ -28,6 +26,7 @@ done
 
 brew install \
     git \
+    wget \
     cmake \
     eigen \
     freeimage \
@@ -38,16 +37,11 @@ brew install \
     suite-sparse \
     ceres-solver \
     glew \
-    cgal \
     sqlite3 \
     libomp \
     llvm \
     boost \
     lz4
-
-brew info gcc
-brew upgrade gcc
-brew info gcc
 
 # Install Boost
 #mkdir -p boost
