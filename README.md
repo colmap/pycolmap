@@ -9,7 +9,7 @@ Wheels for Python 8/9/10 on Linux and macOS 11/12 can be install using pip:
 pip install pycolmap
 ```
 
-The wheels are automatically built and pushed to [pypi](https://pypi.org/project/pycolmap/) at each release.
+The wheels are automatically built and pushed to [pypi](https://pypi.org/project/pycolmap/) at each release. They are currently not built with CUDA support, which requires building from source (see below).
 
 ### Building from source
 
