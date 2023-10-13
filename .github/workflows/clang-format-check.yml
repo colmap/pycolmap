@@ -1,5 +1,10 @@
 name: clang-format Check
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [ assigned, opened, synchronize, reopened ]
 jobs:
   formatting-check:
     name: Formatting Check
@@ -10,4 +15,3 @@ jobs:
       uses: jidicula/clang-format-action@v4.11.0
       with:
         clang-format-version: '14'
-        check-path: 'src/colmap'

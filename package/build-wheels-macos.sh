@@ -18,7 +18,6 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew upgrade
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     brew install --force "python@${PYTHON_VERSION}"
@@ -38,14 +37,11 @@ brew install \
     suite-sparse \
     ceres-solver \
     glew \
-    cgal \
     sqlite3 \
     libomp \
     llvm \
     boost \
     lz4
-
-brew upgrade gcc
 
 # Install Boost
 #mkdir -p boost
