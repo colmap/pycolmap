@@ -19,7 +19,7 @@ Alternatively, PyCOLMAP can be built from source. Here is how to build the most 
 
 2. Clone and build the PyCOLMAP repository and its submodules:
 ```bash
-git clone -b v0.4.0 --recursive git@github.com:colmap/pycolmap.git
+git clone -b v0.4.0 --recursive https://github.com/colmap/pycolmap.git
 cd pycolmap
 pip install .
 ```
