@@ -256,7 +256,7 @@ void init_image(py::module& m) {
             std::vector<Eigen::Vector2d> world_points(point3Ds.size());
             for (int idx = 0; idx < point3Ds.size(); ++idx) {
               world_points[idx] =
-                  (self.CamFromWorld() * point3Ds[idx].XYZ()).hnormalized();
+                  (self.CamFromWorld() * point3Ds[idx].xyz).hnormalized();
             }
             return world_points;
           },

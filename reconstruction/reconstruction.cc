@@ -435,7 +435,7 @@ void init_reconstruction(py::module& m) {
             for (auto& p3D_p : self.Points3D()) {
               const Point3D& p3D = p3D_p.second;
               const point3D_t p3Did = p3D_p.first;
-              for (auto& track_el : p3D.Track().Elements()) {
+              for (auto& track_el : p3D.track.Elements()) {
                 image_t image_id = track_el.image_id;
                 point2D_t point2D_idx = track_el.point2D_idx;
                 THROW_CHECK_MSG(self.ExistsImage(image_id), image_id);
