@@ -90,7 +90,7 @@ void init_image(py::module& m) {
           &Image::CameraId,
           [](Image& self, const camera_t camera_id) {
             THROW_CHECK_NE(camera_id, kInvalidCameraId);
-            self.SetCameraId(kInvalidCameraId);
+            self.SetCameraId(camera_id);
           },
           "Unique identifier of the camera.")
       .def_property("name",
@@ -167,7 +167,7 @@ void init_image(py::module& m) {
       .def(
           "set_up",
           [](Image& self, const class Camera& camera) {
-            THROW_CHECK_EQ(self.CameraId(), camera.CameraId());
+            THROW_CHECK_EQ(self.CameraId(), camera.camera_id);
             self.SetUp(camera);
           },
           "Setup the image and necessary internal data structures before being "
@@ -256,7 +256,7 @@ void init_image(py::module& m) {
             std::vector<Eigen::Vector2d> world_points(point3Ds.size());
             for (int idx = 0; idx < point3Ds.size(); ++idx) {
               world_points[idx] =
-                  (self.CamFromWorld() * point3Ds[idx].XYZ()).hnormalized();
+                  (self.CamFromWorld() * point3Ds[idx].xyz).hnormalized();
             }
             return world_points;
           },
