@@ -32,7 +32,14 @@ using namespace pybind11::literals;
 void init_reconstruction(py::module&);
 void init_quaternion(py::module&);
 
-class glog_dummy {};  // dummy class
+struct Logging {
+  enum class Level {
+    INFO = google::GLOG_INFO,
+    WARNING = google::GLOG_WARNING,
+    ERROR = google::GLOG_ERROR,
+    FATAL = google::GLOG_FATAL,
+  };
+};  // dummy class
 
 PYBIND11_MODULE(pycolmap, m) {
   m.doc() = "COLMAP plugin";
@@ -42,12 +49,23 @@ PYBIND11_MODULE(pycolmap, m) {
   m.attr("__version__") = py::str("dev");
 #endif
 
-  py::class_<glog_dummy>(m, "glog")
-      .def_readwrite_static("minloglevel", &FLAGS_minloglevel)
-      .def_readwrite_static("stderrthreshold", &FLAGS_stderrthreshold)
-      .def_readwrite_static("log_dir", &FLAGS_log_dir)
-      .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
-      .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr);
+  auto PyLogging =
+      py::class_<Logging>(m, "logging")
+          .def_readwrite_static("minloglevel", &FLAGS_minloglevel)
+          .def_readwrite_static("stderrthreshold", &FLAGS_stderrthreshold)
+          .def_readwrite_static("log_dir", &FLAGS_log_dir)
+          .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
+          .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr)
+          .def_static("info", [](std::string msg) { LOG(INFO) << msg; })
+          .def_static("warning", [](std::string msg) { LOG(WARNING) << msg; })
+          .def_static("error", [](std::string msg) { LOG(ERROR) << msg; })
+          .def_static("fatal", [](std::string msg) { LOG(FATAL) << msg; });
+  py::enum_<Logging::Level>(PyLogging, "Level")
+      .value("INFO", Logging::Level::INFO)
+      .value("WARNING", Logging::Level::WARNING)
+      .value("ERROR", Logging::Level::ERROR)
+      .value("FATAL", Logging::Level::FATAL)
+      .export_values();
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
   FLAGS_logtostderr = true;
