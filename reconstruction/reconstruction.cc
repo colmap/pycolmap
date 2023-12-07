@@ -153,7 +153,7 @@ void init_reconstruction(py::module& m) {
       .def(
           "add_camera",
           [](Reconstruction& self, const class Camera& camera) {
-            THROW_CHECK(!self.ExistsCamera(camera.CameraId()));
+            THROW_CHECK(!self.ExistsCamera(camera.camera_id));
             THROW_CHECK(camera.VerifyParams());
             self.AddCamera(camera);
           },

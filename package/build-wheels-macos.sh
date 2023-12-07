@@ -56,7 +56,7 @@ brew install \
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 0fb46f4d5304168131f4d8e5bdf9efc6a62ffd50
+git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
