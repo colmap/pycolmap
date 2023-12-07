@@ -92,19 +92,18 @@ Camera infer_camera_from_image(const py::object image_path_,
       std::invalid_argument,
       (std::string("Cannot read image file: ") + image_path).c_str());
 
-  Camera camera;
-  camera.SetCameraId(kInvalidCameraId);
-  camera.SetModelIdFromName(options.camera_model);
   double focal_length = 0.0;
-  if (bitmap.ExifFocalLength(&focal_length)) {
-    camera.SetPriorFocalLength(true);
-  } else {
+  bool has_prior_focal_length = bitmap.ExifFocalLength(&focal_length);
+  if (!has_prior_focal_length) {
     focal_length = options.default_focal_length_factor *
                    std::max(bitmap.Width(), bitmap.Height());
-    camera.SetPriorFocalLength(false);
   }
-  camera.InitializeWithId(
-      camera.ModelId(), focal_length, bitmap.Width(), bitmap.Height());
+  Camera camera = Camera::CreateFromModelName(kInvalidCameraId,
+                                              options.camera_model,
+                                              focal_length,
+                                              bitmap.Width(),
+                                              bitmap.Height());
+  camera.has_prior_focal_length = has_prior_focal_length;
   THROW_CUSTOM_CHECK_MSG(
       camera.VerifyParams(),
       std::invalid_argument,

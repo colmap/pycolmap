@@ -41,8 +41,8 @@ inline void AddStringToEnumConstructor(py::enum_<T>& enm) {
   py::implicitly_convertible<std::string, T>();
 }
 
-template <typename T>
-inline void make_dataclass(py::class_<T> cls) {
+template <typename T, typename... options>
+inline void make_dataclass(py::class_<T, options...> cls) {
   cls.def(py::init([cls](py::dict dict) {
     auto self = py::object(cls());
     self.attr("mergedict").attr("__call__")(dict);

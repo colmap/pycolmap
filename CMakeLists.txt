@@ -4,12 +4,6 @@ project(PyCOLMAP)
 set(CMAKE_CUDA_ARCHITECTURES "native")
 find_package(colmap 3.9 REQUIRED)
 
-if(${CERES_VERSION} VERSION_LESS "2.2.0")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
-
 add_subdirectory(pybind11)
 
 pybind11_add_module(pycolmap main.cc)

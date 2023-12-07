@@ -273,14 +273,14 @@ The `TwoViewGeometryOptions` control how each model is selected. The output stru
 
 ### Camera argument
 
-All estimators expect a COLMAP camera object, which can be created as follow:
+Some estimators expect a COLMAP camera object, which can be created as follow:
 
 ```python
 camera = pycolmap.Camera(
-    COLMAP_CAMERA_MODEL_NAME,
-    IMAGE_WIDTH, 
-    IMAGE_HEIGHT,
-    EXTRA_CAMERA_PARAMETERS,
+    model=camera_model_name_or_id,
+    width=width,
+    height=height,
+    params=params,
 )
 ```
 
