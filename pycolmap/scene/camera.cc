@@ -32,7 +32,7 @@ std::string PrintCamera(const Camera& camera) {
   return ss.str();
 }
 
-void init_camera(py::module& m) {
+void BindCamera(py::module& m) {
   auto PyCameraModelId = py::enum_<CameraModelId>(m, "CameraModelId")
                              .value("INVALID", CameraModelId::kInvalid);
 #define CAMERA_MODEL_CASE(CameraModel) \
@@ -216,4 +216,6 @@ void init_camera(py::module& m) {
     py::dict dict = kwargs.cast<py::dict>();
     return PyCamera(dict).cast<Camera>();
   }));
+
+  py::implicitly_convertible<py::dict, Camera>();
 }

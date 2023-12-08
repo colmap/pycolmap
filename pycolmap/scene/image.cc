@@ -17,7 +17,8 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-PYBIND11_MAKE_OPAQUE(std::unordered_map<image_t, Image>);
+using ImageMap = std::unordered_map<image_t, Image>;
+PYBIND11_MAKE_OPAQUE(ImageMap);
 
 std::string PrintImage(const Image& image) {
   std::stringstream ss;
@@ -49,8 +50,7 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
   return image;
 }
 
-void init_image(py::module& m) {
-  using ImageMap = std::unordered_map<image_t, Image>;
+void BindImage(py::module& m) {
   py::bind_map<ImageMap>(m, "MapImageIdImage")
       .def("__repr__", [](const ImageMap& self) {
         std::string repr = "{";

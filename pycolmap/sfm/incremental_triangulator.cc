@@ -13,7 +13,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void init_incremental_triangulator(py::module& m) {
+void BindIncrementalTriangulator(py::module& m) {
   py::class_<IncrementalTriangulator::Options,
              std::shared_ptr<IncrementalTriangulator::Options>>(
       m, "IncrementalTriangulatorOptions")

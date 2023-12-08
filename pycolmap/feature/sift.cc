@@ -93,7 +93,7 @@ class Sift {
   bool use_gpu_ = false;
 };
 
-void init_sift(py::module& m) {
+void BindSift(py::module& m) {
   // For backwards consistency
   py::dict sift_options;
   sift_options["peak_threshold"] = 0.01;

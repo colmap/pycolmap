@@ -13,13 +13,12 @@
 #include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
-using namespace pybind11::literals;
 namespace py = pybind11;
 
 using Point3DMap = std::unordered_map<point3D_t, Point3D>;
 PYBIND11_MAKE_OPAQUE(Point3DMap);
 
-void init_point3D(py::module& m) {
+void BindPoint3D(py::module& m) {
   py::bind_map<Point3DMap>(m, "MapPoint3DIdPoint3D");
 
   auto PyPoint3D =

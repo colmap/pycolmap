@@ -31,7 +31,7 @@ py::dict PyPoseFromHomographyMatrix(
   return py::dict("R"_a = R, "t"_a = t, "n"_a = n, "points3D"_a = points3D);
 }
 
-void init_homography_matrix(py::module& m) {
+void BindHomographyGeometry(py::module& m) {
   m.def("homography_decomposition",
         &PyPoseFromHomographyMatrix,
         "H"_a,

@@ -16,7 +16,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void init_correspondence_graph(py::module& m) {
+void BindCorrespondenceGraph(py::module& m) {
   py::class_<CorrespondenceGraph::Correspondence,
              std::shared_ptr<CorrespondenceGraph::Correspondence>>(
       m, "Correspondence")

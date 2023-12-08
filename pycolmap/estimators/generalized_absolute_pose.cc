@@ -77,7 +77,7 @@ py::object PyEstimateAndRefineGeneralizedAbsolutePose(
   return success_dict;
 }
 
-void bind_generalized_absolute_pose_estimation(py::module& m) {
+void BindGeneralizedAbsolutePose(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
   auto ref_options = m.attr("AbsolutePoseRefinementOptions")()
                          .cast<AbsolutePoseRefinementOptions>();

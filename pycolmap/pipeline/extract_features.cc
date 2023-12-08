@@ -66,8 +66,7 @@ void ExtractFeatures(const py::object database_path_,
   PyWait(extractor.get());
 }
 
-void init_extract_features(py::module& m) {
-  /* OPTIONS */
+void BindExtractFeatures(py::module& m) {
   using SEOpts = SiftExtractionOptions;
   auto PyNormalization =
       py::enum_<SEOpts::Normalization>(m, "Normalization")

@@ -113,14 +113,14 @@ Camera infer_camera_from_image(const py::object image_path_,
   return camera;
 }
 
-void undistort_images(py::object output_path_,
-                      py::object input_path_,
-                      py::object image_path_,
-                      std::vector<std::string> image_list,
-                      std::string output_type,
-                      CopyType copy_type,
-                      int num_patch_match_src_images,
-                      UndistortCameraOptions undistort_camera_options) {
+void UndistortImages(py::object output_path_,
+                     py::object input_path_,
+                     py::object image_path_,
+                     std::vector<std::string> image_list,
+                     std::string output_type,
+                     CopyType copy_type,
+                     int num_patch_match_src_images,
+                     UndistortCameraOptions undistort_camera_options) {
   std::string output_path = py::str(output_path_).cast<std::string>();
   std::string input_path = py::str(input_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(input_path);
@@ -170,8 +170,7 @@ void undistort_images(py::object output_path_,
   PyWait(undistorter.get());
 }
 
-void init_images(py::module& m) {
-  /* OPTIONS */
+void BindImages(py::module& m) {
   auto PyCameraMode = py::enum_<CameraMode>(m, "CameraMode")
                           .value("AUTO", CameraMode::AUTO)
                           .value("SINGLE", CameraMode::SINGLE)
@@ -290,7 +289,7 @@ void init_images(py::module& m) {
         "Guess the camera parameters from the EXIF metadata");
 
   m.def("undistort_images",
-        &undistort_images,
+        &UndistortImages,
         "output_path"_a,
         "input_path"_a,
         "image_path"_a,

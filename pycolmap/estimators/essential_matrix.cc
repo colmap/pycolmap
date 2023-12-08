@@ -92,7 +92,7 @@ py::object PyEstimateAndDecomposeEssentialMatrix(
                   "inliers"_a = ToPythonMask(inlier_mask));
 }
 
-void bind_essential_matrix_estimation(py::module& m) {
+void BindEssentialMatrix(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("essential_matrix_estimation",

@@ -23,7 +23,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void bind_alignment(py::module& m) {
+void BindAlignment(py::module& m) {
   py::class_<ImageAlignmentError>(m, "ImageAlignmentError")
       .def(py::init<>())
       .def_readwrite("image_name", &ImageAlignmentError::image_name)

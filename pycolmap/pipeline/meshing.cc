@@ -12,7 +12,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void init_meshing(py::module& m) {
+void BindMeshing(py::module& m) {
   using PoissonMOpts = mvs::PoissonMeshingOptions;
   auto PyPoissonMeshingOptions =
       py::class_<PoissonMOpts>(m, "PoissonMeshingOptions")

@@ -16,9 +16,6 @@
 
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
-#include "pycolmap/pipeline/extract_features.cc"
-#include "pycolmap/pipeline/images.cc"
-#include "pycolmap/pipeline/match_features.cc"
 
 using namespace colmap;
 using namespace pybind11::literals;
@@ -118,11 +115,7 @@ void BundleAdjustment(std::shared_ptr<Reconstruction> reconstruction,
   PyWait(&controller);
 }
 
-void init_sfm(py::module& m) {
-  init_images(m);
-  init_extract_features(m);
-  init_match_features(m);
-
+void BindSfM(py::module& m) {
   using Opts = IncrementalMapperOptions;
   auto PyIncrementalMapperOptions =
       py::class_<Opts>(m, "IncrementalMapperOptions")

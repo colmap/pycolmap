@@ -74,8 +74,7 @@ void verify_matches(const py::object database_path_,
   PyWait(matcher.get());
 }
 
-void init_match_features(py::module& m) {
-  /* OPTIONS */
+void BindMatchFeatures(py::module& m) {
   using SMOpts = SiftMatchingOptions;
   auto PySiftMatchingOptions =
       py::class_<SMOpts>(m, "SiftMatchingOptions")

@@ -105,7 +105,7 @@ Reconstruction StereoFusion(py::object output_path_,
   return reconstruction;
 }
 
-void init_mvs(py::module& m) {
+void BindMVS(py::module& m) {
   using PMOpts = mvs::PatchMatchOptions;
   auto PyPatchMatchOptions =
       py::class_<PMOpts>(m, "PatchMatchOptions")

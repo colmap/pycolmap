@@ -14,21 +14,10 @@
 #include <pybind11/stl_bind.h>
 
 #include "pycolmap/log_exceptions.h"
-#include "pycolmap/reconstruction/camera.cc"
-#include "pycolmap/reconstruction/image.cc"
-#include "pycolmap/reconstruction/point2D.cc"
-#include "pycolmap/reconstruction/point3D.cc"
-#include "pycolmap/reconstruction/track.cc"
 
 using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
-
-void init_track(py::module&);
-void init_point2D(py::module&);
-void init_point3D(py::module&);
-void init_image(py::module&);
-void init_camera(py::module&);
 
 bool ExistsReconstructionText(const std::string& path) {
   return (ExistsFile(JoinPaths(path, "cameras.txt")) &&
@@ -66,19 +55,7 @@ bool ExistsReconstruction(const std::string& path) {
       std::invalid_argument,                          \
       std::string("cameras, images, points3D not found at ") + input_path);
 
-// Reconstruction Bindings
-void init_reconstruction(py::module& m) {
-  // STL Containers, required for fast looping over members (avoids copying)
-  using ImageMap = std::unordered_map<image_t, Image>;
-  using Point3DMap = std::unordered_map<point3D_t, Point3D>;
-  using CameraMap = std::unordered_map<camera_t, Camera>;
-
-  init_track(m);
-  init_point2D(m);
-  init_point3D(m);
-  init_image(m);
-  init_camera(m);
-
+void BindReconstruction(py::module& m) {
   py::class_<Reconstruction, std::shared_ptr<Reconstruction>>(m,
                                                               "Reconstruction")
       .def(py::init<>())

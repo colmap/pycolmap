@@ -16,7 +16,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void init_track(py::module& m) {
+void BindTrack(py::module& m) {
   py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
       .def(py::init<>())
       .def(py::init<image_t, point2D_t>())

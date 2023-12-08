@@ -42,7 +42,7 @@ FeatureMatches FeatureMatchesFromMatrix(const PyFeatureMatches& matrix) {
   return matches;
 }
 
-void bind_two_view_geometry_estimation(py::module& m) {
+void BindTwoViewGeometry(py::module& m) {
   auto PyTwoViewGeometryOptions =
       py::class_<TwoViewGeometryOptions>(m, "TwoViewGeometryOptions")
           .def(py::init<>())

@@ -1,6 +1,7 @@
 // Authors: John Lambert (johnwlambert), Paul-Edouard Sarlin (skydes)
 
 #include "colmap/estimators/homography_matrix.h"
+
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"
 
@@ -38,7 +39,7 @@ py::object PyEstimateHomographyMatrix(
                   "inliers"_a = ToPythonMask(report.inlier_mask));
 }
 
-void bind_homography_estimation(py::module& m) {
+void BindHomographyMatrix(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("homography_matrix_estimation",

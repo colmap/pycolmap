@@ -29,7 +29,7 @@ std::string PrintPoint2D(const Point2D& p2D) {
   return ss.str();
 }
 
-void init_point2D(py::module& m) {
+void BindPoint2D(py::module& m) {
   py::bind_vector<vector_Point2D>(m, "ListPoint2D")
       .def("__repr__", [](const vector_Point2D& self) {
         std::string repr = "[";
