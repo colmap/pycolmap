@@ -19,7 +19,7 @@ Alternatively, PyCOLMAP can be built from source. Here is how to build the most 
 
 2. Clone and build the PyCOLMAP repository and its submodules:
 ```bash
-git clone -b v0.4.0 --recursive git@github.com:colmap/pycolmap.git
+git clone -b v0.4.0 --recursive https://github.com/colmap/pycolmap.git
 cd pycolmap
 pip install .
 ```
@@ -273,14 +273,14 @@ The `TwoViewGeometryOptions` control how each model is selected. The output stru
 
 ### Camera argument
 
-All estimators expect a COLMAP camera object, which can be created as follow:
+Some estimators expect a COLMAP camera object, which can be created as follow:
 
 ```python
 camera = pycolmap.Camera(
-    COLMAP_CAMERA_MODEL_NAME,
-    IMAGE_WIDTH, 
-    IMAGE_HEIGHT,
-    EXTRA_CAMERA_PARAMETERS,
+    model=camera_model_name_or_id,
+    width=width,
+    height=height,
+    params=params,
 )
 ```
 

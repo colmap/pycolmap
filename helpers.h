@@ -4,6 +4,7 @@
 
 #include "colmap/util/threading.h"
 
+#include <glog/logging.h>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
@@ -26,7 +27,7 @@ inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
     return T(values[strVal].template cast<T>());
   }
   std::string msg =
-      "ERROR: Invalid string value " + value + " for enum " +
+      "Invalid string value " + value + " for enum " +
       std::string(enm.attr("__name__").template cast<std::string>());
   THROW_EXCEPTION(std::out_of_range, msg.c_str());
   T t;
@@ -41,8 +42,8 @@ inline void AddStringToEnumConstructor(py::enum_<T>& enm) {
   py::implicitly_convertible<std::string, T>();
 }
 
-template <typename T>
-inline void make_dataclass(py::class_<T> cls) {
+template <typename T, typename... options>
+inline void make_dataclass(py::class_<T, options...> cls) {
   cls.def(py::init([cls](py::dict dict) {
     auto self = py::object(cls());
     self.attr("mergedict").attr("__call__")(dict);
@@ -91,7 +92,7 @@ inline void make_dataclass(py::class_<T> cls) {
              << "'.";
           // We write the err message to give info even if exceptions
           // is catched outside, e.g. in function overload resolve
-          std::cerr << "Internal TypeError: " << ss.str() << std::endl;
+          LOG(ERROR) << "Internal TypeError: " << ss.str();
           throw(
               py::type_error(std::string("Failed to merge dict into class: ") +
                              "Could not assign " +
@@ -105,12 +106,12 @@ inline void make_dataclass(py::class_<T> cls) {
              << " defined readonly.";
           throw py::attribute_error(ss.str());
         } else if (ex.matches(PyExc_AttributeError)) {
-          std::cerr << "Internal AttributeError: "
-                    << py::str(ex.value()).cast<std::string>() << std::endl;
+          LOG(ERROR) << "Internal AttributeError: "
+                     << py::str(ex.value()).cast<std::string>();
           throw;
         } else {
-          std::cerr << "Internal Error: "
-                    << py::str(ex.value()).cast<std::string>() << std::endl;
+          LOG(ERROR) << "Internal Error: "
+                     << py::str(ex.value()).cast<std::string>();
           throw;
         }
       }
@@ -245,7 +246,7 @@ void PyWait(Thread* thread, double gap = 2.0) {
   PyInterrupt py_interrupt(gap);
   while (thread->IsRunning()) {
     if (py_interrupt.Raised()) {
-      std::cerr << "Stopping thread..." << std::endl;
+      LOG(ERROR) << "Stopping thread...";
       thread->Stop();
       thread->Wait();
       throw py::error_already_set();

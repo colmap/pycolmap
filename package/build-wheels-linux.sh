@@ -97,7 +97,7 @@ make install
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 0d9ab40f6037b5ede71f3af3b8d1f5091f68855d
+git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build/
 cd build/
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
