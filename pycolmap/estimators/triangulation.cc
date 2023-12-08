@@ -41,8 +41,9 @@ py::dict PyEstimateTriangulation(
   return py::dict("xyz"_a = xyz, "inliers"_a = ToPythonMask(inlier_mask));
 }
 
-void bind_estimate_triangulation(py::module& m,
-                                 py::class_<RANSACOptions> PyRANSACOptions) {
+void bind_estimate_triangulation(py::module& m) {
+  auto PyRANSACOptions = m.attr("RANSACOptions");
+
   py::class_<TriangulationEstimator::PointData>(m, "PointData")
       .def(py::init<const Eigen::Vector2d&, const Eigen::Vector2d&>());
 
@@ -57,7 +58,9 @@ void bind_estimate_triangulation(py::module& m,
             return options;
           }))
           .def_readwrite("min_tri_angle",
-                         &EstimateTriangulationOptions::min_tri_angle);
+                         &EstimateTriangulationOptions::min_tri_angle)
+          .def_readwrite("ransac",
+                         &EstimateTriangulationOptions::ransac_options);
   make_dataclass(PyTriangulationOptions);
   auto triangulation_options =
       PyTriangulationOptions().cast<EstimateTriangulationOptions>();

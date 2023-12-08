@@ -95,8 +95,8 @@ py::object PyRefineAbsolutePose(
   return py::dict("cam_from_world"_a = refined_cam_from_world);
 }
 
-void bind_absolute_pose_estimation(py::module& m,
-                                   py::class_<RANSACOptions> PyRANSACOptions) {
+void bind_absolute_pose_estimation(py::module& m) {
+  auto PyRANSACOptions = m.attr("RANSACOptions");
   auto PyEstimationOptions =
       py::class_<AbsolutePoseEstimationOptions>(m,
                                                 "AbsolutePoseEstimationOptions")
