@@ -6,7 +6,7 @@ find_package(colmap 3.9 REQUIRED)
 
 add_subdirectory(pybind11)
 
-pybind11_add_module(pycolmap main.cc)
+pybind11_add_module(pycolmap pycolmap/main.cc)
 target_include_directories(pycolmap PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(pycolmap PRIVATE colmap::colmap freeimage::FreeImage)
 if(MSVC)
