@@ -13,6 +13,7 @@ using namespace pybind11::literals;
 #include "estimators/fundamental_matrix.cc"
 #include "estimators/generalized_absolute_pose.cc"
 #include "estimators/homography.cc"
+#include "estimators/triangulation.cc"
 #include "estimators/two_view_geometry.cc"
 #include "geometry/quaternion.cc"
 #include "geometry/rigid3.cc"
@@ -110,6 +111,7 @@ PYBIND11_MODULE(pycolmap, m) {
   bind_generalized_absolute_pose_estimation(m);
   bind_homography_estimation(m);
   bind_two_view_geometry_estimation(m);
+  bind_estimate_triangulation(m, PyRANSACOptions);
   bind_alignment(m);
 
   // Homography Decomposition.
