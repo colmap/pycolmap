@@ -32,8 +32,7 @@ void extract_features(const py::object database_path_,
                       const std::string camera_model,
                       ImageReaderOptions reader_options,
                       SiftExtractionOptions sift_options,
-                      const Device device,
-                      bool verbose) {
+                      const Device device) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_MSG(!ExistsFile(database_path),
                   database_path + " already exists.");
@@ -61,22 +60,11 @@ void extract_features(const py::object database_path_,
                          std::invalid_argument,
                          "Invalid camera parameters.");
 
-  std::stringstream oss;
-  std::streambuf* oldcerr = nullptr;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    oldcout = std::cout.rdbuf(oss.rdbuf());
-  }
   py::gil_scoped_release release;
   std::unique_ptr<Thread> extractor =
       CreateFeatureExtractorController(reader_options, sift_options);
-
   extractor->Start();
   PyWait(extractor.get());
-
-  if (!verbose) {
-    std::cout.rdbuf(oldcout);
-  }
 }
 
 void init_extract_features(py::module& m) {
@@ -170,6 +158,5 @@ void init_extract_features(py::module& m) {
         "reader_options"_a = ImageReaderOptions(),
         "sift_options"_a = sift_extraction_options,
         "device"_a = Device::AUTO,
-        "verbose"_a = true,
         "Extract SIFT Features and write them to database");
 }

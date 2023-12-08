@@ -18,8 +18,6 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew upgrade
-brew install wget cmake
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     brew install --force "python@${PYTHON_VERSION}"
@@ -28,6 +26,7 @@ done
 
 brew install \
     git \
+    wget \
     cmake \
     eigen \
     freeimage \
@@ -38,16 +37,11 @@ brew install \
     suite-sparse \
     ceres-solver \
     glew \
-    cgal \
     sqlite3 \
     libomp \
     llvm \
     boost \
     lz4
-
-brew info gcc
-brew upgrade gcc
-brew info gcc
 
 # Install Boost
 #mkdir -p boost
@@ -62,7 +56,7 @@ brew info gcc
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout 0d9ab40f6037b5ede71f3af3b8d1f5091f68855d
+git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build
 cd build
 cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
