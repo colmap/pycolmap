@@ -21,7 +21,7 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "utils.h"
 
-py::object absolute_pose_estimation(
+py::object PyEstimateAndRefineAbsolutePose(
     const std::vector<Eigen::Vector2d> points2D,
     const std::vector<Eigen::Vector3d> points3D,
     Camera& camera,
@@ -68,7 +68,7 @@ py::object absolute_pose_estimation(
   return success_dict;
 }
 
-py::object pose_refinement(
+py::object PyRefineAbsolutePose(
     const Rigid3d& init_cam_from_world,
     const std::vector<Eigen::Vector2d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
@@ -155,7 +155,7 @@ void bind_absolute_pose_estimation(py::module& m,
       PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();
 
   m.def("absolute_pose_estimation",
-        &absolute_pose_estimation,
+        &PyEstimateAndRefineAbsolutePose,
         "points2D"_a,
         "points3D"_a,
         "camera"_a,
@@ -165,7 +165,7 @@ void bind_absolute_pose_estimation(py::module& m,
         "Absolute pose estimation with non-linear refinement.");
 
   m.def("pose_refinement",
-        &pose_refinement,
+        &PyRefineAbsolutePose,
         "cam_from_world"_a,
         "points2D"_a,
         "points3D"_a,

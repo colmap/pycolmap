@@ -23,7 +23,7 @@ using namespace pybind11::literals;
 #include "log_exceptions.h"
 #include "utils.h"
 
-py::object essential_matrix_estimation(
+py::object PyEstimateAndDecomposeEssentialMatrix(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     Camera& camera1,
@@ -100,7 +100,7 @@ void bind_essential_matrix_estimation(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("essential_matrix_estimation",
-        &essential_matrix_estimation,
+        &PyEstimateAndDecomposeEssentialMatrix,
         "points2D1"_a,
         "points2D2"_a,
         "camera1"_a,

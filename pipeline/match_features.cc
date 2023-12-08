@@ -29,11 +29,11 @@ template <typename Opts,
                                                  const SiftMatchingOptions&,
                                                  const TwoViewGeometryOptions&,
                                                  const std::string&)>
-void match_features(py::object database_path_,
-                    SiftMatchingOptions sift_options,
-                    const Opts& matching_options,
-                    const TwoViewGeometryOptions& verification_options,
-                    const Device device) {
+void MatchFeatures(py::object database_path_,
+                   SiftMatchingOptions sift_options,
+                   const Opts& matching_options,
+                   const TwoViewGeometryOptions& verification_options,
+                   const Device device) {
   const std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
   try {
@@ -226,7 +226,7 @@ void init_match_features(py::module& m) {
       m.attr("TwoViewGeometryOptions")().cast<TwoViewGeometryOptions>();
 
   m.def("match_exhaustive",
-        &match_features<EMOpts, CreateExhaustiveFeatureMatcher>,
+        &MatchFeatures<EMOpts, CreateExhaustiveFeatureMatcher>,
         "database_path"_a,
         "sift_options"_a = sift_matching_options,
         "matching_options"_a = exhaustive_options,
@@ -235,7 +235,7 @@ void init_match_features(py::module& m) {
         "Exhaustive feature matching");
 
   m.def("match_sequential",
-        &match_features<SeqMOpts, CreateSequentialFeatureMatcher>,
+        &MatchFeatures<SeqMOpts, CreateSequentialFeatureMatcher>,
         "database_path"_a,
         "sift_options"_a = sift_matching_options,
         "matching_options"_a = sequential_options,
@@ -244,7 +244,7 @@ void init_match_features(py::module& m) {
         "Sequential feature matching");
 
   m.def("match_spatial",
-        &match_features<SpMOpts, CreateSpatialFeatureMatcher>,
+        &MatchFeatures<SpMOpts, CreateSpatialFeatureMatcher>,
         "database_path"_a,
         "sift_options"_a = sift_matching_options,
         "matching_options"_a = spatial_options,
@@ -253,7 +253,7 @@ void init_match_features(py::module& m) {
         "Spatial feature matching");
 
   m.def("match_vocabtree",
-        &match_features<VTMOpts, CreateVocabTreeFeatureMatcher>,
+        &MatchFeatures<VTMOpts, CreateVocabTreeFeatureMatcher>,
         "database_path"_a,
         "sift_options"_a = sift_matching_options,
         "matching_options"_a = vocabtree_options,
