@@ -29,13 +29,11 @@ void patch_match_stereo(py::object workspace_path_,
                         std::string workspace_format,
                         std::string pmvs_option_name,
                         mvs::PatchMatchOptions options,
-                        std::string config_path,
-                        bool verbose) {
+                        std::string config_path) {
 #ifndef COLMAP_CUDA_ENABLED
-  THROW_EXCEPTION(
-      std::runtime_error,
-      "ERROR: Dense stereo reconstruction requires CUDA, which is not "
-      "available on your system.");
+  THROW_EXCEPTION(std::runtime_error,
+                  "Dense stereo reconstruction requires CUDA, which is not "
+                  "available on the system.");
   return;
 #endif  // COLMAP_CUDA_ENABLED
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
@@ -48,22 +46,11 @@ void patch_match_stereo(py::object workspace_path_,
       "Invalid `workspace_format` - supported values are "
       "'COLMAP' or 'PMVS'.")
 
-  std::stringstream oss;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    oldcout = std::cout.rdbuf(oss.rdbuf());
-  }
-
+  py::gil_scoped_release release;
   mvs::PatchMatchController controller(
       options, workspace_path, workspace_format, pmvs_option_name, config_path);
-
   controller.Start();
   PyWait(&controller);
-  // controller.Wait();
-
-  if (!verbose) {
-    std::cout.rdbuf(oldcout);
-  }
 }
 
 Reconstruction stereo_fusion(py::object output_path_,
@@ -71,8 +58,7 @@ Reconstruction stereo_fusion(py::object output_path_,
                              std::string workspace_format,
                              std::string pmvs_option_name,
                              std::string input_type,
-                             mvs::StereoFusionOptions options,
-                             bool verbose) {
+                             mvs::StereoFusionOptions options) {
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 
@@ -92,24 +78,13 @@ Reconstruction stereo_fusion(py::object output_path_,
       "Invalid input type - supported values are 'photometric' and "
       "'geometric'.");
 
+  py::gil_scoped_release release;
   mvs::StereoFusion fuser(
       options, workspace_path, workspace_format, pmvs_option_name, input_type);
-
-  std::stringstream oss;
-  std::streambuf* oldcout = nullptr;
-  if (!verbose) {
-    oldcout = std::cout.rdbuf(oss.rdbuf());
-  }
-  py::gil_scoped_release release;
   fuser.Start();
   PyWait(&fuser);
 
-  if (!verbose) {
-    std::cout.rdbuf(oldcout);
-  }
-
   Reconstruction reconstruction;
-
   // read data from sparse reconstruction
   if (workspace_format == "colmap") {
     reconstruction.Read(JoinPaths(workspace_path, "sparse"));
@@ -282,7 +257,6 @@ void init_mvs(py::module& m) {
         "pmvs_option_name"_a = "option-all",
         "options"_a = patch_match_options,
         "config_path"_a = "",
-        "verbose"_a = true,
         "Runs Patch-Match-Stereo (requires CUDA)");
 
   m.def("stereo_fusion",
@@ -293,6 +267,5 @@ void init_mvs(py::module& m) {
         "pmvs_option_name"_a = "option-all",
         "input_type"_a = "geometric",
         "options"_a = stereo_fusion_options,
-        "verbose"_a = true,
         "Stereo Fusion");
 }
