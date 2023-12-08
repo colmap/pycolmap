@@ -247,7 +247,7 @@ bool PyInterrupt::Raised() {
 }
 
 // Instead of thread.Wait() call this to allow interrupts through python
-void PyWait(Thread* thread, double gap = 2.0) {
+void PyWait(colmap::Thread* thread, double gap = 2.0) {
   PyInterrupt py_interrupt(gap);
   while (thread->IsRunning()) {
     if (py_interrupt.Raised()) {
