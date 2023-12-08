@@ -3,11 +3,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
-#include "colmap/geometry/pose.h"
-
 #include "estimators/absolute_pose.cc"
 #include "estimators/alignment.cc"
 #include "estimators/essential_matrix.cc"
@@ -29,6 +24,9 @@ using namespace pybind11::literals;
 #include "reconstruction/reconstruction.cc"
 #include "sift.cc"
 #include "utils.h"
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 void init_reconstruction(py::module&);
 void init_quaternion(py::module&);

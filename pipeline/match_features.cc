@@ -10,19 +10,18 @@
 #include "colmap/feature/sift.h"
 #include "colmap/util/misc.h"
 
-using namespace colmap;
-
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "utils.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 template <typename Opts,
           std::unique_ptr<Thread> MatcherFactory(const Opts&,

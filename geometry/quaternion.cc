@@ -1,13 +1,15 @@
+#include <sstream>
+
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+#include "log_exceptions.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
-
-#include "log_exceptions.h"
 
 void init_quaternion(py::module& m) {
   py::class_<Eigen::Quaterniond>(m, "Rotation3d")

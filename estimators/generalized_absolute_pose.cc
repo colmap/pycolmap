@@ -8,20 +8,16 @@
 #include "colmap/scene/camera.h"
 #include "colmap/util/misc.h"
 
-#include <fstream>
-#include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
 #include "utils.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 py::object PyEstimateAndRefineGeneralizedAbsolutePose(
     const std::vector<Eigen::Vector2d>& points2D,

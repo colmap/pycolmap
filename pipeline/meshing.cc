@@ -1,19 +1,16 @@
 // Author: Philipp Lindenberger (Phil26AT)
 #include "colmap/mvs/meshing.h"
 
-using namespace colmap;
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
-#include <string>
-
 #include "helpers.h"
 #include "log_exceptions.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 void init_meshing(py::module& m) {
   using PoissonMOpts = mvs::PoissonMeshingOptions;

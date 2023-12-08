@@ -14,10 +14,10 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
+
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {

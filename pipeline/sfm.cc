@@ -9,21 +9,20 @@
 
 #include <memory>
 
-using namespace colmap;
-
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "pipeline/extract_features.cc"
 #include "pipeline/images.cc"
 #include "pipeline/match_features.cc"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 std::shared_ptr<Reconstruction> TriangulatePoints(
     const std::shared_ptr<Reconstruction> reconstruction,

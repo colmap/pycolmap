@@ -1,17 +1,16 @@
 #include "colmap/estimators/triangulation.h"
 
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "utils.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 py::dict PyEstimateTriangulation(
     const std::vector<TriangulationEstimator::PointData>& point_data,
