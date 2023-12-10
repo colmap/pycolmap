@@ -16,6 +16,7 @@
 
 #include "log_exceptions.h"
 
+using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
@@ -228,7 +229,7 @@ struct PyInterrupt {
  private:
   std::mutex mutex_;
   bool found = false;
-  colmap::Timer timer_;
+  Timer timer_;
   clock::time_point start;
   double gap_;
 };
@@ -247,7 +248,7 @@ bool PyInterrupt::Raised() {
 }
 
 // Instead of thread.Wait() call this to allow interrupts through python
-void PyWait(colmap::Thread* thread, double gap = 2.0) {
+void PyWait(Thread* thread, double gap = 2.0) {
   PyInterrupt py_interrupt(gap);
   while (thread->IsRunning()) {
     if (py_interrupt.Raised()) {
