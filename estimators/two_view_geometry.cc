@@ -8,21 +8,17 @@
 #include "colmap/optim/loransac.h"
 #include "colmap/scene/camera.h"
 
-#include <fstream>
-#include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "utils.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 // TODO(sarlinpe): Consider changing the COLMAP type.
 typedef Eigen::Matrix<uint32_t, Eigen::Dynamic, 2, Eigen::RowMajor>

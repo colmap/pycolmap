@@ -9,15 +9,10 @@
 
 #include <memory>
 
-using namespace colmap;
-
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
 
 #include "helpers.h"
 #include "log_exceptions.h"
@@ -25,7 +20,11 @@ using namespace pybind11::literals;
 #include "pipeline/images.cc"
 #include "pipeline/match_features.cc"
 
-std::shared_ptr<Reconstruction> triangulate_points(
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+std::shared_ptr<Reconstruction> TriangulatePoints(
     const std::shared_ptr<Reconstruction> reconstruction,
     const py::object database_path_,
     const py::object image_path_,
@@ -51,7 +50,7 @@ std::shared_ptr<Reconstruction> triangulate_points(
   return reconstruction;
 }
 
-std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
+std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
     const py::object database_path_,
     const py::object image_path_,
     const py::object output_path_,
@@ -109,8 +108,8 @@ std::map<size_t, std::shared_ptr<Reconstruction>> incremental_mapping(
   return reconstructions;
 }
 
-void bundle_adjustment(std::shared_ptr<Reconstruction> reconstruction,
-                       const BundleAdjustmentOptions& options) {
+void BundleAdjustment(std::shared_ptr<Reconstruction> reconstruction,
+                      const BundleAdjustmentOptions& options) {
   py::gil_scoped_release release;
   OptionManager option_manager;
   *option_manager.bundle_adjustment = options;
@@ -260,7 +259,7 @@ void init_sfm(py::module& m) {
   auto ba_options = PyBundleAdjustmentOptions().cast<BAOpts>();
 
   m.def("triangulate_points",
-        &triangulate_points,
+        &TriangulatePoints,
         "reconstruction"_a,
         "database_path"_a,
         "image_path"_a,
@@ -271,7 +270,7 @@ void init_sfm(py::module& m) {
         "Triangulate 3D points from known camera poses");
 
   m.def("incremental_mapping",
-        &incremental_mapping,
+        &IncrementalMapping,
         "database_path"_a,
         "image_path"_a,
         "output_path"_a,
@@ -280,7 +279,7 @@ void init_sfm(py::module& m) {
         "Triangulate 3D points from known poses");
 
   m.def("bundle_adjustment",
-        &bundle_adjustment,
+        &BundleAdjustment,
         "reconstruction"_a,
         "options"_a = ba_options);
 }

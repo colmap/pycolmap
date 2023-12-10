@@ -8,22 +8,18 @@
 #include "colmap/optim/loransac.h"
 #include "colmap/scene/camera.h"
 
-#include <fstream>
-#include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
 #include "utils.h"
 
-py::object essential_matrix_estimation(
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+py::object PyEstimateAndDecomposeEssentialMatrix(
     const std::vector<Eigen::Vector2d> points2D1,
     const std::vector<Eigen::Vector2d> points2D2,
     Camera& camera1,
@@ -100,7 +96,7 @@ void bind_essential_matrix_estimation(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("essential_matrix_estimation",
-        &essential_matrix_estimation,
+        &PyEstimateAndDecomposeEssentialMatrix,
         "points2D1"_a,
         "points2D2"_a,
         "camera1"_a,

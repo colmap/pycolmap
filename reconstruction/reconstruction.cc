@@ -8,15 +8,10 @@
 
 #include <memory>
 
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
 
 #include "log_exceptions.h"
 #include "reconstruction/camera.cc"
@@ -24,6 +19,10 @@ using namespace pybind11::literals;
 #include "reconstruction/point2D.cc"
 #include "reconstruction/point3D.cc"
 #include "reconstruction/track.cc"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 void init_track(py::module&);
 void init_point2D(py::module&);

@@ -5,17 +5,16 @@
 #include "colmap/feature/types.h"
 #include "colmap/util/types.h"
 
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 void init_correspondence_graph(py::module& m) {
   py::class_<CorrespondenceGraph::Correspondence,

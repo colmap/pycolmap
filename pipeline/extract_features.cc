@@ -11,28 +11,27 @@
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 
-using namespace colmap;
-
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 #include "utils.h"
 
-void extract_features(const py::object database_path_,
-                      const py::object image_path_,
-                      const std::vector<std::string> image_list,
-                      const CameraMode camera_mode,
-                      const std::string camera_model,
-                      ImageReaderOptions reader_options,
-                      SiftExtractionOptions sift_options,
-                      const Device device) {
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+void ExtractFeatures(const py::object database_path_,
+                     const py::object image_path_,
+                     const std::vector<std::string> image_list,
+                     const CameraMode camera_mode,
+                     const std::string camera_model,
+                     ImageReaderOptions reader_options,
+                     SiftExtractionOptions sift_options,
+                     const Device device) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_MSG(!ExistsFile(database_path),
                   database_path + " already exists.");
@@ -149,7 +148,7 @@ void init_extract_features(py::module& m) {
 
   /* PIPELINE */
   m.def("extract_features",
-        &extract_features,
+        &ExtractFeatures,
         "database_path"_a,
         "image_path"_a,
         "image_list"_a = std::vector<std::string>(),

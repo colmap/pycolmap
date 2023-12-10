@@ -12,24 +12,23 @@
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 
-using namespace colmap;
-
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
 
-void patch_match_stereo(py::object workspace_path_,
-                        std::string workspace_format,
-                        std::string pmvs_option_name,
-                        mvs::PatchMatchOptions options,
-                        std::string config_path) {
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+void PatchMatchStereo(py::object workspace_path_,
+                      std::string workspace_format,
+                      std::string pmvs_option_name,
+                      mvs::PatchMatchOptions options,
+                      std::string config_path) {
 #ifndef COLMAP_CUDA_ENABLED
   THROW_EXCEPTION(std::runtime_error,
                   "Dense stereo reconstruction requires CUDA, which is not "
@@ -53,12 +52,12 @@ void patch_match_stereo(py::object workspace_path_,
   PyWait(&controller);
 }
 
-Reconstruction stereo_fusion(py::object output_path_,
-                             py::object workspace_path_,
-                             std::string workspace_format,
-                             std::string pmvs_option_name,
-                             std::string input_type,
-                             mvs::StereoFusionOptions options) {
+Reconstruction StereoFusion(py::object output_path_,
+                            py::object workspace_path_,
+                            std::string workspace_format,
+                            std::string pmvs_option_name,
+                            std::string input_type,
+                            mvs::StereoFusionOptions options) {
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 
@@ -251,7 +250,7 @@ void init_mvs(py::module& m) {
   auto stereo_fusion_options = PyStereoFusionOptions().cast<SFOpts>();
 
   m.def("patch_match_stereo",
-        &patch_match_stereo,
+        &PatchMatchStereo,
         "workspace_path"_a,
         "workspace_format"_a = "COLMAP",
         "pmvs_option_name"_a = "option-all",
@@ -260,7 +259,7 @@ void init_mvs(py::module& m) {
         "Runs Patch-Match-Stereo (requires CUDA)");
 
   m.def("stereo_fusion",
-        &stereo_fusion,
+        &StereoFusion,
         "output_path"_a,
         "workspace_path"_a,
         "workspace_format"_a = "COLMAP",

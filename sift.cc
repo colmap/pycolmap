@@ -1,21 +1,20 @@
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "colmap/feature/sift.h"
+
 #include "colmap/feature/utils.h"
 
 #include <Eigen/Core>
 #include <FreeImage.h>
-
-using namespace colmap;
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
 #include "helpers.h"
 #include "utils.h"
 
 #define kdim 4
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 template <typename dtype>
 using pyimage_t =

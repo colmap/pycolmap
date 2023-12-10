@@ -3,9 +3,7 @@
 #include "colmap/geometry/pose.h"
 #include "colmap/geometry/rigid3.h"
 
-#include <utility>
-
-using namespace colmap;
+#include <sstream>
 
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
@@ -13,6 +11,7 @@ using namespace colmap;
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+using namespace colmap;
 namespace py = pybind11;
 
 void init_sim3(py::module& m) {

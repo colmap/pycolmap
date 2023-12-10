@@ -1,11 +1,7 @@
+#include <glog/logging.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace py = pybind11;
-using namespace pybind11::literals;
-
-#include "colmap/geometry/pose.h"
 
 #include "estimators/absolute_pose.cc"
 #include "estimators/alignment.cc"
@@ -15,11 +11,11 @@ using namespace pybind11::literals;
 #include "estimators/homography.cc"
 #include "estimators/triangulation.cc"
 #include "estimators/two_view_geometry.cc"
+#include "geometry/homography_matrix.cc"
 #include "geometry/quaternion.cc"
 #include "geometry/rigid3.cc"
 #include "geometry/sim3.cc"
 #include "helpers.h"
-#include "homography_decomposition.cc"
 #include "pipeline/meshing.cc"
 #include "pipeline/mvs.cc"
 #include "pipeline/sfm.cc"
@@ -28,7 +24,9 @@ using namespace pybind11::literals;
 #include "reconstruction/reconstruction.cc"
 #include "sift.cc"
 #include "utils.h"
-#include <glog/logging.h>
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 void init_reconstruction(py::module&);
 void init_quaternion(py::module&);
@@ -83,6 +81,7 @@ PYBIND11_MODULE(pycolmap, m) {
   init_quaternion(m);
   init_sim3(m);
   init_rigid3(m);
+  init_homography_matrix(m);
 
   // Estimators
   auto PyRANSACOptions =
@@ -113,16 +112,6 @@ PYBIND11_MODULE(pycolmap, m) {
   bind_two_view_geometry_estimation(m);
   bind_estimate_triangulation(m, PyRANSACOptions);
   bind_alignment(m);
-
-  // Homography Decomposition.
-  m.def("homography_decomposition",
-        &homography_decomposition_estimation,
-        "H"_a,
-        "K1"_a,
-        "K2"_a,
-        "points1"_a,
-        "points2"_a,
-        "Analytical Homography Decomposition.");
 
   // Reconstruction bindings
   init_reconstruction(m);

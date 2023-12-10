@@ -8,22 +8,18 @@
 #include "colmap/scene/camera.h"
 #include "colmap/util/misc.h"
 
-#include <fstream>
-#include <iostream>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
 #include "utils.h"
 
-py::object rig_absolute_pose_estimation(
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+py::object PyEstimateAndRefineGeneralizedAbsolutePose(
     const std::vector<Eigen::Vector2d>& points2D,
     const std::vector<Eigen::Vector3d>& points3D,
     const std::vector<size_t>& camera_idxs,
@@ -88,7 +84,7 @@ void bind_generalized_absolute_pose_estimation(py::module& m) {
 
   m.def(
       "rig_absolute_pose_estimation",
-      &rig_absolute_pose_estimation,
+      &PyEstimateAndRefineGeneralizedAbsolutePose,
       "points2D"_a,
       "points3D"_a,
       "cameras"_a,

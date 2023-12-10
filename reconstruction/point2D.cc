@@ -7,18 +7,16 @@
 #include "colmap/util/types.h"
 
 #include <Eigen/StdVector>
-
-using namespace colmap;
-
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "log_exceptions.h"
+
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
 
 using vector_Point2D =
     std::vector<class Point2D, Eigen::aligned_allocator<Point2D>>;

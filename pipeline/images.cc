@@ -12,25 +12,24 @@
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 
-using namespace colmap;
-
+#include <glog/logging.h>
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
-
 #include "helpers.h"
 #include "log_exceptions.h"
-#include <glog/logging.h>
 
-void import_images(const py::object database_path_,
-                   const py::object image_path_,
-                   const CameraMode camera_mode,
-                   const std::vector<std::string> image_list,
-                   const ImageReaderOptions options_) {
+using namespace colmap;
+using namespace pybind11::literals;
+namespace py = pybind11;
+
+void ImportImages(const py::object database_path_,
+                  const py::object image_path_,
+                  const CameraMode camera_mode,
+                  const std::vector<std::string> image_list,
+                  const ImageReaderOptions options_) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
   std::string image_path = py::str(image_path_).cast<std::string>();
@@ -69,16 +68,16 @@ void import_images(const py::object database_path_,
   }
 }
 
-void import_images(const py::object database_path_,
-                   const py::object image_path_,
-                   const CameraMode camera_mode,
-                   const std::string camera_model,
-                   const std::vector<std::string> image_list) {
+void ImportImages(const py::object database_path_,
+                  const py::object image_path_,
+                  const CameraMode camera_mode,
+                  const std::string camera_model,
+                  const std::vector<std::string> image_list) {
   ImageReaderOptions options;
   if (!camera_model.empty()) {
     options.camera_model = camera_model;
   }
-  return import_images(
+  return ImportImages(
       database_path_, image_path_, camera_mode, image_list, options);
 }
 
@@ -263,7 +262,7 @@ void init_images(py::module& m) {
                              const py::object,
                              const CameraMode,
                              const std::vector<std::string>,
-                             const ImageReaderOptions)>(&import_images),
+                             const ImageReaderOptions)>(&ImportImages),
         "database_path"_a,
         "image_path"_a,
         "camera_mode"_a = CameraMode::AUTO,
@@ -276,7 +275,7 @@ void init_images(py::module& m) {
                              const py::object,
                              const CameraMode,
                              const std::string,
-                             const std::vector<std::string>)>(&import_images),
+                             const std::vector<std::string>)>(&ImportImages),
         "database_path"_a,
         "image_path"_a,
         "camera_mode"_a = CameraMode::AUTO,
