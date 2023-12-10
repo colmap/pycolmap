@@ -41,7 +41,7 @@ py::object PyEstimateFundamentalMatrix(
                   "inliers"_a = ToPythonMask(report.inlier_mask));
 }
 
-void BindFundamentalMatrix(py::module& m) {
+void BindFundamentalMatrixEstimator(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("fundamental_matrix_estimation",

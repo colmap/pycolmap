@@ -41,7 +41,7 @@ py::dict PyEstimateTriangulation(
   return py::dict("xyz"_a = xyz, "inliers"_a = ToPythonMask(inlier_mask));
 }
 
-void BindTriangulation(py::module& m) {
+void BindTriangulationEstimator(py::module& m) {
   auto PyRANSACOptions = m.attr("RANSACOptions");
 
   py::class_<TriangulationEstimator::PointData>(m, "PointData")

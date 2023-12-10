@@ -39,7 +39,7 @@ py::object PyEstimateHomographyMatrix(
                   "inliers"_a = ToPythonMask(report.inlier_mask));
 }
 
-void BindHomographyMatrix(py::module& m) {
+void BindHomographyMatrixEstimator(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
   m.def("homography_matrix_estimation",

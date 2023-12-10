@@ -12,12 +12,12 @@
 namespace py = pybind11;
 
 void BindEstimators(py::module& m) {
-  BindAbsolutePose(m);
-  BindAlignment(m);
-  BindEssentialMatrix(m);
-  BindFundamentalMatrix(m);
-  BindGeneralizedAbsolutePose(m);
-  BindHomographyMatrix(m);
-  BindTriangulation(m);
-  BindTwoViewGeometry(m);
+  BindAbsolutePoseEstimator(m);
+  BindAlignmentEstimator(m);
+  BindEssentialMatrixEstimator(m);
+  BindFundamentalMatrixEstimator(m);
+  BindGeneralizedAbsolutePoseEstimator(m);
+  BindHomographyMatrixEstimator(m);
+  BindTriangulationEstimator(m);
+  BindTwoViewGeometryEstimator(m);
 }
