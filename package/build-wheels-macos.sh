@@ -21,7 +21,6 @@ brew update
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     brew install --force "python@${PYTHON_VERSION}"
-    echo "$(python${PYTHON_VERSION} --version)"
     python${PYTHON_VERSION} -m pip install -U pip setuptools wheel cffi
 done
 
