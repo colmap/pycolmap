@@ -1,5 +1,5 @@
 #!/bin/bash
-PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310")
+PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310" "cp311-cp311" "cp311-cp312")
 
 uname -a
 echo "Current CentOS Version:"
