@@ -3,14 +3,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "pycolmap/estimators/bindings.cc"
-#include "pycolmap/feature/sift.cc"
-#include "pycolmap/geometry/bindings.cc"
+#include "pycolmap/estimators/bindings.h"
+#include "pycolmap/feature/sift.h"
+#include "pycolmap/geometry/bindings.h"
 #include "pycolmap/helpers.h"
-#include "pycolmap/optim/bindings.cc"
-#include "pycolmap/pipeline/bindings.cc"
-#include "pycolmap/scene/bindings.cc"
-#include "pycolmap/sfm/incremental_triangulator.cc"
+#include "pycolmap/optim/bindings.h"
+#include "pycolmap/pipeline/bindings.h"
+#include "pycolmap/scene/bindings.h"
+#include "pycolmap/sfm/incremental_triangulator.h"
 #include "pycolmap/utils.h"
 
 namespace py = pybind11;
