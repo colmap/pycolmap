@@ -1,0 +1,26 @@
+[build-system]
+requires = ["scikit-build-core>=0.3.3"]
+build-backend = "scikit_build_core.build"
+
+
+[project]
+name = "pycolmap"
+version = "0.5.0"
+description="COLMAP bindings"
+readme = "README.md"
+authors = [
+  { name = "Mihai Dusmanu", email = "mihai.dusmanu@microsoft.com" },
+  { name = "Paul-Edouard Sarlin", email = "psarlin@ethz.ch" },
+  { name = "Philipp Lindenberger", email = "plindenbe@ethz.ch" },
+]
+license = {file = "LICENSE"}
+urls = {Repository = "https://github.com/colmap/pycolmap"}
+requires-python = ">=3.7"
+classifiers = [
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+
+[tool.scikit-build]
+wheel.expand-macos-universal-tags = true
