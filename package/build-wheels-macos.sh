@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x -e
 
-PYTHON_VERSIONS=("3.8" "3.9" "3.10" "3.11" "3.12")
+PYTHON_VERSIONS=("3.8" "3.9" "3.10" "3.11")
 
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
@@ -21,6 +21,7 @@ brew update
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
     brew install --force "python@${PYTHON_VERSION}"
+    echo "$(python${PYTHON_VERSION} --version)"
     python${PYTHON_VERSION} -m pip install -U pip setuptools wheel cffi
 done
 
