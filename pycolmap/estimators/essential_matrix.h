@@ -1,8 +1,7 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
-#include "colmap/geometry/essential_matrix.h"
-
 #include "colmap/estimators/essential_matrix.h"
+#include "colmap/geometry/essential_matrix.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"

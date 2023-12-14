@@ -1,7 +1,6 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 #include "colmap/estimators/alignment.h"
-
 #include "colmap/estimators/similarity_transform.h"
 #include "colmap/exe/model.h"
 #include "colmap/geometry/sim3.h"

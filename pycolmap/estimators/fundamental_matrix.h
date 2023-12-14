@@ -1,7 +1,6 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
 #include "colmap/estimators/fundamental_matrix.h"
-
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/scene/camera.h"

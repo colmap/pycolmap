@@ -1,8 +1,7 @@
 // Author: Mihai Dusmanu (mihaidusmanu)
 
-#include "colmap/scene/correspondence_graph.h"
-
 #include "colmap/feature/types.h"
+#include "colmap/scene/correspondence_graph.h"
 #include "colmap/util/types.h"
 
 #include <pybind11/eigen.h>

@@ -1,8 +1,7 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
-#include "colmap/scene/image.h"
-
 #include "colmap/geometry/rigid3.h"
+#include "colmap/scene/image.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 

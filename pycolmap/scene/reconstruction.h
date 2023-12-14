@@ -1,6 +1,5 @@
 // Author: Philipp Lindenberger (Phil26AT)
 #include "colmap/scene/reconstruction.h"
-
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 #include "colmap/util/ply.h"

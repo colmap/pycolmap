@@ -1,7 +1,6 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 #include "colmap/scene/point3d.h"
-
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 

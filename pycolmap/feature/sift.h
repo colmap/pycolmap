@@ -1,5 +1,4 @@
 #include "colmap/feature/sift.h"
-
 #include "colmap/feature/utils.h"
 
 #include <Eigen/Core>
