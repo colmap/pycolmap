@@ -1,10 +1,10 @@
 #pragma once
 
+#include "pycolmap/log_exceptions.h"
+
 #include <iostream>
 #include <regex>
 #include <string>
-
-#include "pycolmap/log_exceptions.h"
 
 enum class Device { AUTO = -1, CPU = 0, CUDA = 1 };
 

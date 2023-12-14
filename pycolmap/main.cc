@@ -1,8 +1,3 @@
-#include <glog/logging.h>
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include "pycolmap/estimators/bindings.h"
 #include "pycolmap/feature/sift.h"
 #include "pycolmap/geometry/bindings.h"
@@ -12,6 +7,11 @@
 #include "pycolmap/scene/bindings.h"
 #include "pycolmap/sfm/incremental_triangulator.h"
 #include "pycolmap/utils.h"
+
+#include <glog/logging.h>
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 

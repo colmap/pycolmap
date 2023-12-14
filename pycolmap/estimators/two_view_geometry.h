@@ -7,13 +7,13 @@
 #include "colmap/scene/camera.h"
 #include "colmap/scene/two_view_geometry.h"
 
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 #include "pycolmap/utils.h"
+
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 using namespace colmap;
 using namespace pybind11::literals;

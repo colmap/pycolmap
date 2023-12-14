@@ -1,13 +1,13 @@
 #include "colmap/feature/sift.h"
 #include "colmap/feature/utils.h"
 
+#include "pycolmap/helpers.h"
+#include "pycolmap/utils.h"
+
 #include <Eigen/Core>
 #include <FreeImage.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-
-#include "pycolmap/helpers.h"
-#include "pycolmap/utils.h"
 
 #define kdim 4
 

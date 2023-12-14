@@ -1,5 +1,3 @@
-#include <pybind11/pybind11.h>
-
 #include "pycolmap/estimators/absolute_pose.h"
 #include "pycolmap/estimators/alignment.h"
 #include "pycolmap/estimators/essential_matrix.h"
@@ -8,6 +6,8 @@
 #include "pycolmap/estimators/homography_matrix.h"
 #include "pycolmap/estimators/triangulation.h"
 #include "pycolmap/estimators/two_view_geometry.h"
+
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 

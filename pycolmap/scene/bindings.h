@@ -1,5 +1,3 @@
-#include <pybind11/pybind11.h>
-
 #include "pycolmap/scene/camera.h"
 #include "pycolmap/scene/correspondence_graph.h"
 #include "pycolmap/scene/image.h"
@@ -7,6 +5,8 @@
 #include "pycolmap/scene/point3D.h"
 #include "pycolmap/scene/reconstruction.h"
 #include "pycolmap/scene/track.h"
+
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 

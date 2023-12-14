@@ -8,12 +8,12 @@
 #include "colmap/scene/camera.h"
 #include "colmap/util/misc.h"
 
+#include "pycolmap/log_exceptions.h"
+#include "pycolmap/utils.h"
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "pycolmap/log_exceptions.h"
-#include "pycolmap/utils.h"
 
 using namespace colmap;
 using namespace pybind11::literals;
