@@ -1,14 +1,14 @@
 #!/bin/bash
-PYTHON_VERSIONS=("cp38-cp38" "cp39-cp39" "cp310-cp310" "cp311-cp311")
-
+set -e -x
 uname -a
 echo "Current CentOS Version:"
-cat /etc/centos-release
+#cat /etc/centos-release
 
-ls -ltrh /io/
+#ls -ltrh /io/
 
 CURRDIR=$(pwd)
 echo "Num. processes to use for building: $(nproc)"
+echo "${CURRDIR}"
 
 # ------ Install dependencies from the default repositories ------
 cd $CURRDIR
@@ -65,9 +65,10 @@ make install
 # ------ Install Eigen ------
 cd $CURRDIR
 EIGEN_VERSION="3.3.9"
-export EIGEN_DIR="$CURRDIR/eigen-${EIGEN_VERSION}"
+export EIGEN_DIR="$CURRDIR/eigen"
 wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
 tar -xvzf eigen-${EIGEN_VERSION}.tar.gz
+mv eigen-${EIGEN_VERSION} ${EIGEN_DIR}
 cd $EIGEN_DIR
 mkdir build && cd build
 cmake ..
@@ -107,35 +108,4 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DCGAL_ENABLED=OFF \
          -DGUI_ENABLED=OFF \
          -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
-
-if [ $ec -ne 0 ]; then
-    echo "Error:"
-    cat ./CMakeCache.txt
-    exit $ec
-fi
-set -e -x
 make -j$(nproc) install
-
-# ------ Build pycolmap wheel ------
-cd /io/
-WHEEL_DIR="wheels/"
-for PYTHON_VERSION in ${PYTHON_VERSIONS[@]}; do
-    PYTHON_EXEC="/opt/python/${PYTHON_VERSION}/bin/python"
-    ${PYTHON_EXEC} -m pip install --upgrade pip
-    ${PYTHON_EXEC} -m pip wheel \
-        --no-deps \
-        -w ${WHEEL_DIR} \
-        --config-settings=cmake.define.EIGEN3_INCLUDE_DIRS="${EIGEN_DIR}" \
-        .
-done
-
-PYTHON_DEFAULT="/opt/python/${PYTHON_VERSIONS[-1]}/bin/python"
-${PYTHON_DEFAULT} -m pip install auditwheel
-
-# Bundle external shared libraries into the wheels
-OUT_DIR="/io/wheelhouse"
-mkdir -p ${OUT_DIR}
-for whl in ${WHEEL_DIR}/*.whl; do
-    auditwheel repair "$whl" -w ${OUT_DIR} --plat ${PLAT}
-done
-ls -ltrh ${OUT_DIR}
