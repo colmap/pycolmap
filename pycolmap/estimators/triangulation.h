@@ -1,12 +1,12 @@
 #include "colmap/estimators/triangulation.h"
 
-#include <pybind11/eigen.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 #include "pycolmap/utils.h"
+
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 
 using namespace colmap;
 using namespace pybind11::literals;

@@ -2,17 +2,16 @@
 
 // Use Eigens aligned allocator for vectors
 #include "colmap/scene/point2d.h"
-
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
+
+#include "pycolmap/log_exceptions.h"
 
 #include <Eigen/StdVector>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-#include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
 using namespace pybind11::literals;

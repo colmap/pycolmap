@@ -2,12 +2,12 @@
 
 #include "colmap/sfm/incremental_triangulator.h"
 
+#include "pycolmap/log_exceptions.h"
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-#include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
 using namespace pybind11::literals;

@@ -1,11 +1,13 @@
 // Author: Paul-Edouard Sarlin (skydes)
-#include "colmap/exe/sfm.h"
-
 #include "colmap/controllers/bundle_adjustment.h"
 #include "colmap/controllers/incremental_mapper.h"
+#include "colmap/exe/sfm.h"
 #include "colmap/scene/reconstruction.h"
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
+
+#include "pycolmap/helpers.h"
+#include "pycolmap/log_exceptions.h"
 
 #include <memory>
 
@@ -13,9 +15,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-
-#include "pycolmap/helpers.h"
-#include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
 using namespace pybind11::literals;
