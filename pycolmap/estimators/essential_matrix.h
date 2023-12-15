@@ -1,19 +1,18 @@
 // Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
 
-#include "colmap/geometry/essential_matrix.h"
-
 #include "colmap/estimators/essential_matrix.h"
+#include "colmap/geometry/essential_matrix.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"
 #include "colmap/scene/camera.h"
 
+#include "pycolmap/log_exceptions.h"
+#include "pycolmap/utils.h"
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "pycolmap/log_exceptions.h"
-#include "pycolmap/utils.h"
 
 using namespace colmap;
 using namespace pybind11::literals;

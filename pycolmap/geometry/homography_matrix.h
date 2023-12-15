@@ -2,11 +2,11 @@
 
 #include "colmap/geometry/homography_matrix.h"
 
+#include "pycolmap/log_exceptions.h"
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
 using namespace pybind11::literals;

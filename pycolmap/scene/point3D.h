@@ -1,16 +1,15 @@
 // Author: Philipp Lindenberger (Phil26AT)
 
 #include "colmap/scene/point3d.h"
-
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
+
+#include "pycolmap/helpers.h"
+#include "pycolmap/log_exceptions.h"
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "pycolmap/helpers.h"
-#include "pycolmap/log_exceptions.h"
 
 using namespace colmap;
 namespace py = pybind11;

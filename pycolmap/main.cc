@@ -1,17 +1,17 @@
+#include "pycolmap/estimators/bindings.h"
+#include "pycolmap/feature/sift.h"
+#include "pycolmap/geometry/bindings.h"
+#include "pycolmap/helpers.h"
+#include "pycolmap/optim/bindings.h"
+#include "pycolmap/pipeline/bindings.h"
+#include "pycolmap/scene/bindings.h"
+#include "pycolmap/sfm/incremental_triangulator.h"
+#include "pycolmap/utils.h"
+
 #include <glog/logging.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-#include "pycolmap/estimators/bindings.cc"
-#include "pycolmap/feature/sift.cc"
-#include "pycolmap/geometry/bindings.cc"
-#include "pycolmap/helpers.h"
-#include "pycolmap/optim/bindings.cc"
-#include "pycolmap/pipeline/bindings.cc"
-#include "pycolmap/scene/bindings.cc"
-#include "pycolmap/sfm/incremental_triangulator.cc"
-#include "pycolmap/utils.h"
 
 namespace py = pybind11;
 
@@ -40,10 +40,13 @@ PYBIND11_MODULE(pycolmap, m) {
           .def_readwrite_static("log_dir", &FLAGS_log_dir)
           .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
           .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr)
-          .def_static("info", [](std::string msg) { LOG(INFO) << msg; })
-          .def_static("warning", [](std::string msg) { LOG(WARNING) << msg; })
-          .def_static("error", [](std::string msg) { LOG(ERROR) << msg; })
-          .def_static("fatal", [](std::string msg) { LOG(FATAL) << msg; });
+          .def_static("info", [](const std::string& msg) { LOG(INFO) << msg; })
+          .def_static("warning",
+                      [](const std::string& msg) { LOG(WARNING) << msg; })
+          .def_static("error",
+                      [](const std::string& msg) { LOG(ERROR) << msg; })
+          .def_static("fatal",
+                      [](const std::string& msg) { LOG(FATAL) << msg; });
   py::enum_<Logging::Level>(PyLogging, "Level")
       .value("INFO", Logging::Level::INFO)
       .value("WARNING", Logging::Level::WARNING)
