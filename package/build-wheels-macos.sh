@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x -e
 
-PYTHON_VERSIONS=("3.8" "3.9" "3.10")
+PYTHON_VERSIONS=("3.8" "3.9" "3.10" "3.11")
 
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
