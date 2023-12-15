@@ -70,28 +70,7 @@ std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
   IncrementalMapperController mapper(
       options_, image_path, database_path, reconstruction_manager);
 
-  // In case a new reconstruction is started, write results of individual sub-
-  // models to as their reconstruction finishes instead of writing all results
-  // after all reconstructions finished.
-  size_t prev_num_reconstructions = 0;
-  std::map<size_t, std::shared_ptr<Reconstruction>> reconstructions;
-  mapper.AddCallback(
-      IncrementalMapperController::LAST_IMAGE_REG_CALLBACK, [&]() {
-        // If the number of reconstructions has not changed, the last model
-        // was discarded for some reason.
-        if (reconstruction_manager->Size() > prev_num_reconstructions) {
-          const std::string reconstruction_path =
-              JoinPaths(output_path, std::to_string(prev_num_reconstructions));
-          const auto& reconstruction =
-              reconstruction_manager->Get(prev_num_reconstructions);
-          CreateDirIfNotExists(reconstruction_path);
-          reconstruction->Write(reconstruction_path);
-          reconstructions[prev_num_reconstructions] = reconstruction;
-          prev_num_reconstructions = reconstruction_manager->Size();
-        }
-      });
-
-  PyInterrupt py_interrupt(1.0);  // Check for interrupts every 2 seconds
+  PyInterrupt py_interrupt(1.0);  // Check for interrupts every second
   mapper.AddCallback(IncrementalMapperController::NEXT_IMAGE_REG_CALLBACK,
                      [&]() {
                        if (py_interrupt.Raised()) {
@@ -101,6 +80,12 @@ std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
 
   mapper.Start();
   mapper.Wait();
+
+  reconstruction_manager->Write(output_path);
+  std::map<size_t, std::shared_ptr<Reconstruction>> reconstructions;
+  for (size_t i = 0; i < reconstruction_manager->Size(); ++i) {
+    reconstructions[i] = reconstruction_manager->Get(i);
+  }
   return reconstructions;
 }
 
