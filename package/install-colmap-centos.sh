@@ -25,7 +25,6 @@ yum install -y \
 
 # ------ Install boost ------
 cd ${CURRDIR}
-mkdir -p boost && cd boost
 export BOOST_FILENAME=boost_1_71_0
 wget -nv https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/${BOOST_FILENAME}.tar.gz
 tar xzf ${BOOST_FILENAME}.tar.gz
@@ -65,21 +64,18 @@ cd ${CURRDIR}
 git clone https://ceres-solver.googlesource.com/ceres-solver
 cd ceres-solver
 git checkout $(git describe --tags) # Checkout the latest release
-mkdir build
-cd build
+mkdir build && cd build
 cmake .. -DBUILD_TESTING=OFF \
          -DBUILD_EXAMPLES=OFF \
          -DEigen3_DIR="${EIGEN_DIR}/cmake/"
-make -j$(nproc)
-make install
+make -j$(nproc) install
 
 # ------ Build COLMAP ------
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
-mkdir build/
-cd build/
+mkdir build && cd build
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DBoost_USE_STATIC_LIBS=OFF \
          -DBOOST_ROOT=/usr/local \
