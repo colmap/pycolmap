@@ -16,6 +16,7 @@ authors = [
 license = {file = "LICENSE"}
 urls = {Repository = "https://github.com/colmap/pycolmap"}
 requires-python = ">=3.7"
+dependencies = ["numpy"]
 classifiers = [
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Python :: 3 :: Only",
@@ -29,7 +30,6 @@ wheel.expand-macos-universal-tags = true
 build = "cp3{8,9,10,11}-{macosx,manylinux}*"
 archs = ["auto64"]
 test-command = "python -c 'import pycolmap; print(pycolmap.__version__)'"
-test-requires = ["numpy"]
 
 [tool.cibuildwheel.linux]
 before-all = "./package/build-colmap-linux.sh"
