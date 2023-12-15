@@ -1,4 +1,4 @@
-name: PyCOLMAP build and publish
+name: Build and publish wheels
 
 on:
   push:
@@ -11,52 +11,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux-build:
-    name: Wrapper Linux Build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [ manylinux2014_x86_64 ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Build the Linux wheels
-        run: |
-          sudo docker run --rm -e PLAT=${{ matrix.platform }} -v `pwd`:/io quay.io/pypa/${{ matrix.platform }} /io/package/build-wheels-linux.sh
-          # cleanup for custom runner
-          sudo chown -R $(whoami):$(whoami) .
-      - name: Archive wheels
-        uses: actions/upload-artifact@v3
-        with:
-          # we strip the version number from the artifact name
-          name: pycolmap-${{ matrix.platform }}
-          path: wheelhouse/pycolmap-*.whl
-
-  mac-build:
-    name: Wrapper macOS Build
+  build:
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-12, macos-13 ]
+        os: [ubuntu-latest, macos-12, macos-13]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Build the macOS wheels
-        run: |
-          ./package/build-wheels-macos.sh
+      - uses: actions/checkout@v4
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.2
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
           name: pycolmap-${{ matrix.os }}
-          path: ./wheelhouse/pycolmap-*.whl
+          path: wheelhouse/pycolmap-*.whl
 
   pypi-publish:
     name: Publish wheels to PyPI
-    needs: [ linux-build, mac-build ]
+    needs: build
     runs-on: ubuntu-latest
     # We publish the wheel to pypi when a new tag is pushed,
     # either by creating a new GitHub release or explictly with `git tag`

@@ -16,6 +16,7 @@ authors = [
 license = {file = "LICENSE"}
 urls = {Repository = "https://github.com/colmap/pycolmap"}
 requires-python = ">=3.7"
+dependencies = ["numpy"]
 classifiers = [
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Python :: 3 :: Only",
@@ -24,3 +25,17 @@ classifiers = [
 
 [tool.scikit-build]
 wheel.expand-macos-universal-tags = true
+
+
+[tool.cibuildwheel]
+build = "cp3{8,9,10,11}-{macosx,manylinux}*"
+archs = ["auto64"]
+test-command = "python -c 'import pycolmap; print(pycolmap.__version__)'"
+
+[tool.cibuildwheel.linux]
+before-all = "./package/install-colmap-centos.sh"
+config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
+
+[tool.cibuildwheel.macos]
+before-all = "./package/install-colmap-macos.sh"
+config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Boost_NO_SYSTEM_PATHS" = "ON" }
