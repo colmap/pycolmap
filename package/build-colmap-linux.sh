@@ -40,13 +40,12 @@ cd ${BOOST_FILENAME}
 ./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
 
 # ------ Install gflags ------
-#cd $CURRDIR
-#git clone --branch v2.2.2 --depth 1 https://github.com/gflags/gflags.git
-#cd gflags
-#mkdir build && cd build
-#cmake ..
-#make -j$(nproc)
-#make install
+cd $CURRDIR
+git clone --branch v2.2.2 --depth 1 https://github.com/gflags/gflags.git
+cd gflags
+mkdir build && cd build
+cmake .. -DBUILD_SHARED_LIBS=ON
+make -j$(nproc) install
 
 # ------ Install glog ------
 cd $CURRDIR
