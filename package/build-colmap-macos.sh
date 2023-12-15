@@ -32,18 +32,18 @@ brew install \
     sqlite3 \
     libomp \
     llvm \
-    boost \
     lz4
 
 # Install Boost
-#mkdir -p boost
-#cd boost
-#wget https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz
-#tar xzf boost_1_81_0.tar.gz
-#cd boost_1_81_0
-#BOOST_DIR=$CURRDIR/boost_install
-#./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
-#./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
+mkdir -p boost
+cd boost
+BOOST_VERSION="1_83_0"
+wget https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_${BOOST_VERSION}.tar.gz
+tar xzf boost_${BOOST_VERSION}.tar.gz
+cd boost_${BOOST_VERSION}
+BOOST_DIR=$CURRDIR/boost_install
+./bootstrap.sh --prefix=${BOOST_DIR} --with-libraries=filesystem,system,program_options,graph,test --without-icu clang-darwin
+./b2 -j$(sysctl -n hw.logicalcpu) cxxflags="-fPIC" link=static runtime-link=static variant=release --disable-icu --prefix=${BOOST_DIR} install
 
 cd $CURRDIR
 git clone https://github.com/colmap/colmap.git
@@ -51,5 +51,5 @@ cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build
 cd build
-cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF #-DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
+cmake .. -DGUI_ENABLED=OFF -DCUDA_ENABLED=OFF -DCGAL_ENABLED=OFF -DBoost_USE_STATIC_LIBS=ON -DBOOSTROOT=${BOOST_DIR} -DBoost_NO_SYSTEM_PATHS=ON
 make -j ${NUM_LOGICAL_CPUS} install
