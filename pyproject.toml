@@ -36,5 +36,9 @@ test-command = "python -c 'import pycolmap; print(pycolmap.__version__)'"
 before-all = "./package/install-colmap-centos.sh"
 config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
+[tool.cibuildwheel.macos]
+before-all = "./package/install-colmap-macos.sh"
+config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Boost_NO_SYSTEM_PATHS" = "ON" }
+
 [tool.cibuildwheel.windows]
 before-all = "./package/install-colmap-windows.ps1"
