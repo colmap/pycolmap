@@ -12,8 +12,8 @@ git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 
-$packages = Get-Content -Path ".azure-pipelines/build-windows-vcpkg.txt"
-& "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @$packages
+$PACKAGE_NAMES = Get-Content -Path ".azure-pipelines/build-windows-vcpkg.txt"
+& "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @PACKAGE_NAMES
 
 mkdir build
 cd build
