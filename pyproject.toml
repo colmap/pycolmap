@@ -41,4 +41,4 @@ before-all = "{project}/package/install-colmap-macos.sh"
 config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Boost_NO_SYSTEM_PATHS" = "ON" }
 
 [tool.cibuildwheel.windows]
-before-all = "powershell.exe '{project}/package/install-colmap-windows.ps1'"
+before-all = "powershell '& {project}/package/install-colmap-windows.ps1'"
