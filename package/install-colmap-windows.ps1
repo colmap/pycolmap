@@ -1,5 +1,6 @@
 CURRDIR = $PWD
 
+echo $env:VCPKG_INSTALLATION_ROOT
 ${VCPKG_INSTALLATION_ROOT}/vcpkg.exe integrate install
 
 curl -L -o ninja.zip https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip
@@ -20,5 +21,8 @@ cmake .. `
   -DCMAKE_MAKE_PROGRAM=${NINJA_PATH} `
   -DCMAKE_BUILD_TYPE=Release `
   -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake `
-  -DVCPKG_TARGET_TRIPLET=x64-windows
+  -DVCPKG_TARGET_TRIPLET=x64-windows `
+  -DCUDA_ENABLED=OFF `
+  -DCGAL_ENABLED=OFF `
+  -DGUI_ENABLED=OFF
 ${NINJA_PATH} install
