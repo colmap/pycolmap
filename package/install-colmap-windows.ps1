@@ -12,18 +12,20 @@ git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 
-$PACKAGE_NAMES = Get-Content -Path ".azure-pipelines/build-windows-vcpkg.txt"
-& "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @PACKAGE_NAMES
+[System.Collections.ArrayList]$DEPS = Get-Content -Path ".azure-pipelines/build-windows-vcpkg.txt"
+$DEPS.Remove("cgal")
+$DEPS.Remove("qt5-base")
+& "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @DEPS
 
 mkdir build
 cd build
 cmake .. `
   -GNinja `
-  -DCMAKE_MAKE_PROGRAM=${NINJA_PATH} `
-  -DCMAKE_BUILD_TYPE=Release `
+  -DCMAKE_MAKE_PROGRAM="${NINJA_PATH}" `
+  -DCMAKE_BUILD_TYPE="Release" `
   -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
-  -DVCPKG_TARGET_TRIPLET=x64-windows `
-  -DCUDA_ENABLED=OFF `
-  -DCGAL_ENABLED=OFF `
-  -DGUI_ENABLED=OFF
+  -DVCPKG_TARGET_TRIPLET="x64-windows" `
+  -DCUDA_ENABLED="OFF" `
+  -DCGAL_ENABLED="OFF" `
+  -DGUI_ENABLED="OFF"
 & ${NINJA_PATH} install
