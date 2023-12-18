@@ -1,7 +1,7 @@
 CURRDIR = $PWD
 
 echo $env:VCPKG_INSTALLATION_ROOT
-"${VCPKG_INSTALLATION_ROOT}/vcpkg.exe" integrate install
+& "${VCPKG_INSTALLATION_ROOT}/vcpkg.exe" integrate install
 
 curl -L -o "ninja.zip" "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip"
 Expand-Archive -LiteralPath "${CURRDIR}/ninja.zip" -DestinationPath ${CURRDIR}
@@ -12,7 +12,7 @@ git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 
-"${VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse ".azure-pipelines/build-windows-vcpkg.txt" --clean-after-build
+& "${VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse ".azure-pipelines/build-windows-vcpkg.txt" --clean-after-build
 
 mkdir build
 cd build
@@ -25,4 +25,4 @@ cmake .. `
   -DCUDA_ENABLED=OFF `
   -DCGAL_ENABLED=OFF `
   -DGUI_ENABLED=OFF
-${NINJA_PATH} install
+& ${NINJA_PATH} install
