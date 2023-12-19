@@ -42,4 +42,4 @@ config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Bo
 
 [tool.cibuildwheel.windows]
 before-all = "powershell -File {project}/package/install-colmap-windows.ps1"
-config-settings = { "cmake.define.CMAKE_TOOLCHAIN_FILE" = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake", "cmake.define.VCPKG_TARGET_TRIPLET" = "x64-windows" }
+environment = { CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake", VCPKG_TARGET_TRIPLET="x64-windows" }
