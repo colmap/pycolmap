@@ -7,10 +7,13 @@
 #include "colmap/feature/sift.h"
 #include "colmap/mvs/fusion.h"
 #include "colmap/mvs/meshing.h"
-#include "colmap/mvs/patch_match.h"
 #include "colmap/scene/reconstruction.h"
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
+
+#ifndef COLMAP_CUDA_ENABLED
+#include "colmap/mvs/patch_match.h"
+#endif  // COLMAP_CUDA_ENABLED
 
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
@@ -24,17 +27,12 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
+#ifndef COLMAP_CUDA_ENABLED
 void PatchMatchStereo(py::object workspace_path_,
                       std::string workspace_format,
                       std::string pmvs_option_name,
                       mvs::PatchMatchOptions options,
                       std::string config_path) {
-#ifndef COLMAP_CUDA_ENABLED
-  THROW_EXCEPTION(std::runtime_error,
-                  "Dense stereo reconstruction requires CUDA, which is not "
-                  "available on the system.");
-  return;
-#endif  // COLMAP_CUDA_ENABLED
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 
@@ -51,6 +49,7 @@ void PatchMatchStereo(py::object workspace_path_,
   controller.Start();
   PyWait(&controller);
 }
+#endif  // COLMAP_CUDA_ENABLED
 
 Reconstruction StereoFusion(py::object output_path_,
                             py::object workspace_path_,
@@ -106,6 +105,7 @@ Reconstruction StereoFusion(py::object output_path_,
 }
 
 void BindMVS(py::module& m) {
+#ifndef COLMAP_CUDA_ENABLED
   using PMOpts = mvs::PatchMatchOptions;
   auto PyPatchMatchOptions =
       py::class_<PMOpts>(m, "PatchMatchOptions")
@@ -195,6 +195,16 @@ void BindMVS(py::module& m) {
   make_dataclass(PyPatchMatchOptions);
   auto patch_match_options = PyPatchMatchOptions().cast<PMOpts>();
 
+  m.def("patch_match_stereo",
+        &PatchMatchStereo,
+        "workspace_path"_a,
+        "workspace_format"_a = "COLMAP",
+        "pmvs_option_name"_a = "option-all",
+        "options"_a = patch_match_options,
+        "config_path"_a = "",
+        "Runs Patch-Match-Stereo (requires CUDA)");
+#endif  // COLMAP_CUDA_ENABLED
+
   using SFOpts = mvs::StereoFusionOptions;
   auto PyStereoFusionOptions =
       py::class_<SFOpts>(m, "StereoFusionOptions")
@@ -248,15 +258,6 @@ void BindMVS(py::module& m) {
 
   make_dataclass(PyStereoFusionOptions);
   auto stereo_fusion_options = PyStereoFusionOptions().cast<SFOpts>();
-
-  m.def("patch_match_stereo",
-        &PatchMatchStereo,
-        "workspace_path"_a,
-        "workspace_format"_a = "COLMAP",
-        "pmvs_option_name"_a = "option-all",
-        "options"_a = patch_match_options,
-        "config_path"_a = "",
-        "Runs Patch-Match-Stereo (requires CUDA)");
 
   m.def("stereo_fusion",
         &StereoFusion,
