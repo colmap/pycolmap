@@ -14,6 +14,7 @@ git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 [System.Collections.ArrayList]$DEPS = Get-Content -Path ".azure-pipelines/build-windows-vcpkg.txt"
 $DEPS.Remove("cgal")
 $DEPS.Remove("qt5-base")
+$DEPS.Add("boost-heap")
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @DEPS
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" integrate install
 
