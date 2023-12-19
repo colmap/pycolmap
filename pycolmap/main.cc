@@ -16,12 +16,12 @@
 namespace py = pybind11;
 
 struct Logging {
-  //enum class Level {
-    //INFO = google::GLOG_INFO,
-    //WARNING = google::GLOG_WARNING,
-    //ERROR = google::GLOG_ERROR,
-    //FATAL = google::GLOG_FATAL,
-  //};
+  enum class Level {
+    INFO_ = google::GLOG_INFO,
+    WARNING_ = google::GLOG_WARNING,
+    ERROR_ = google::GLOG_ERROR,
+    FATAL_ = google::GLOG_FATAL,
+  };
 };  // dummy class
 
 PYBIND11_MODULE(pycolmap, m) {
@@ -47,12 +47,12 @@ PYBIND11_MODULE(pycolmap, m) {
                       [](const std::string& msg) { LOG(ERROR) << msg; })
           .def_static("fatal",
                       [](const std::string& msg) { LOG(FATAL) << msg; });
-  //py::enum_<Logging::Level>(PyLogging, "Level")
-      //.value("INFO", Logging::Level::INFO)
-      //.value("WARNING", Logging::Level::WARNING)
-      //.value("ERROR", Logging::Level::ERROR)
-      //.value("FATAL", Logging::Level::FATAL)
-      //.export_values();
+  py::enum_<Logging::Level>(PyLogging, "Level")
+      .value("INFO", Logging::Level::INFO_)
+      .value("WARNING", Logging::Level::WARNING_)
+      .value("ERROR", Logging::Level::ERROR_)
+      .value("FATAL", Logging::Level::FATAL_)
+      .export_values();
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
   FLAGS_logtostderr = true;
