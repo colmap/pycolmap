@@ -11,7 +11,7 @@
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 
-#ifndef COLMAP_CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
 #include "colmap/mvs/patch_match.h"
 #endif  // COLMAP_CUDA_ENABLED
 
@@ -27,7 +27,7 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-#ifndef COLMAP_CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
 void PatchMatchStereo(py::object workspace_path_,
                       std::string workspace_format,
                       std::string pmvs_option_name,
@@ -105,7 +105,7 @@ Reconstruction StereoFusion(py::object output_path_,
 }
 
 void BindMVS(py::module& m) {
-#ifndef COLMAP_CUDA_ENABLED
+#ifdef COLMAP_CUDA_ENABLED
   using PMOpts = mvs::PatchMatchOptions;
   auto PyPatchMatchOptions =
       py::class_<PMOpts>(m, "PatchMatchOptions")
