@@ -3,6 +3,7 @@
 #pragma once
 
 #include "colmap/util/threading.h"
+#include "colmap/util/types.h"
 
 #include "pycolmap/log_exceptions.h"
 
@@ -15,6 +16,7 @@
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
 using namespace colmap;
@@ -263,7 +265,16 @@ void PyWait(Thread* thread, double gap = 2.0) {
   thread->Wait();
 }
 
-namespace pybind11 {
+namespace PYBIND11_NAMESPACE {
+
+// Bind COLMAP's backport implementation of std::span. This copies the content
+// into a list. We could instead create a view with an Eigen::Map but the cast
+// should be explicit and cannot be automatic - likely not worth the added
+// logic.
+namespace detail {
+template <typename Type>
+struct type_caster<span<Type>> : list_caster<span<Type>, Type> {};
+}  // namespace detail
 
 // Fix long-standing bug https://github.com/pybind/pybind11/issues/4529
 // TODO(sarlinpe): remove when https://github.com/pybind/pybind11/pull/4972
@@ -429,4 +440,4 @@ class_<Map, holder_type> bind_map_fix(handle scope,
 
   return cl;
 }
-}  // namespace pybind11
+}  // namespace PYBIND11_NAMESPACE
