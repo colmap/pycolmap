@@ -45,4 +45,5 @@ config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Bo
 before-all = "powershell -File {project}/package/install-colmap-windows.ps1"
 environment = { CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake", VCPKG_TARGET_TRIPLET="x64-windows" }
 before-build = "pip install delvewheel"
-repair-wheel-command = "delvewheel repair -v --add-path %VCPKG_INSTALLATION_ROOT%/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"
+# Env variable are not interpolated in the repair command, unsure why.
+repair-wheel-command = "delvewheel repair -v --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"
