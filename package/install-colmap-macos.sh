@@ -55,7 +55,7 @@ BOOST_DIR=${CURRDIR}/boost_install
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
+git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
