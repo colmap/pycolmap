@@ -19,38 +19,15 @@ brew install \
     git \
     wget \
     cmake \
-    eigen \
-    freeimage \
-    flann \
-    glog \
-    gflags \
-    metis \
-    suite-sparse \
-    ceres-solver \
-    glew \
-    sqlite3 \
-    libomp \
-    llvm \
-    lz4
+    llvm
 
-# Install Boost
-mkdir boost && cd boost
-BOOST_FILENAME="boost_1_83_0"
-wget https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/${BOOST_FILENAME}.tar.gz
-tar xzf ${BOOST_FILENAME}.tar.gz
-cd ${BOOST_FILENAME}
-BOOST_DIR=${CURRDIR}/boost_install
-./bootstrap.sh --prefix=${BOOST_DIR} \
-    --with-libraries=filesystem,system,program_options,graph,test \
-    --without-icu clang-darwin
-./b2 -j ${NUM_LOGICAL_CPUS} \
-    cxxflags="-fPIC" \
-    link=static \
-    runtime-link=static \
-    variant=release \
-    --disable-icu \
-    --prefix=${BOOST_DIR} \
-    install
+cd ${CURRDIR}
+git clone https://github.com/microsoft/vcpkg
+cd vcpkg
+VCPKG_DIR=$(pwd)
+./bootstrap-vcpkg.sh
+./vcpkg install --recurse --clean-after-build --triplet=x64-osx boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system ceres[lapack,suitesparse] eigen3 flann freeimage metis gflags glog gtest sqlite3
+./vcpkg integrate install
 
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
@@ -60,7 +37,6 @@ mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
-    -DBoost_USE_STATIC_LIBS=OFF \
-    -DBOOSTROOT=${BOOST_DIR} \
-    -DBoost_NO_SYSTEM_PATHS=ON
+    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake \
+    -DVCPKG_TARGET_TRIPLET=x64-osx
 make -j ${NUM_LOGICAL_CPUS} install
