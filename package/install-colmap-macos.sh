@@ -15,11 +15,14 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install gfortran \
+brew install \
     git \
     wget \
     cmake \
-    llvm
+    llvm \
+    gfortran
+gfortran --version
+gfortran-13 --version
 
 cd ${CURRDIR}
 git clone https://github.com/microsoft/vcpkg
