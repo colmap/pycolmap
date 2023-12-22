@@ -19,10 +19,9 @@ brew install \
     git \
     wget \
     cmake \
-    llvm
-brew install gfortran
-gfortran-13 --version
-gfortran --version
+    llvm \
+    gfortran
+export CMAKE_FORTRAN_COMPILER=$(where gfortran-13)
 
 cd ${CURRDIR}
 git clone https://github.com/microsoft/vcpkg
