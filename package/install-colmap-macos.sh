@@ -20,7 +20,7 @@ brew install \
     wget \
     cmake \
     llvm \
-    gfortran
+    gcc
 
 cd ${CURRDIR}
 git clone https://github.com/microsoft/vcpkg
