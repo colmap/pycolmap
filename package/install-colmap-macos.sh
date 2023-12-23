@@ -29,10 +29,12 @@ ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 echo "$VCPKG_TARGET_TRIPLET $CIBW_ARCHS_MACOS"
 
 cd ${CURRDIR}
-git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+#git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
-./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system ceres suitesparse eigen3 flann freeimage metis gflags glog gtest sqlite3
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system ceres[lapack,suitesparse] eigen3 flann freeimage metis gflags glog gtest sqlite3
 ./vcpkg integrate install
 
 cd ${CURRDIR}
