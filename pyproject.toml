@@ -38,5 +38,8 @@ config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
 [tool.cibuildwheel.macos]
 before-all = "./package/install-colmap-macos.sh"
-environment = { VCPKG_INSTALLATION_ROOT="/Users/runner/work/vcpkg", CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake", VCPKG_TARGET_TRIPLET="x64-osx" }
-archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.macos.environment]
+VCPKG_INSTALLATION_ROOT = "/Users/runner/work/vcpkg"
+CMAKE_TOOLCHAIN_FILE = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+VCPKG_TARGET_TRIPLET = "${ARCHFLAGS%_64}-osx"

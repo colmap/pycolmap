@@ -40,7 +40,5 @@ git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
-    -DCGAL_ENABLED=OFF \
-    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-    -DVCPKG_TARGET_TRIPLET=x64-osx
+    -DCGAL_ENABLED=OFF
 make -j ${NUM_LOGICAL_CPUS} install
