@@ -42,4 +42,3 @@ before-all = "./package/install-colmap-macos.sh"
 [tool.cibuildwheel.macos.environment]
 VCPKG_INSTALLATION_ROOT = "/Users/runner/work/vcpkg"
 CMAKE_TOOLCHAIN_FILE = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
-VCPKG_TARGET_TRIPLET = "$([[ ${CIBW_ARCHS_MACOS} == x86_64 ]] && V=x64-osx || V=arm64-osx-release; echo $V)"
