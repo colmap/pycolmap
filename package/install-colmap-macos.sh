@@ -32,7 +32,7 @@ git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG
 
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
-./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system eigen3 flann freeimage metis gflags glog gtest sqlite3 ceres[lapack,suitesparse]
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system eigen3 flann freeimage metis gflags glog gtest sqlite3 ceres[lapack,suitesparse,tools]
 ./vcpkg integrate install
 
 cd ${CURRDIR}
@@ -42,5 +42,7 @@ git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
-    -DCGAL_ENABLED=OFF
+    -DCGAL_ENABLED=OFF \
+    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT} \
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
 make -j ${NUM_LOGICAL_CPUS} install
