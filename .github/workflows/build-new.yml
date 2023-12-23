@@ -40,10 +40,16 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.config.arch }}
+      - name: Upload logs
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: logs-${{ matrix.config.os }}-${{ matrix.config.arch }}
+          path: /Users/runner/work/vcpkg/buildtrees/*/*.log
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
-          name: pycolmap-${{ matrix.os }}
+          name: pycolmap-${{ matrix.config.os }}
           path: wheelhouse/pycolmap-*.whl
 
   pypi-publish:
