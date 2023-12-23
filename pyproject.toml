@@ -30,7 +30,7 @@ wheel.expand-macos-universal-tags = true
 [tool.cibuildwheel]
 build = "cp3{8,9,10,11}-{macosx,manylinux,win}*"
 archs = ["auto64"]
-environment = { COLMAP_COMMIT_ID="c0355417328f3706a30a9265fd52bc7a5aa4cb8c" }
+environment = { COLMAP_COMMIT_ID="9d970e5f3db2f39f0db5d86b5d11650c5f79a53c" }
 test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
 [tool.cibuildwheel.linux]
