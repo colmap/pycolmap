@@ -27,9 +27,8 @@ export CMAKE_Fortran_COMPILER_INIT="gfortran-13"
 ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 
 cd ${CURRDIR}
-git clone https://github.com/microsoft/vcpkg
-cd vcpkg
-VCPKG_DIR=$(pwd)
+git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=x64-osx boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system ceres[lapack,suitesparse] eigen3 flann freeimage metis gflags glog gtest sqlite3
 ./vcpkg integrate install
@@ -42,6 +41,6 @@ mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
-    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
     -DVCPKG_TARGET_TRIPLET=x64-osx
 make -j ${NUM_LOGICAL_CPUS} install

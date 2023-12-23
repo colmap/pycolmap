@@ -38,5 +38,5 @@ config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
 [tool.cibuildwheel.macos]
 before-all = "./package/install-colmap-macos.sh"
-config-settings = { "cmake.define.BOOSTROOT" = "boost_install", "cmake.define.Boost_NO_SYSTEM_PATHS" = "ON" }
+environment = { VCPKG_INSTALLATION_ROOT="/Users/runner/work/vcpkg", CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake", VCPKG_TARGET_TRIPLET="x64-osx" }
 archs = ["x86_64", "arm64"]
