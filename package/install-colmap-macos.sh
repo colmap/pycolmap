@@ -26,8 +26,6 @@ export CMAKE_Fortran_COMPILER=$(which gfortran-13)
 export CMAKE_Fortran_COMPILER_INIT="gfortran-13"
 ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 
-echo "$VCPKG_TARGET_TRIPLET $CIBW_ARCHS_MACOS"
-
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
