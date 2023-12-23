@@ -34,7 +34,7 @@ git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG
 
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
-./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system ceres[lapack,suitesparse] eigen3 flann freeimage metis gflags glog gtest sqlite3
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system eigen3 flann freeimage metis gflags glog gtest sqlite3 ceres[lapack,suitesparse]
 ./vcpkg integrate install
 
 cd ${CURRDIR}
