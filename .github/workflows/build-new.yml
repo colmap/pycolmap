@@ -25,7 +25,8 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v4
-      - shell: bash
+      - name: Set architecture env
+        shell: bash
         run: |
           if [[ ${{ matrix.config.os }} == macos-* ]]; then
             if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
