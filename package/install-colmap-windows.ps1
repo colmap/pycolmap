@@ -23,9 +23,7 @@ cd build
 cmake .. `
   -GNinja `
   -DCMAKE_MAKE_PROGRAM="${NINJA_PATH}" `
-  -DCMAKE_TOOLCHAIN_FILE="${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
   -DCMAKE_BUILD_TYPE="Release" `
-  -DVCPKG_TARGET_TRIPLET="x64-windows" `
   -DCUDA_ENABLED="OFF" `
   -DCGAL_ENABLED="OFF" `
   -DGUI_ENABLED="OFF"
