@@ -26,18 +26,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set architecture env
-        shell: bash
         run: |
-          if [[ ${{ matrix.config.os }} == macos-* ]]; then
-            if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
-              VCPKG_TARGET_TRIPLET="x64-osx"
-            if [[ ${{ matrix.config.arch }} == "arm64" ]]; then
-              VCPKG_TARGET_TRIPLET="arm64-osx-release"
-            else
-              exit 1
-            fi
-            echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
+            VCPKG_TARGET_TRIPLET="x64-osx"
+          elif [[ ${{ matrix.config.arch }} == "arm64" ]]; then
+            VCPKG_TARGET_TRIPLET="arm64-osx-release"
+          else
+            exit 1
           fi
+          echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "$GITHUB_ENV"
+        if: ${{ startsWith(matrix.config.os, 'macos') }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:
