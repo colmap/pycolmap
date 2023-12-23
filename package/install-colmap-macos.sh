@@ -27,7 +27,7 @@ export CMAKE_Fortran_COMPILER_INIT="gfortran-13"
 ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 
 echo "$VCPKG_TARGET_TRIPLET $CIBW_ARCHS_MACOS"
-export VCPKG_TARGET_TRIPLET="${CIBW_ARCHS_MACOS%_64}-osx"
+export VCPKG_TARGET_TRIPLET="$([[ ${CIBW_ARCHS_MACOS} == "x86_64" ]] && V="x64-osx" || V="arm64-osx-release"; echo $V)"
 
 cd ${CURRDIR}
 git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
