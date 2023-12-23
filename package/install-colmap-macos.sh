@@ -43,6 +43,6 @@ mkdir build && cd build
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
-    -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT} \
+    -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
 make -j ${NUM_LOGICAL_CPUS} install
