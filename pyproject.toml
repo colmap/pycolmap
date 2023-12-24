@@ -44,3 +44,8 @@ before-build = "${VCPKG_INSTALLATION_ROOT}/vcpkg integrate install"
 VCPKG_INSTALLATION_ROOT = "/Users/runner/work/vcpkg"
 CMAKE_TOOLCHAIN_FILE = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
 CMAKE_OSX_ARCHITECTURES = "${CIBW_ARCHS_MACOS}"
+
+[tool.cibuildwheel.macos.config-settings]
+"cmake.define.CMAKE_TOOLCHAIN_FILE" = "/Users/runner/work/vcpkg/scripts/buildsystems/vcpkg.cmake"
+"cmake.define.VCPKG_TARGET_TRIPLET" = "arm64-osx-release"
+"cmake.define.CMAKE_OSX_ARCHITECTURES" = "arm64"
