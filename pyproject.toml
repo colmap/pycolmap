@@ -42,3 +42,4 @@ before-all = "./package/install-colmap-macos.sh"
 [tool.cibuildwheel.macos.environment]
 VCPKG_INSTALLATION_ROOT = "/Users/runner/work/vcpkg"
 CMAKE_TOOLCHAIN_FILE = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+CMAKE_OSX_ARCHITECTURES = "${CIBW_ARCHS_MACOS}"
