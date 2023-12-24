@@ -40,6 +40,7 @@ git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build && cd build
+export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
