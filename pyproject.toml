@@ -46,6 +46,6 @@ CMAKE_TOOLCHAIN_FILE = "${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cm
 CMAKE_OSX_ARCHITECTURES = "${CIBW_ARCHS_MACOS}"
 
 [tool.cibuildwheel.macos.config-settings]
-"cmake.define.CMAKE_TOOLCHAIN_FILE" = "/Users/runner/work/vcpkg/scripts/buildsystems/vcpkg.cmake"
-"cmake.define.VCPKG_TARGET_TRIPLET" = "arm64-osx-release"
-"cmake.define.CMAKE_OSX_ARCHITECTURES" = "arm64"
+"cmake.define.CMAKE_TOOLCHAIN_FILE" = "${CMAKE_TOOLCHAIN_FILE}"
+"cmake.define.VCPKG_TARGET_TRIPLET" = "${VCPKG_TARGET_TRIPLET}"
+"cmake.define.CMAKE_OSX_ARCHITECTURES" = "${CIBW_ARCHS_MACOS}"
