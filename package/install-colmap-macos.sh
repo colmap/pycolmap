@@ -44,5 +44,8 @@ export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
+    -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
+    -DCMAKE_OSX_ARCHITECTURES=${CIBW_ARCHS_MACOS} \
     `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
 make -j ${NUM_LOGICAL_CPUS} install
