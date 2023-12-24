@@ -18,7 +18,7 @@ jobs:
       matrix:
         config: [
               {os: ubuntu-latest},
-              #{os: macos-13, arch: x86_64},
+              {os: macos-13, arch: x86_64},
               {os: macos-13, arch: arm64},
         ]
     steps:
@@ -33,17 +33,24 @@ jobs:
             exit 1
           fi
           echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "$GITHUB_ENV"
+
+          VCPKG_INSTALLATION_ROOT="/Users/runner/work/vcpkg"
+          CMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          CMAKE_OSX_ARCHITECTURES=${{ matrix.config.arch }}
+          echo "VCPKG_INSTALLATION_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
+          echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "$GITHUB_ENV"
+          echo "CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}" >> "$GITHUB_ENV"
+
+          CONFIG_SETTINGS="cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+          CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+          CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
+          echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
+
         if: ${{ startsWith(matrix.config.os, 'macos') }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.config.arch }}
-      - name: Upload logs
-        uses: actions/upload-artifact@v3
-        if: failure() && ${{ startsWith(matrix.config.os, 'macos') }}
-        with:
-          name: logs-${{ matrix.config.os }}-${{ matrix.config.arch }}
-          path: /Users/runner/work/vcpkg/buildtrees/*/*.log
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
