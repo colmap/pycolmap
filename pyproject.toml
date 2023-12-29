@@ -38,4 +38,3 @@ config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
 [tool.cibuildwheel.macos]
 before-all = "./package/install-colmap-macos.sh"
-before-build = "${VCPKG_INSTALLATION_ROOT}/vcpkg integrate install"
