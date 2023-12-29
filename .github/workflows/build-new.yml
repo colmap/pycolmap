@@ -28,7 +28,7 @@ jobs:
           # Fix: cibuildhweel cannot interpolate env variables.
           $CONFIG_SETTINGS = "cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
           $CONFIG_SETTINGS = "${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=x64-windows"
-          echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "${env:GITHUB_ENV}"
+          echo "CIBW_CONFIG_SETTINGS_WINDOWS=${CONFIG_SETTINGS}" >> "${env:GITHUB_ENV}"
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
       - name: Archive wheels
