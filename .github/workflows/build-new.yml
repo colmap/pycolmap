@@ -23,7 +23,7 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v4
-      - name: Set architecture env
+      - name: Set macOS env
         if: ${{ startsWith(matrix.config.os, 'macos') }}
         run: |
           if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
