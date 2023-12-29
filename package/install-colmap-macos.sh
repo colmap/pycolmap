@@ -15,16 +15,7 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install \
-    git \
-    wget \
-    cmake \
-    llvm
-
-# for lapack-reference
-export CMAKE_Fortran_COMPILER=$(which gfortran-13)
-export CMAKE_Fortran_COMPILER_INIT="gfortran-13"
-ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
+brew install git cmake llvm
 
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
@@ -32,7 +23,25 @@ git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG
 
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
-./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} boost-algorithm boost-filesystem boost-graph boost-heap boost-program-options boost-property-map boost-property-tree boost-regex boost-system eigen3 flann freeimage metis gflags glog gtest sqlite3 ceres[lapack,suitesparse,tools]
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
+    boost-algorithm \
+    boost-filesystem \
+    boost-graph \
+    boost-heap \
+    boost-program-options \
+    boost-property-map \
+    boost-property-tree \
+    boost-regex \
+    boost-system \
+    ceres[lapack,suitesparse,tools] \
+    eigen3 \
+    flann \
+    freeimage \
+    metis \
+    gflags \
+    glog \
+    gtest \
+    sqlite3
 ./vcpkg integrate install
 
 cd ${CURRDIR}
@@ -44,8 +53,8 @@ export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
-    -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" \
+    -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
-    -DCMAKE_OSX_ARCHITECTURES=${CIBW_ARCHS_MACOS} \
+    -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \
     `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
 make -j ${NUM_LOGICAL_CPUS} install

@@ -24,6 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set architecture env
+        if: ${{ startsWith(matrix.config.os, 'macos') }}
         run: |
           if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
             VCPKG_TARGET_TRIPLET="x64-osx"
@@ -41,12 +42,11 @@ jobs:
           echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "$GITHUB_ENV"
           echo "CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}" >> "$GITHUB_ENV"
 
+          # Fix: cibuildhweel cannot interpolate env variables.
           CONFIG_SETTINGS="cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
-
-        if: ${{ startsWith(matrix.config.os, 'macos') }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:
@@ -54,7 +54,7 @@ jobs:
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
-          name: pycolmap-${{ matrix.config.os }}
+          name: pycolmap-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: wheelhouse/pycolmap-*.whl
 
   pypi-publish:
