@@ -46,7 +46,3 @@ before-all = "powershell -File {project}/package/install-colmap-windows.ps1"
 before-build = "pip install delvewheel"
 # Env variable are not interpolated in the repair command, unsure why.
 repair-wheel-command = "delvewheel repair -v --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"
-
-[tool.cibuildwheel.windows.environment]
-CMAKE_TOOLCHAIN_FILE = "$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-VCPKG_TARGET_TRIPLET = "x64-windows"

@@ -19,6 +19,16 @@ jobs:
         os: [ubuntu-latest, macos-12, macos-13, windows-latest]
     steps:
       - uses: actions/checkout@v4
+      - name: Set Windows env
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
+        shell: pwsh
+        run: |
+          $CMAKE_TOOLCHAIN_FILE = "${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "${env:GITHUB_ENV}"
+          # Fix: cibuildhweel cannot interpolate env variables.
+          $CONFIG_SETTINGS = "cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+          $CONFIG_SETTINGS = "${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=x64-windows"
+          echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "${env:GITHUB_ENV}"
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
       - name: Archive wheels
