@@ -1,4 +1,6 @@
 $CURRDIR = $PWD
+echo "CMAKE_TOOLCHAIN_FILE = ${env:CMAKE_TOOLCHAIN_FILE}"
+echo "CIBW_CONFIG_SETTINGS_WINDOWS = ${env:CIBW_CONFIG_SETTINGS_WINDOWS}"
 
 curl.exe -L -o "ninja.zip" "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip"
 Expand-Archive -LiteralPath "${CURRDIR}/ninja.zip" -DestinationPath ${CURRDIR}
@@ -26,5 +28,7 @@ cmake .. `
   -DCMAKE_BUILD_TYPE="Release" `
   -DCUDA_ENABLED="OFF" `
   -DCGAL_ENABLED="OFF" `
-  -DGUI_ENABLED="OFF"
+  -DGUI_ENABLED="OFF" `
+  -DCMAKE_TOOLCHAIN_FILE="${env:CMAKE_TOOLCHAIN_FILE}" `
+  -DVCPKG_TARGET_TRIPLET="x64-windows"
 & ${NINJA_PATH} install
