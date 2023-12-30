@@ -31,7 +31,7 @@ cd ${VCPKG_INSTALLATION_ROOT}
     boost-property-tree \
     boost-regex \
     boost-system \
-    ceres[lapack,suitesparse,tools] \
+    ceres[lapack,suitesparse] \
     eigen3 \
     flann \
     freeimage \
