@@ -1,8 +1,6 @@
 #!/bin/bash
 set -x -e
-
 CURRDIR=$(pwd)
-NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
 
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
@@ -15,7 +13,7 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install git cmake llvm
+brew install git cmake ninja llvm
 
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
@@ -50,11 +48,11 @@ cd colmap
 git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
 mkdir build && cd build
 export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
-cmake .. -DGUI_ENABLED=OFF \
+cmake .. -GNinja -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
     -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \
     `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
-make -j ${NUM_LOGICAL_CPUS} install
+ninja install
