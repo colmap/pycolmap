@@ -74,7 +74,7 @@ make -j$(nproc) install
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
+git checkout c206c7a333c8b2ef818135bdfe9d31a28bd2eb2b
 mkdir build && cd build
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DBoost_USE_STATIC_LIBS=OFF \
