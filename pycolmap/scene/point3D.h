@@ -30,5 +30,5 @@ void BindPoint3D(py::module& m) {
           .def("__copy__", [](const Point3D& self) { return Point3D(self); })
           .def("__deepcopy__",
                [](const Point3D& self, py::dict) { return Point3D(self); });
-  make_dataclass(PyPoint3D);
+  MakeDataclass(PyPoint3D);
 }

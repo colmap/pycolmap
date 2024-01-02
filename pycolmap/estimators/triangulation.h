@@ -61,7 +61,7 @@ void BindTriangulationEstimator(py::module& m) {
                          &EstimateTriangulationOptions::min_tri_angle)
           .def_readwrite("ransac",
                          &EstimateTriangulationOptions::ransac_options);
-  make_dataclass(PyTriangulationOptions);
+  MakeDataclass(PyTriangulationOptions);
   auto triangulation_options =
       PyTriangulationOptions().cast<EstimateTriangulationOptions>();
 

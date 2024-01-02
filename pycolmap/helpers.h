@@ -183,7 +183,7 @@ inline std::string CreateSummary(const T& self, bool write_type) {
 }
 
 template <typename T, typename... options>
-inline void make_dataclass(py::class_<T, options...> cls) {
+inline void MakeDataclass(py::class_<T, options...> cls) {
   cls.def("mergedict", &UpdateFromDict);
   cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   cls.def("todict", &ConvertToDict<T>);

@@ -250,7 +250,7 @@ void BindSfM(py::module& m) {
                      "Options of the IncrementalTriangulator.")
       .def("get_mapper", &MapperOpts::Mapper)
       .def("get_triangulation", &MapperOpts::Triangulation);
-  make_dataclass(PyMapperOpts);
+  MakeDataclass(PyMapperOpts);
   auto mapper_options = PyMapperOpts().cast<MapperOpts>();
 
   using BAOpts = BundleAdjustmentOptions;
@@ -289,7 +289,7 @@ void BindSfM(py::module& m) {
           .def_readwrite("max_consecutive_nonmonotonic_steps",
                          &CSOpts::max_consecutive_nonmonotonic_steps)
           .def_readwrite("num_threads", &CSOpts::num_threads);
-  make_dataclass(PyCeresSolverOptions);
+  MakeDataclass(PyCeresSolverOptions);
   auto PyBundleAdjustmentOptions =
       py::class_<BAOpts>(m, "BundleAdjustmentOptions")
           .def(py::init<>())
@@ -327,7 +327,7 @@ void BindSfM(py::module& m) {
           .def_readwrite("solver_options",
                          &BAOpts::solver_options,
                          "Ceres-Solver options.");
-  make_dataclass(PyBundleAdjustmentOptions);
+  MakeDataclass(PyBundleAdjustmentOptions);
   auto ba_options = PyBundleAdjustmentOptions().cast<BAOpts>();
 
   m.def("triangulate_points",

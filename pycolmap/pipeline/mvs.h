@@ -192,7 +192,7 @@ void BindMVS(py::module& m) {
           .def_readwrite("write_consistency_graph",
                          &PMOpts::write_consistency_graph,
                          "Whether to write the consistency graph.");
-  make_dataclass(PyPatchMatchOptions);
+  MakeDataclass(PyPatchMatchOptions);
   auto patch_match_options = PyPatchMatchOptions().cast<PMOpts>();
 
   m.def("patch_match_stereo",
@@ -256,7 +256,7 @@ void BindMVS(py::module& m) {
                          &SFOpts::bounding_box,
                          "Bounding box Tuple[min, max]");
 
-  make_dataclass(PyStereoFusionOptions);
+  MakeDataclass(PyStereoFusionOptions);
   auto stereo_fusion_options = PyStereoFusionOptions().cast<SFOpts>();
 
   m.def("stereo_fusion",

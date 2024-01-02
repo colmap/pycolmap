@@ -220,7 +220,7 @@ void BindImages(py::module& m) {
               "Optional path to an image file specifying a mask for all "
               "images. No features will be extracted in regions where the "
               "mask is black (pixel intensity value 0 in grayscale)");
-  make_dataclass(PyImageReaderOptions);
+  MakeDataclass(PyImageReaderOptions);
   auto reader_options = PyImageReaderOptions().cast<IROpts>();
 
   auto PyCopyType = py::enum_<CopyType>(m, "CopyType")
@@ -253,7 +253,7 @@ void BindImages(py::module& m) {
           .def_readwrite("roi_min_y", &UDOpts::roi_min_y)
           .def_readwrite("roi_max_x", &UDOpts::roi_max_x)
           .def_readwrite("roi_max_y", &UDOpts::roi_max_y);
-  make_dataclass(PyUndistortCameraOptions);
+  MakeDataclass(PyUndistortCameraOptions);
   auto undistort_options = PyUndistortCameraOptions().cast<UDOpts>();
 
   m.def("import_images",
