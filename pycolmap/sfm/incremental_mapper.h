@@ -66,13 +66,16 @@ void BindIncrementalMapper(py::module& m) {
                      "bundle adjustment.")
       .def_readwrite("min_focal_length_ratio",
                      &Opts::min_focal_length_ratio,
-                     "The threshold used to filter and ignore images with degenerate intrinsics.")
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
       .def_readwrite("max_focal_length_ratio",
                      &Opts::max_focal_length_ratio,
-                     "The threshold used to filter and ignore images with degenerate intrinsics.")
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
       .def_readwrite("max_extra_param",
                      &Opts::max_extra_param,
-                     "The threshold used to filter and ignore images with degenerate intrinsics.")
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
       .def_readwrite("filter_max_reproj_error",
                      &Opts::filter_max_reproj_error,
                      "Maximum reprojection error in pixels for observations.")
