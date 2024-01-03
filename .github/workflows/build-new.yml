@@ -49,7 +49,7 @@ jobs:
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
       - name: Set Windows env
-        if: ${{ startsWith(matrix.os, 'windows') }}
+        if: ${{ startsWith(matrix.config.os, 'windows') }}
         shell: pwsh
         run: |
           $CMAKE_TOOLCHAIN_FILE = "${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
