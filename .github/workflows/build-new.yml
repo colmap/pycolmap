@@ -12,19 +12,49 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.config.os }} ${{ matrix.config.arch }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-12, macos-13]
+        config: [
+              {os: ubuntu-latest},
+              {os: macos-13, arch: x86_64},
+              {os: macos-13, arch: arm64},
+        ]
     steps:
       - uses: actions/checkout@v4
+      - name: Set macOS env
+        if: ${{ startsWith(matrix.config.os, 'macos') }}
+        run: |
+          if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
+            VCPKG_TARGET_TRIPLET="x64-osx"
+          elif [[ ${{ matrix.config.arch }} == "arm64" ]]; then
+            VCPKG_TARGET_TRIPLET="arm64-osx-release"
+          else
+            exit 1
+          fi
+          echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "$GITHUB_ENV"
+
+          VCPKG_INSTALLATION_ROOT="/Users/runner/work/vcpkg"
+          CMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          CMAKE_OSX_ARCHITECTURES=${{ matrix.config.arch }}
+          echo "VCPKG_INSTALLATION_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
+          echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "$GITHUB_ENV"
+          echo "CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}" >> "$GITHUB_ENV"
+
+          # Fix: cibuildhweel cannot interpolate env variables.
+          CONFIG_SETTINGS="cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+          CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+          CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
+          echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
+        env:
+          CIBW_ARCHS_MACOS: ${{ matrix.config.arch }}
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
-          name: pycolmap-${{ matrix.os }}
+          name: pycolmap-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: wheelhouse/pycolmap-*.whl
 
   pypi-publish:
