@@ -22,8 +22,8 @@ cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 
-ls -l "${COMPILER_CACHE_DIR}/vcpkg/*"
 du -hs "${COMPILER_CACHE_DIR}/vcpkg/*"
+ls -l "${COMPILER_CACHE_DIR}/vcpkg/*"
 
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh

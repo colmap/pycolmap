@@ -61,7 +61,9 @@ jobs:
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
 
           # vcpkg binary caching
-          VCPKG_BINARY_SOURCES="clear;files,${COMPILER_CACHE_DIR}/vcpkg,readwrite"
+          VCPKG_CACHE_DIR="${COMPILER_CACHE_DIR}/vcpkg"
+          mkdir -p ${VCPKG_CACHE_DIR}
+          VCPKG_BINARY_SOURCES="clear;files,${VCPKG_CACHE_DIR},readwrite"
           echo "VCPKG_BINARY_SOURCES=${VCPKG_BINARY_SOURCES}" >> "$GITHUB_ENV"
       - name: Set env (Windows)
         if: runner.os == 'Windows'
