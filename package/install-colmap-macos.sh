@@ -13,7 +13,10 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install git cmake ninja llvm
+brew install git cmake ninja llvm ccache
+export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
+export CMAKE_C_COMPILER_LAUNCHER="ccache"
+export VCPKG_KEEP_ENV_VARS="CMAKE_CXX_COMPILER_LAUNCHER;CMAKE_C_COMPILER_LAUNCHER"
 
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
@@ -51,6 +54,7 @@ export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -GNinja -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
+    -DCCACHE_ENABLED=ON \
     -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \

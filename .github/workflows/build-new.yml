@@ -22,10 +22,21 @@ jobs:
               {os: macos-13, arch: arm64},
               {os: windows-latest},
         ]
+    env:
+      COMPILER_CACHE_VERSION: 1
+      COMPILER_CACHE_DIR: ${{ github.workspace }}/compiler-cache
+      CCACHE_DIR: ${{ github.workspace }}/compiler-cache/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
     steps:
+      - uses: actions/cache@v3
+        id: cache-builds
+        with:
+          key: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ github.run_id }}-${{ github.run_number }}
+          restore-keys: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}
+          path: ${{ env.COMPILER_CACHE_DIR }}
       - uses: actions/checkout@v4
-      - name: Set macOS env
-        if: ${{ startsWith(matrix.config.os, 'macos') }}
+      - name: Set env (macOS)
+        if: runner.os == 'macOS'
         run: |
           if [[ ${{ matrix.config.arch }} == "x86_64" ]]; then
             VCPKG_TARGET_TRIPLET="x64-osx"
@@ -48,8 +59,8 @@ jobs:
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
-      - name: Set Windows env
-        if: ${{ startsWith(matrix.os, 'windows') }}
+      - name: Set env (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $CMAKE_TOOLCHAIN_FILE = "${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -70,6 +81,13 @@ jobs:
         with:
           name: pycolmap-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: wheelhouse/pycolmap-*.whl
+      - name: Cleanup compiler cache (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -x
+          ccache --show-stats --verbose
+          ccache --evict-older-than 7d
+          ccache --show-stats --verbose
 
   pypi-publish:
     name: Publish wheels to PyPI
