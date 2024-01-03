@@ -22,10 +22,15 @@ cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 
+ls -l "${COMPILER_CACHE_DIR}/vcpkg/*"
+du -hs "${COMPILER_CACHE_DIR}/vcpkg/*"
+
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
     --debug \
+    --x-abi-tools-use-exact-versions \
+    --only-binarycaching \
     boost-algorithm \
     boost-filesystem \
     boost-graph \
