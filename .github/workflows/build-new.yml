@@ -28,13 +28,13 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/compiler-cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/cache@v3
         id: cache-builds
         with:
           key: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ github.run_id }}-${{ github.run_number }}
           restore-keys: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: ${{ env.COMPILER_CACHE_DIR }}
-      - uses: actions/checkout@v4
       - name: Set env (macOS)
         if: runner.os == 'macOS'
         run: |
