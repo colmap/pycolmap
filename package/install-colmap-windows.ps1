@@ -7,9 +7,7 @@ git checkout "${env:COLMAP_COMMIT_ID}"
 
 $COMPILER_TOOLS_DIR = "${env:COMPILER_CACHE_DIR}/bin"
 New-Item -ItemType Directory -Force -Path ${COMPILER_TOOLS_DIR}
-echo $env:Path
 $env:Path = "${COMPILER_TOOLS_DIR};" + $env:Path
-echo $env:Path
 
 $NINJA_PATH = "${COMPILER_TOOLS_DIR}/ninja.exe"
 If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
@@ -19,7 +17,16 @@ If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
     Remove-Item ${NINJA_ZIP}
 }
 If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
-    .azure-pipelines/install-ccache.ps1 -Destination ${COMPILER_TOOLS_DIR}
+    $CCACHE_ZIP = "${env:TEMP}/ccache.zip"
+    $url = "https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-windows-x86_64.zip"
+    $expectedSha256 = "A2B3BAB4BB8318FFC5B3E4074DC25636258BC7E4B51261F7D9BEF8127FDA8309"
+    curl.exe -L -o ${CCACHE_ZIP} ${url}
+    $hash = Get-FileHash ${CCACHE_ZIP} -Algorithm "sha256"
+    if ($hash.Hash -ne ${expectedSha256}) {
+        throw "File ${CCACHE_ZIP} hash $hash.Hash did not match expected hash ${expectedSha256}"
+    }
+    Expand-Archive -LiteralPath ${CCACHE_ZIP} -DestinationPath ${COMPILER_TOOLS_DIR}
+    Remove-Item ${CCACHE_ZIP}
 }
 Dir -Recurse ${COMPILER_TOOLS_DIR} | Select Fullname
 
