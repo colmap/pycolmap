@@ -4,7 +4,7 @@ This repository exposes to Python most [COLMAP](https://colmap.github.io/) recon
 
 ## Getting started
 
-Wheels for Python 8/9/10 on Linux and macOS 11/12 can be install using pip:
+Wheels for Python 8/9/10 on Linux, macOS 11/12, and Windows can be install using pip:
 ```bash
 pip install pycolmap
 ```
@@ -27,11 +27,14 @@ pip install .
 > [!IMPORTANT]
 > The master branch is in active development and its API is unstable. It is currently only compatible with the COLMAP commit [colmap/colmap@`0d9ab40`](https://github.com/colmap/colmap/commit/0d9ab40f6037b5ede71f3af3b8d1f5091f68855d). Using an earlier commit might not work.
 
-### Windows
-
-*Building on Windows is currently not supported - please do not open any issues regarding this.*
-Any contributions in this direction are welcome - please refer to issue [#34](https://github.com/colmap/pycolmap/issues/34).
-As a temporary workaround, we suggest using [WSL](https://docs.microsoft.com/en-us/windows/wsl/install). 
+To build PyCOLMAP on Windows, install COLMAP via VCPKG following [the official guide](https://colmap.github.io/install.html#id3) and run in powershell:
+```powershell
+git clone https://github.com/colmap/pycolmap.git
+cd pycolmap
+py -m pip install . `
+    --cmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+    --cmake.define.VCPKG_TARGET_TRIPLET="x64-windows"
+```
 
 ##
 

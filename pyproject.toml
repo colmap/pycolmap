@@ -28,13 +28,20 @@ wheel.expand-macos-universal-tags = true
 
 
 [tool.cibuildwheel]
-build = "cp3{8,9,10,11}-{macosx,manylinux}*"
+build = "cp3{8,9,10,11}-{macosx,manylinux,win}*"
 archs = ["auto64"]
-test-command = "python -c 'import pycolmap; print(pycolmap.__version__)'"
+environment = { COLMAP_COMMIT_ID="9d970e5f3db2f39f0db5d86b5d11650c5f79a53c" }
+test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
 [tool.cibuildwheel.linux]
-before-all = "./package/install-colmap-centos.sh"
+before-all = "{project}/package/install-colmap-centos.sh"
 config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
 [tool.cibuildwheel.macos]
-before-all = "./package/install-colmap-macos.sh"
+before-all = "{project}/package/install-colmap-macos.sh"
+
+[tool.cibuildwheel.windows]
+before-all = "powershell -File {project}/package/install-colmap-windows.ps1"
+before-build = "pip install delvewheel"
+# Env variable are not interpolated in the repair command, unsure why.
+repair-wheel-command = "delvewheel repair -v --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"

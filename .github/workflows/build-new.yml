@@ -20,6 +20,7 @@ jobs:
               {os: ubuntu-latest},
               {os: macos-13, arch: x86_64},
               {os: macos-13, arch: arm64},
+              {os: windows-latest},
         ]
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +48,19 @@ jobs:
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
+      - name: Set Windows env
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          $CMAKE_TOOLCHAIN_FILE = "${env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "${env:GITHUB_ENV}"
+          $VCPKG_TARGET_TRIPLET = "x64-windows"
+          echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "${env:GITHUB_ENV}"
+          # Fix: cibuildhweel cannot interpolate env variables.
+          $CMAKE_TOOLCHAIN_FILE = $CMAKE_TOOLCHAIN_FILE.replace('\', '/')
+          $CONFIG_SETTINGS = "cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+          $CONFIG_SETTINGS = "${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+          echo "CIBW_CONFIG_SETTINGS_WINDOWS=${CONFIG_SETTINGS}" >> "${env:GITHUB_ENV}"
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:

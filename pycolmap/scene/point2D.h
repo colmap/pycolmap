@@ -18,7 +18,7 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 using vector_Point2D =
-    std::vector<class Point2D, Eigen::aligned_allocator<Point2D>>;
+    std::vector<struct Point2D, Eigen::aligned_allocator<Point2D>>;
 PYBIND11_MAKE_OPAQUE(vector_Point2D);
 
 std::string PrintPoint2D(const Point2D& p2D) {

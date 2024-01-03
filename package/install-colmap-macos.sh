@@ -45,7 +45,7 @@ cd ${VCPKG_INSTALLATION_ROOT}
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout c0355417328f3706a30a9265fd52bc7a5aa4cb8c
+git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
 export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -GNinja -DGUI_ENABLED=OFF \

@@ -127,7 +127,7 @@ void BindReconstruction(py::module& m) {
       .def("exists_image_pair", &Reconstruction::ExistsImagePair)
       .def(
           "add_camera",
-          [](Reconstruction& self, const class Camera& camera) {
+          [](Reconstruction& self, const struct Camera& camera) {
             THROW_CHECK(!self.ExistsCamera(camera.camera_id));
             THROW_CHECK(camera.VerifyParams());
             self.AddCamera(camera);
