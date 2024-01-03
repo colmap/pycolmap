@@ -18,12 +18,14 @@ export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
 export CMAKE_C_COMPILER_LAUNCHER="ccache"
 export VCPKG_KEEP_ENV_VARS="CMAKE_CXX_COMPILER_LAUNCHER;CMAKE_C_COMPILER_LAUNCHER"
 
+du -hs "${CURRDIR}/*"
+du -hs "${COMPILER_CACHE_DIR}/*"
+du -hs "${COMPILER_CACHE_DIR}/vcpkg/*"
+ls -l "${COMPILER_CACHE_DIR}/vcpkg/*"
+
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
-
-du -hs "${COMPILER_CACHE_DIR}/vcpkg/*"
-ls -l "${COMPILER_CACHE_DIR}/vcpkg/*"
 
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
