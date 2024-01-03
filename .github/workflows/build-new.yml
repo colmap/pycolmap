@@ -32,8 +32,8 @@ jobs:
       - uses: actions/cache@v3
         id: cache-builds
         with:
-          key: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ github.run_id }}-${{ github.run_number }}
-          restore-keys: ccache-${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}
+          key: v${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ github.run_id }}-${{ github.run_number }}
+          restore-keys: v${{ env.COMPILER_CACHE_VERSION }}-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: ${{ env.COMPILER_CACHE_DIR }}
       - name: Set env (macOS)
         if: runner.os == 'macOS'
@@ -62,7 +62,6 @@ jobs:
 
           # vcpkg binary caching
           VCPKG_CACHE_DIR="${COMPILER_CACHE_DIR}/vcpkg"
-          mkdir -p ${VCPKG_CACHE_DIR}
           VCPKG_BINARY_SOURCES="clear;files,${VCPKG_CACHE_DIR},readwrite"
           echo "VCPKG_BINARY_SOURCES=${VCPKG_BINARY_SOURCES}" >> "$GITHUB_ENV"
       - name: Set env (Windows)

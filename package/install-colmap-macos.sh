@@ -14,16 +14,10 @@ brew remove node@18
 
 brew update
 brew install git cmake ninja llvm ccache
-export CMAKE_CXX_COMPILER_LAUNCHER="ccache"
-export CMAKE_C_COMPILER_LAUNCHER="ccache"
-export VCPKG_KEEP_ENV_VARS="CMAKE_CXX_COMPILER_LAUNCHER;CMAKE_C_COMPILER_LAUNCHER"
 
-ls -l ${CURRDIR}
-ls -l ${COMPILER_CACHE_DIR}
-du -hs ${CURRDIR}/*
-du -hs ${COMPILER_CACHE_DIR}/*
-du -hs ${COMPILER_CACHE_DIR}/vcpkg/*
-ls -l ${COMPILER_CACHE_DIR}/vcpkg/*
+#ls -l ${COMPILER_CACHE_DIR}
+#ls -l ${COMPILER_CACHE_DIR}/vcpkg/*
+echo ${VCPKG_BINARY_SOURCES}
 
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
@@ -32,9 +26,6 @@ git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
-    --debug \
-    --x-abi-tools-use-exact-versions \
-    --only-binarycaching \
     boost-algorithm \
     boost-filesystem \
     boost-graph \
