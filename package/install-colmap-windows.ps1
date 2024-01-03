@@ -25,7 +25,6 @@ If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
     Remove-Item ${zip_path}
     Remove-Item -Recurse ${folder_path}
 }
-Dir -Recurse ${COMPILER_TOOLS_DIR} | Select Fullname
 
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
@@ -53,3 +52,7 @@ cmake .. `
   -DCMAKE_TOOLCHAIN_FILE="${env:CMAKE_TOOLCHAIN_FILE}" `
   -DVCPKG_TARGET_TRIPLET="x64-windows"
 & ${NINJA_PATH} install
+
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose

@@ -57,3 +57,7 @@ cmake .. -GNinja -DGUI_ENABLED=OFF \
     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \
     `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
 ninja install
+
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose

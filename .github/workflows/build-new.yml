@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         config: [
-              #{os: ubuntu-latest},
+              {os: ubuntu-latest},
               {os: macos-13, arch: x86_64},
               {os: macos-13, arch: arm64},
               {os: windows-latest},
@@ -92,13 +92,6 @@ jobs:
         with:
           name: pycolmap-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: wheelhouse/pycolmap-*.whl
-      - name: Cleanup compiler cache (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          set -x
-          ccache --show-stats --verbose
-          ccache --evict-older-than 7d
-          ccache --show-stats --verbose
 
   pypi-publish:
     name: Publish wheels to PyPI
