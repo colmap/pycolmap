@@ -25,6 +25,7 @@ git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
+    --debug \
     boost-algorithm \
     boost-filesystem \
     boost-graph \
