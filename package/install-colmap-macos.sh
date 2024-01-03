@@ -1,8 +1,6 @@
 #!/bin/bash
 set -x -e
-
 CURRDIR=$(pwd)
-NUM_LOGICAL_CPUS=$(sysctl -n hw.logicalcpu)
 
 # See https://github.com/actions/setup-python/issues/577
 find /usr/local/bin -lname '*/Library/Frameworks/Python.framework/*' -delete
@@ -15,52 +13,46 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install \
-    git \
-    wget \
-    cmake \
-    eigen \
-    freeimage \
-    flann \
-    glog \
-    gflags \
-    metis \
-    suite-sparse \
-    ceres-solver \
-    glew \
-    sqlite3 \
-    libomp \
-    llvm \
-    lz4
+brew install git cmake ninja llvm
 
-# Install Boost
-mkdir boost && cd boost
-BOOST_FILENAME="boost_1_83_0"
-wget https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/${BOOST_FILENAME}.tar.gz
-tar xzf ${BOOST_FILENAME}.tar.gz
-cd ${BOOST_FILENAME}
-BOOST_DIR=${CURRDIR}/boost_install
-./bootstrap.sh --prefix=${BOOST_DIR} \
-    --with-libraries=filesystem,system,program_options,graph,test \
-    --without-icu clang-darwin
-./b2 -j ${NUM_LOGICAL_CPUS} \
-    cxxflags="-fPIC" \
-    link=static \
-    runtime-link=static \
-    variant=release \
-    --disable-icu \
-    --prefix=${BOOST_DIR} \
-    install
+cd ${CURRDIR}
+#git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+
+cd ${VCPKG_INSTALLATION_ROOT}
+./bootstrap-vcpkg.sh
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
+    boost-algorithm \
+    boost-filesystem \
+    boost-graph \
+    boost-heap \
+    boost-program-options \
+    boost-property-map \
+    boost-property-tree \
+    boost-regex \
+    boost-system \
+    ceres[lapack,suitesparse] \
+    eigen3 \
+    flann \
+    freeimage \
+    metis \
+    gflags \
+    glog \
+    gtest \
+    sqlite3
+./vcpkg integrate install
 
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
-cmake .. -DGUI_ENABLED=OFF \
+export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
+cmake .. -GNinja -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
-    -DBoost_USE_STATIC_LIBS=OFF \
-    -DBOOSTROOT=${BOOST_DIR} \
-    -DBoost_NO_SYSTEM_PATHS=ON
-make -j ${NUM_LOGICAL_CPUS} install
+    -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
+    -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \
+    `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
+ninja install
