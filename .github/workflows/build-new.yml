@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         config: [
-              {os: ubuntu-latest},
+              #{os: ubuntu-latest},
               {os: macos-13, arch: x86_64},
               {os: macos-13, arch: arm64},
-              {os: windows-latest},
+              #{os: windows-latest},
         ]
     env:
       COMPILER_CACHE_VERSION: 1
@@ -59,6 +59,10 @@ jobs:
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
           CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}"
           echo "CIBW_CONFIG_SETTINGS_MACOS=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
+
+          # vcpkg binary caching
+          VCPKG_BINARY_SOURCES="clear;files,${COMPILER_CACHE_DIR}/vcpkg,readwrite"
+          echo "VCPKG_BINARY_SOURCES=${VCPKG_BINARY_SOURCES}" >> "$GITHUB_ENV"
       - name: Set env (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
