@@ -5,7 +5,7 @@
 #include "pycolmap/optim/bindings.h"
 #include "pycolmap/pipeline/bindings.h"
 #include "pycolmap/scene/bindings.h"
-#include "pycolmap/sfm/incremental_triangulator.h"
+#include "pycolmap/sfm/bindings.h"
 #include "pycolmap/utils.h"
 
 #include <glog/logging.h>
@@ -67,7 +67,7 @@ PYBIND11_MODULE(pycolmap, m) {
   BindOptim(m);
   BindScene(m);
   BindEstimators(m);
-  BindIncrementalTriangulator(m);
+  BindSfMObjects(m);
   BindSift(m);
   BindPipeline(m);
 
