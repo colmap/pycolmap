@@ -1,15 +1,24 @@
 $CURRDIR = $PWD
-echo "CMAKE_TOOLCHAIN_FILE = ${env:CMAKE_TOOLCHAIN_FILE}"
-echo "CIBW_CONFIG_SETTINGS_WINDOWS = ${env:CIBW_CONFIG_SETTINGS_WINDOWS}"
-
-curl.exe -L -o "ninja.zip" "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip"
-Expand-Archive -LiteralPath "${CURRDIR}/ninja.zip" -DestinationPath ${CURRDIR}
-$NINJA_PATH = "${CURRDIR}/ninja.exe"
 
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout "${env:COLMAP_COMMIT_ID}"
+
+$COMPILER_TOOLS_DIR = "${env:COMPILER_CACHE_DIR}/bin"
+New-Item -ItemType Directory -Force -Path ${COMPILER_TOOLS_DIR}
+$env:Path = "${COMPILER_TOOLS_DIR};" + $env:Path
+
+$NINJA_PATH = "${COMPILER_TOOLS_DIR}/ninja.exe"
+If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
+    $NINJA_ZIP = "${env:TEMP}/ninja.zip"
+    curl.exe -L -o ${NINJA_ZIP} "https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip"
+    Expand-Archive -LiteralPath ${NINJA_ZIP} -DestinationPath ${COMPILER_TOOLS_DIR}
+    Remove-Item ${NINJA_ZIP}
+}
+If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
+    .azure-pipelines/install-ccache.ps1 -Destination ${COMPILER_TOOLS_DIR}
+}
 
 & "./scripts/shell/enter_vs_dev_shell.ps1"
 
