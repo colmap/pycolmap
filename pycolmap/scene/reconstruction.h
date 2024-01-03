@@ -110,15 +110,16 @@ void BindReconstruction(py::module& m) {
       .def("num_reg_images", &Reconstruction::NumRegImages)
       .def("num_points3D", &Reconstruction::NumPoints3D)
       .def("num_image_pairs", &Reconstruction::NumImagePairs)
-      .def_property_readonly(
-          "images", &Reconstruction::Images, py::return_value_policy::reference)
+      .def_property_readonly("images",
+                             &Reconstruction::Images,
+                             py::return_value_policy::reference_internal)
       .def_property_readonly("image_pairs", &Reconstruction::ImagePairs)
       .def_property_readonly("cameras",
                              &Reconstruction::Cameras,
-                             py::return_value_policy::reference)
+                             py::return_value_policy::reference_internal)
       .def_property_readonly("points3D",
                              &Reconstruction::Points3D,
-                             py::return_value_policy::reference)
+                             py::return_value_policy::reference_internal)
       .def("point3D_ids", &Reconstruction::Point3DIds)
       .def("reg_image_ids", &Reconstruction::RegImageIds)
       .def("exists_camera", &Reconstruction::ExistsCamera)
@@ -137,25 +138,15 @@ void BindReconstruction(py::module& m) {
           "might be taken by the same camera.")
       .def(
           "add_image",
-          [](Reconstruction& self,
-             const class Image& image,
-             bool check_not_registered) {
+          [](Reconstruction& self, const class Image& image) {
             THROW_CHECK(!self.ExistsImage(image.ImageId()));
-            if (check_not_registered) {
-              THROW_CHECK(!image.IsRegistered());
-            }
             self.AddImage(image);
             if (image.IsRegistered()) {
               THROW_CHECK_NE(image.ImageId(), kInvalidImageId);
-              self.Image(image.ImageId())
-                  .SetRegistered(false);  // Set true in next line
-              self.RegisterImage(image.ImageId());
             }
           },
           "image"_a,
-          "check_not_registered"_a = false,
-          "Add new image. If Image.IsRegistered()==true, either throw "
-          "if check_not_registered, or register image also in reconstr.")
+          "Add a new image.")
       .def("add_point3D",
            &Reconstruction::AddPoint3D,
            "Add new 3D object, and return its unique ID.",

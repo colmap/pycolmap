@@ -100,63 +100,158 @@ void BundleAdjustment(std::shared_ptr<Reconstruction> reconstruction,
 }
 
 void BindSfM(py::module& m) {
-  using Opts = IncrementalMapperOptions;
-  auto PyIncrementalMapperOptions =
-      py::class_<Opts>(m, "IncrementalMapperOptions")
-          .def(py::init<>())
-          .def_readwrite("min_num_matches", &Opts::min_num_matches)
-          .def_readwrite("ignore_watermarks", &Opts::ignore_watermarks)
-          .def_readwrite("multiple_models", &Opts::multiple_models)
-          .def_readwrite("max_num_models", &Opts::max_num_models)
-          .def_readwrite("max_model_overlap", &Opts::max_model_overlap)
-          .def_readwrite("min_model_size", &Opts::min_model_size)
-          .def_readwrite("init_image_id1", &Opts::init_image_id1)
-          .def_readwrite("init_image_id2", &Opts::init_image_id2)
-          .def_readwrite("init_num_trials", &Opts::init_num_trials)
-          .def_readwrite("extract_colors", &Opts::extract_colors)
-          .def_readwrite("num_threads", &Opts::num_threads)
-          .def_readwrite("min_focal_length_ratio",
-                         &Opts::min_focal_length_ratio)
-          .def_readwrite("max_focal_length_ratio",
-                         &Opts::max_focal_length_ratio)
-          .def_readwrite("max_extra_param", &Opts::max_extra_param)
-          .def_readwrite("ba_refine_focal_length",
-                         &Opts::ba_refine_focal_length)
-          .def_readwrite("ba_refine_principal_point",
-                         &Opts::ba_refine_principal_point)
-          .def_readwrite("ba_refine_extra_params",
-                         &Opts::ba_refine_extra_params)
-          .def_readwrite("ba_min_num_residuals_for_multi_threading",
-                         &Opts::ba_min_num_residuals_for_multi_threading)
-          .def_readwrite("ba_local_num_images", &Opts::ba_local_num_images)
-          .def_readwrite("ba_local_function_tolerance",
-                         &Opts::ba_local_function_tolerance)
-          .def_readwrite("ba_local_max_num_iterations",
-                         &Opts::ba_local_max_num_iterations)
-          .def_readwrite("ba_global_images_ratio",
-                         &Opts::ba_global_images_ratio)
-          .def_readwrite("ba_global_points_ratio",
-                         &Opts::ba_global_points_ratio)
-          .def_readwrite("ba_global_images_freq", &Opts::ba_global_images_freq)
-          .def_readwrite("ba_global_points_freq", &Opts::ba_global_points_freq)
-          .def_readwrite("ba_global_function_tolerance",
-                         &Opts::ba_global_function_tolerance)
-          .def_readwrite("ba_global_max_num_iterations",
-                         &Opts::ba_global_max_num_iterations)
-          .def_readwrite("ba_local_max_refinements",
-                         &Opts::ba_local_max_refinements)
-          .def_readwrite("ba_local_max_refinement_change",
-                         &Opts::ba_local_max_refinement_change)
-          .def_readwrite("ba_global_max_refinements",
-                         &Opts::ba_global_max_refinements)
-          .def_readwrite("ba_global_max_refinement_change",
-                         &Opts::ba_global_max_refinement_change)
-          .def_readwrite("snapshot_path", &Opts::snapshot_path)
-          .def_readwrite("snapshot_images_freq", &Opts::snapshot_images_freq)
-          .def_readwrite("image_names", &Opts::image_names)
-          .def_readwrite("fix_existing_images", &Opts::fix_existing_images);
-  make_dataclass(PyIncrementalMapperOptions);
-  auto mapper_options = PyIncrementalMapperOptions().cast<Opts>();
+  using MapperOpts = IncrementalMapperOptions;
+  auto PyMapperOpts = py::class_<MapperOpts>(m, "IncrementalPipelineOptions");
+  PyMapperOpts.def(py::init<>())
+      .def_readwrite(
+          "min_num_matches",
+          &MapperOpts::min_num_matches,
+          "The minimum number of matches for inlier matches to be considered.")
+      .def_readwrite(
+          "ignore_watermarks",
+          &MapperOpts::ignore_watermarks,
+          "Whether to ignore the inlier matches of watermark image pairs.")
+      .def_readwrite("multiple_models",
+                     &MapperOpts::multiple_models,
+                     "Whether to reconstruct multiple sub-models.")
+      .def_readwrite("max_num_models",
+                     &MapperOpts::max_num_models,
+                     "The number of sub-models to reconstruct.")
+      .def_readwrite(
+          "max_model_overlap",
+          &MapperOpts::max_model_overlap,
+          "The maximum number of overlapping images between sub-models. If the "
+          "current sub-models shares more than this number of images with "
+          "another model, then the reconstruction is stopped.")
+      .def_readwrite("min_model_size",
+                     &MapperOpts::min_model_size,
+                     "The minimum number of registered images of a sub-model, "
+                     "otherwise the sub-model is discarded. Note that the "
+                     "first sub-model is always kept independent of size.")
+      .def_readwrite("init_image_id1",
+                     &MapperOpts::init_image_id1,
+                     "The image identifier of the first image used to "
+                     "initialize the reconstruction.")
+      .def_readwrite(
+          "init_image_id2",
+          &MapperOpts::init_image_id2,
+          "The image identifier of the second image used to initialize the "
+          "reconstruction. Determined automatically if left unspecified.")
+      .def_readwrite("init_num_trials",
+                     &MapperOpts::init_num_trials,
+                     "The number of trials to initialize the reconstruction.")
+      .def_readwrite("extract_colors",
+                     &MapperOpts::extract_colors,
+                     "Whether to extract colors for reconstructed points.")
+      .def_readwrite("num_threads",
+                     &MapperOpts::num_threads,
+                     "The number of threads to use during reconstruction.")
+      .def_readwrite("min_focal_length_ratio",
+                     &MapperOpts::min_focal_length_ratio,
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
+      .def_readwrite("max_focal_length_ratio",
+                     &MapperOpts::max_focal_length_ratio,
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
+      .def_readwrite("max_extra_param",
+                     &MapperOpts::max_extra_param,
+                     "The threshold used to filter and ignore images with "
+                     "degenerate intrinsics.")
+      .def_readwrite(
+          "ba_refine_focal_length",
+          &MapperOpts::ba_refine_focal_length,
+          "Which intrinsic parameters to optimize during the reconstruction.")
+      .def_readwrite(
+          "ba_refine_principal_point",
+          &MapperOpts::ba_refine_principal_point,
+          "Which intrinsic parameters to optimize during the reconstruction.")
+      .def_readwrite(
+          "ba_refine_extra_params",
+          &MapperOpts::ba_refine_extra_params,
+          "Which intrinsic parameters to optimize during the reconstruction.")
+      .def_readwrite(
+          "ba_min_num_residuals_for_multi_threading",
+          &MapperOpts::ba_min_num_residuals_for_multi_threading,
+          "The minimum number of residuals per bundle adjustment problem to "
+          "enable multi-threading solving of the problems.")
+      .def_readwrite(
+          "ba_local_num_images",
+          &MapperOpts::ba_local_num_images,
+          "The number of images to optimize in local bundle adjustment.")
+      .def_readwrite(
+          "ba_local_function_tolerance",
+          &MapperOpts::ba_local_function_tolerance,
+          "Ceres solver function tolerance for local bundle adjustment.")
+      .def_readwrite(
+          "ba_local_max_num_iterations",
+          &MapperOpts::ba_local_max_num_iterations,
+          "The maximum number of local bundle adjustment iterations.")
+      .def_readwrite(
+          "ba_global_images_ratio",
+          &MapperOpts::ba_global_images_ratio,
+          "The growth rates after which to perform global bundle adjustment.")
+      .def_readwrite(
+          "ba_global_points_ratio",
+          &MapperOpts::ba_global_points_ratio,
+          "The growth rates after which to perform global bundle adjustment.")
+      .def_readwrite(
+          "ba_global_images_freq",
+          &MapperOpts::ba_global_images_freq,
+          "The growth rates after which to perform global bundle adjustment.")
+      .def_readwrite(
+          "ba_global_points_freq",
+          &MapperOpts::ba_global_points_freq,
+          "The growth rates after which to perform global bundle adjustment.")
+      .def_readwrite(
+          "ba_global_function_tolerance",
+          &MapperOpts::ba_global_function_tolerance,
+          "Ceres solver function tolerance for global bundle adjustment.")
+      .def_readwrite(
+          "ba_global_max_num_iterations",
+          &MapperOpts::ba_global_max_num_iterations,
+          "The maximum number of global bundle adjustment iterations.")
+      .def_readwrite(
+          "ba_local_max_refinements",
+          &MapperOpts::ba_local_max_refinements,
+          "The thresholds for iterative bundle adjustment refinements.")
+      .def_readwrite(
+          "ba_local_max_refinement_change",
+          &MapperOpts::ba_local_max_refinement_change,
+          "The thresholds for iterative bundle adjustment refinements.")
+      .def_readwrite(
+          "ba_global_max_refinements",
+          &MapperOpts::ba_global_max_refinements,
+          "The thresholds for iterative bundle adjustment refinements.")
+      .def_readwrite(
+          "ba_global_max_refinement_change",
+          &MapperOpts::ba_global_max_refinement_change,
+          "The thresholds for iterative bundle adjustment refinements.")
+      .def_readwrite("snapshot_path",
+                     &MapperOpts::snapshot_path,
+                     "Path to a folder in which reconstruction snapshots will "
+                     "be saved during incremental reconstruction.")
+      .def_readwrite("snapshot_images_freq",
+                     &MapperOpts::snapshot_images_freq,
+                     "Frequency of registered images according to which "
+                     "reconstruction snapshots will be saved.")
+      .def_readwrite("image_names",
+                     &MapperOpts::image_names,
+                     "Which images to reconstruct. If no images are specified, "
+                     "all images will be reconstructed by default.")
+      .def_readwrite("fix_existing_images",
+                     &MapperOpts::fix_existing_images,
+                     "If reconstruction is provided as input, fix the existing "
+                     "image poses.")
+      .def_readwrite(
+          "mapper", &MapperOpts::mapper, "Options of the IncrementalMapper.")
+      .def_readwrite("triangulation",
+                     &MapperOpts::triangulation,
+                     "Options of the IncrementalTriangulator.")
+      .def("get_mapper", &MapperOpts::Mapper)
+      .def("get_triangulation", &MapperOpts::Triangulation);
+  MakeDataclass(PyMapperOpts);
+  auto mapper_options = PyMapperOpts().cast<MapperOpts>();
 
   using BAOpts = BundleAdjustmentOptions;
   auto PyBALossFunctionType =
@@ -194,7 +289,7 @@ void BindSfM(py::module& m) {
           .def_readwrite("max_consecutive_nonmonotonic_steps",
                          &CSOpts::max_consecutive_nonmonotonic_steps)
           .def_readwrite("num_threads", &CSOpts::num_threads);
-  make_dataclass(PyCeresSolverOptions);
+  MakeDataclass(PyCeresSolverOptions);
   auto PyBundleAdjustmentOptions =
       py::class_<BAOpts>(m, "BundleAdjustmentOptions")
           .def(py::init<>())
@@ -232,7 +327,7 @@ void BindSfM(py::module& m) {
           .def_readwrite("solver_options",
                          &BAOpts::solver_options,
                          "Ceres-Solver options.");
-  make_dataclass(PyBundleAdjustmentOptions);
+  MakeDataclass(PyBundleAdjustmentOptions);
   auto ba_options = PyBundleAdjustmentOptions().cast<BAOpts>();
 
   m.def("triangulate_points",

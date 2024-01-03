@@ -142,7 +142,7 @@ void BindExtractFeatures(py::module& m) {
           .def_readwrite("normalization",
                          &SEOpts::normalization,
                          "L1_ROOT or L2 descriptor normalization");
-  make_dataclass(PySiftExtractionOptions);
+  MakeDataclass(PySiftExtractionOptions);
   auto sift_extraction_options = PySiftExtractionOptions().cast<SEOpts>();
 
   /* PIPELINE */

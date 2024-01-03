@@ -2,7 +2,9 @@
 
 #pragma once
 
+#include "colmap/util/string.h"
 #include "colmap/util/threading.h"
+#include "colmap/util/types.h"
 
 #include "pycolmap/log_exceptions.h"
 
@@ -15,6 +17,7 @@
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
 using namespace colmap;
@@ -181,7 +184,30 @@ inline std::string CreateSummary(const T& self, bool write_type) {
 }
 
 template <typename T, typename... options>
-inline void make_dataclass(py::class_<T, options...> cls) {
+void AddDefaultsToDocstrings(py::class_<T, options...> cls) {
+  auto obj = cls();
+  for (auto& handle : obj.attr("__dir__")()) {
+    const std::string attribute = py::str(handle);
+    const auto member = obj.attr(attribute.c_str());
+    if (attribute.find("__") == 0 ||
+        attribute.rfind("__") != std::string::npos ||
+        py::hasattr(member, "__func__")) {
+      continue;
+    }
+    auto prop = cls.attr(attribute.c_str());
+    const auto type_name = py::type::of(member).attr("__name__");
+    const std::string doc =
+        StringPrintf("%s (%s, default: %s)",
+                     py::str(prop.doc()).cast<std::string>().c_str(),
+                     type_name.template cast<std::string>().c_str(),
+                     py::str(member).cast<std::string>().c_str());
+    prop.doc() = py::str(doc);
+  }
+}
+
+template <typename T, typename... options>
+inline void MakeDataclass(py::class_<T, options...> cls) {
+  AddDefaultsToDocstrings(cls);
   cls.def("mergedict", &UpdateFromDict);
   cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   cls.def("todict", &ConvertToDict<T>);
@@ -263,7 +289,16 @@ void PyWait(Thread* thread, double gap = 2.0) {
   thread->Wait();
 }
 
-namespace pybind11 {
+namespace PYBIND11_NAMESPACE {
+
+// Bind COLMAP's backport implementation of std::span. This copies the content
+// into a list. We could instead create a view with an Eigen::Map but the cast
+// should be explicit and cannot be automatic - likely not worth the added
+// logic.
+namespace detail {
+template <typename Type>
+struct type_caster<span<Type>> : list_caster<span<Type>, Type> {};
+}  // namespace detail
 
 // Fix long-standing bug https://github.com/pybind/pybind11/issues/4529
 // TODO(sarlinpe): remove when https://github.com/pybind/pybind11/pull/4972
@@ -429,4 +464,4 @@ class_<Map, holder_type> bind_map_fix(handle scope,
 
   return cl;
 }
-}  // namespace pybind11
+}  // namespace PYBIND11_NAMESPACE
