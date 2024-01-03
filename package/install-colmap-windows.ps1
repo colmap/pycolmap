@@ -7,7 +7,9 @@ git checkout "${env:COLMAP_COMMIT_ID}"
 
 $COMPILER_TOOLS_DIR = "${env:COMPILER_CACHE_DIR}/bin"
 New-Item -ItemType Directory -Force -Path ${COMPILER_TOOLS_DIR}
+echo $env:Path
 $env:Path = "${COMPILER_TOOLS_DIR};" + $env:Path
+echo $env:Path
 
 $NINJA_PATH = "${COMPILER_TOOLS_DIR}/ninja.exe"
 If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
@@ -19,6 +21,7 @@ If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
 If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
     .azure-pipelines/install-ccache.ps1 -Destination ${COMPILER_TOOLS_DIR}
 }
+Dir -Recurse ${COMPILER_TOOLS_DIR} | Select Fullname
 
 & "./scripts/shell/enter_vs_dev_shell.ps1"
 
