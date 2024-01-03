@@ -113,7 +113,7 @@ void BindImage(py::module& m) {
       .def_property(
           "points2D",
           py::overload_cast<>(&Image::Points2D),
-          [](Image& self, const std::vector<class Point2D>& points2D) {
+          [](Image& self, const std::vector<struct Point2D>& points2D) {
             THROW_CUSTOM_CHECK(!points2D.empty(), std::invalid_argument);
             self.SetPoints2D(points2D);
           },
@@ -164,7 +164,7 @@ void BindImage(py::module& m) {
            "Extract the viewing direction of the image.")
       .def(
           "set_up",
-          [](Image& self, const class Camera& camera) {
+          [](Image& self, const struct Camera& camera) {
             THROW_CHECK_EQ(self.CameraId(), camera.camera_id);
             self.SetUp(camera);
           },

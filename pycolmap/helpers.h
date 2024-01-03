@@ -65,7 +65,7 @@ inline void UpdateFromDict(py::object& self, py::dict& dict) {
             self.attr(it.first) = base(it.second);
             success_on_base = true;
             break;
-          } catch (const py::error_already_set& ex) {
+          } catch (const py::error_already_set&) {
             continue;  // We anyway throw afterwards
           }
         }
