@@ -15,11 +15,15 @@ If (!(Test-Path -path ${NINJA_PATH} -PathType Leaf)) {
 If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
     # For some reason this CI runs an earlier PowerShell version that is
     # not compatible with colmap/.azure-pipelines/install-ccache.ps1
-    $zip_path = "${env:TEMP}/ccache.zip"
-    $url = "https://github.com/ccache/ccache/releases/download/v4.8/ccache-4.8-windows-x86_64.zip"
+    $folder = "ccache-4.8-windows-x86_64"
+    $url = "https://github.com/ccache/ccache/releases/download/v4.8/${folder}.zip"
+    $zip_path = "${env:TEMP}/${folder}.zip"
+    $folder_path = "${env:TEMP}/${folder}"
     curl.exe -L -o ${zip_path} ${url}
-    Expand-Archive -LiteralPath ${zip_path} -DestinationPath ${COMPILER_TOOLS_DIR}
+    Expand-Archive -LiteralPath ${zip_path} -DestinationPath "$env:TEMP"
+    Move-Item -Force "${folder_path}/ccache.exe" ${COMPILER_TOOLS_DIR}
     Remove-Item ${zip_path}
+    Remove-Item -Recurse ${folder_path}
 }
 Dir -Recurse ${COMPILER_TOOLS_DIR} | Select Fullname
 
