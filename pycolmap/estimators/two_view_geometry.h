@@ -65,7 +65,7 @@ void BindTwoViewGeometryEstimator(py::module& m) {
           .def_readwrite("multiple_models",
                          &TwoViewGeometryOptions::multiple_models)
           .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
-  make_dataclass(PyTwoViewGeometryOptions);
+  MakeDataclass(PyTwoViewGeometryOptions);
   auto tvg_options = PyTwoViewGeometryOptions().cast<TwoViewGeometryOptions>();
 
   py::enum_<TwoViewGeometry::ConfigurationType>(m,
@@ -82,6 +82,7 @@ void BindTwoViewGeometryEstimator(py::module& m) {
 
   auto PyTwoViewGeometry =
       py::class_<TwoViewGeometry>(m, "TwoViewGeometry")
+          .def(py::init<>())
           .def_readonly("config", &TwoViewGeometry::config)
           .def_readonly("E", &TwoViewGeometry::E)
           .def_readonly("F", &TwoViewGeometry::F)
@@ -94,7 +95,7 @@ void BindTwoViewGeometryEstimator(py::module& m) {
               })
           .def_readonly("tri_angle", &TwoViewGeometry::tri_angle)
           .def("invert", &TwoViewGeometry::Invert);
-  make_dataclass(PyTwoViewGeometry);
+  MakeDataclass(PyTwoViewGeometry);
 
   m.def(
       "estimate_calibrated_two_view_geometry",

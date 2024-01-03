@@ -120,7 +120,7 @@ void BindAbsolutePoseEstimator(py::module& m) {
                          &AbsolutePoseEstimationOptions::max_focal_length_ratio)
           .def_readwrite("ransac",
                          &AbsolutePoseEstimationOptions::ransac_options);
-  make_dataclass(PyEstimationOptions);
+  MakeDataclass(PyEstimationOptions);
   auto est_options =
       PyEstimationOptions().cast<AbsolutePoseEstimationOptions>();
 
@@ -146,7 +146,7 @@ void BindAbsolutePoseEstimator(py::module& m) {
                          &AbsolutePoseRefinementOptions::refine_extra_params)
           .def_readwrite("print_summary",
                          &AbsolutePoseRefinementOptions::print_summary);
-  make_dataclass(PyRefinementOptions);
+  MakeDataclass(PyRefinementOptions);
   auto ref_options =
       PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();
 

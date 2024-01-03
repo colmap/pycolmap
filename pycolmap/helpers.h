@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "colmap/util/string.h"
 #include "colmap/util/threading.h"
 #include "colmap/util/types.h"
 
@@ -183,7 +184,30 @@ inline std::string CreateSummary(const T& self, bool write_type) {
 }
 
 template <typename T, typename... options>
-inline void make_dataclass(py::class_<T, options...> cls) {
+void AddDefaultsToDocstrings(py::class_<T, options...> cls) {
+  auto obj = cls();
+  for (auto& handle : obj.attr("__dir__")()) {
+    const std::string attribute = py::str(handle);
+    const auto member = obj.attr(attribute.c_str());
+    if (attribute.find("__") == 0 ||
+        attribute.rfind("__") != std::string::npos ||
+        py::hasattr(member, "__func__")) {
+      continue;
+    }
+    auto prop = cls.attr(attribute.c_str());
+    const auto type_name = py::type::of(member).attr("__name__");
+    const std::string doc =
+        StringPrintf("%s (%s, default: %s)",
+                     py::str(prop.doc()).cast<std::string>().c_str(),
+                     type_name.template cast<std::string>().c_str(),
+                     py::str(member).cast<std::string>().c_str());
+    prop.doc() = py::str(doc);
+  }
+}
+
+template <typename T, typename... options>
+inline void MakeDataclass(py::class_<T, options...> cls) {
+  AddDefaultsToDocstrings(cls);
   cls.def("mergedict", &UpdateFromDict);
   cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   cls.def("todict", &ConvertToDict<T>);

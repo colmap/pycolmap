@@ -103,7 +103,7 @@ void BindMatchFeatures(py::module& m) {
                          &SMOpts::guided_matching,
                          "Whether to perform guided matching, if geometric "
                          "verification succeeds.");
-  make_dataclass(PySiftMatchingOptions);
+  MakeDataclass(PySiftMatchingOptions);
   auto sift_matching_options = PySiftMatchingOptions().cast<SMOpts>();
 
   using EMOpts = ExhaustiveMatchingOptions;
@@ -111,7 +111,7 @@ void BindMatchFeatures(py::module& m) {
       py::class_<ExhaustiveMatchingOptions>(m, "ExhaustiveMatchingOptions")
           .def(py::init<>())
           .def_readwrite("block_size", &EMOpts::block_size);
-  make_dataclass(PyExhaustiveMatchingOptions);
+  MakeDataclass(PyExhaustiveMatchingOptions);
   auto exhaustive_options = PyExhaustiveMatchingOptions().cast<EMOpts>();
 
   using SeqMOpts = SequentialMatchingOptions;
@@ -155,7 +155,7 @@ void BindMatchFeatures(py::module& m) {
           .def_readwrite("vocab_tree_path",
                          &SeqMOpts::vocab_tree_path,
                          "Path to the vocabulary tree.");
-  make_dataclass(PySequentialMatchingOptions);
+  MakeDataclass(PySequentialMatchingOptions);
   auto sequential_options = PySequentialMatchingOptions().cast<SeqMOpts>();
 
   using SpMOpts = SpatialMatchingOptions;
@@ -178,7 +178,7 @@ void BindMatchFeatures(py::module& m) {
                          &SpMOpts::max_distance,
                          "The maximum distance between the query and nearest "
                          "neighbor [meters].");
-  make_dataclass(PySpatialMatchingOptions);
+  MakeDataclass(PySpatialMatchingOptions);
   auto spatial_options = PySpatialMatchingOptions().cast<SpMOpts>();
 
   using VTMOpts = VocabTreeMatchingOptions;
@@ -217,7 +217,7 @@ void BindMatchFeatures(py::module& m) {
                             "vocab_tree_path required.");
             THROW_CHECK_FILE_EXISTS(self.vocab_tree_path);
           });
-  make_dataclass(PyVocabTreeMatchingOptions);
+  MakeDataclass(PyVocabTreeMatchingOptions);
   auto vocabtree_options = PyVocabTreeMatchingOptions().cast<VTMOpts>();
 
   auto verification_options =

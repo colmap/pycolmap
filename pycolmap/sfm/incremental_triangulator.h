@@ -69,7 +69,7 @@ void BindIncrementalTriangulator(py::module& m) {
                      &Opts::max_extra_param,
                      "The threshold used to filter and ignore images with "
                      "degenerate intrinsics.");
-  make_dataclass(PyOpts);
+  MakeDataclass(PyOpts);
 
   py::class_<IncrementalTriangulator, std::shared_ptr<IncrementalTriangulator>>(
       m, "IncrementalTriangulator")

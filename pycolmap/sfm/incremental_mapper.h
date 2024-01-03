@@ -94,5 +94,5 @@ void BindIncrementalMapper(py::module& m) {
       .def_readwrite("image_selection_method",
                      &Opts::image_selection_method,
                      "Method to find and select next best image to register.");
-  make_dataclass(PyOpts);
+  MakeDataclass(PyOpts);
 }

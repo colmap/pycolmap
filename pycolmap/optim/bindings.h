@@ -23,5 +23,5 @@ void BindOptim(py::module& m) {
                          &RANSACOptions::dyn_num_trials_multiplier)
           .def_readwrite("min_num_trials", &RANSACOptions::min_num_trials)
           .def_readwrite("max_num_trials", &RANSACOptions::max_num_trials);
-  make_dataclass(PyRANSACOptions);
+  MakeDataclass(PyRANSACOptions);
 }
