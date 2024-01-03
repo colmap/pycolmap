@@ -110,15 +110,16 @@ void BindReconstruction(py::module& m) {
       .def("num_reg_images", &Reconstruction::NumRegImages)
       .def("num_points3D", &Reconstruction::NumPoints3D)
       .def("num_image_pairs", &Reconstruction::NumImagePairs)
-      .def_property_readonly(
-          "images", &Reconstruction::Images, py::return_value_policy::reference)
+      .def_property_readonly("images",
+                             &Reconstruction::Images,
+                             py::return_value_policy::reference_internal)
       .def_property_readonly("image_pairs", &Reconstruction::ImagePairs)
       .def_property_readonly("cameras",
                              &Reconstruction::Cameras,
-                             py::return_value_policy::reference)
+                             py::return_value_policy::reference_internal)
       .def_property_readonly("points3D",
                              &Reconstruction::Points3D,
-                             py::return_value_policy::reference)
+                             py::return_value_policy::reference_internal)
       .def("point3D_ids", &Reconstruction::Point3DIds)
       .def("reg_image_ids", &Reconstruction::RegImageIds)
       .def("exists_camera", &Reconstruction::ExistsCamera)
