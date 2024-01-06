@@ -19,6 +19,7 @@ void BindGeometry(py::module& m) {
   BindHomographyGeometry(m);
 
   py::class_<Eigen::Quaterniond>(m, "Rotation3d")
+      .def(py::init([]() { return Eigen::Quaterniond::Identity(); }))
       .def(py::init<const Eigen::Vector4d&>(), "xyzw"_a)
       .def(py::init<const Eigen::Matrix3d&>(), "rotmat"_a)
       .def(py::self * Eigen::Quaterniond())
@@ -33,6 +34,7 @@ void BindGeometry(py::module& m) {
         ss << "Rotation3d: " << self.coeffs();
         return ss.str();
       });
+  py::implicitly_convertible<py::array, Eigen::Quaterniond>();
 
   py::class_<Rigid3d>(m, "Rigid3d")
       .def(py::init<>())
