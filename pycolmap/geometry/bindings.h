@@ -31,7 +31,7 @@ void BindGeometry(py::module& m) {
       .def("inverse", &Eigen::Quaterniond::inverse)
       .def("__repr__", [](const Eigen::Quaterniond& self) {
         std::stringstream ss;
-        ss << "Rotation3d: " << self.coeffs();
+        ss << "Rotation3d(quat_xyzw=[" << self.coeffs().transpose() << "])";
         return ss.str();
       });
   py::implicitly_convertible<py::array, Eigen::Quaterniond>();
@@ -48,7 +48,9 @@ void BindGeometry(py::module& m) {
       .def_static("interpolate", &InterpolateCameraPoses)
       .def("__repr__", [](const Rigid3d& self) {
         std::stringstream ss;
-        ss << "Rigid3d:\n" << self.ToMatrix();
+        ss << "Rigid3d("
+           << "quat_xyzw=[" << self.rotation.coeffs().transpose() << "], "
+           << "t=[" << self.translation.transpose() << "])";
         return ss.str();
       });
 
@@ -67,7 +69,10 @@ void BindGeometry(py::module& m) {
       .def("inverse", static_cast<Sim3d (*)(const Sim3d&)>(&Inverse))
       .def("__repr__", [](const Sim3d& self) {
         std::stringstream ss;
-        ss << "Sim3d:\n" << self.ToMatrix();
+        ss << "Sim3d("
+           << "scale=" << self.scale << ", "
+           << "quat_xyzw=[" << self.rotation.coeffs().transpose() << "], "
+           << "t=[" << self.translation.transpose() << "])";
         return ss.str();
       });
 }
