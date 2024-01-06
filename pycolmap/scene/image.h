@@ -52,17 +52,18 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
 void BindImage(py::module& m) {
   py::bind_map<ImageMap>(m, "MapImageIdImage")
       .def("__repr__", [](const ImageMap& self) {
-        std::string repr = "{";
+        std::stringstream ss;
+        ss << "{";
         bool is_first = true;
-        for (auto& pair : self) {
+        for (const auto& pair : self) {
           if (!is_first) {
-            repr += ", ";
+            ss << ",\n ";
           }
           is_first = false;
-          repr += std::to_string(pair.first) + ": " + PrintImage(pair.second);
+          ss << pair.first << ": " << PrintImage(pair.second);
         }
-        repr += "}";
-        return repr;
+        ss << "}";
+        return ss.str();
       });
 
   py::class_<Image, std::shared_ptr<Image>>(m, "Image")

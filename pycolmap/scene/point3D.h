@@ -18,7 +18,11 @@ using Point3DMap = std::unordered_map<point3D_t, Point3D>;
 PYBIND11_MAKE_OPAQUE(Point3DMap);
 
 void BindPoint3D(py::module& m) {
-  py::bind_map_fix<Point3DMap>(m, "MapPoint3DIdPoint3D");
+  py::bind_map_fix<Point3DMap>(m, "MapPoint3DIdPoint3D")
+      .def("__repr__", [](const Point3DMap& self) {
+        return "MapPoint3DIdPoint3D(num_points3D=" +
+               std::to_string(self.size()) + ")";
+      });
 
   auto PyPoint3D =
       py::class_<Point3D, std::shared_ptr<Point3D>>(m, "Point3D")

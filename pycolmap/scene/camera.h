@@ -46,7 +46,21 @@ void BindCamera(py::module& m) {
   AddStringToEnumConstructor(PyCameraModelId);
   py::implicitly_convertible<int, CameraModelId>();
 
-  py::bind_map<CameraMap>(m, "MapCameraIdCamera");
+  py::bind_map<CameraMap>(m, "MapCameraIdCamera")
+      .def("__repr__", [](const CameraMap& self) {
+        std::stringstream ss;
+        ss << "{";
+        bool is_first = true;
+        for (const auto& pair : self) {
+          if (!is_first) {
+            ss << ",\n ";
+          }
+          is_first = false;
+          ss << pair.first << ": " << PrintCamera(pair.second);
+        }
+        ss << "}";
+        return ss.str();
+      });
 
   py::class_<Camera, std::shared_ptr<Camera>> PyCamera(m, "Camera");
   PyCamera.def(py::init<>())
