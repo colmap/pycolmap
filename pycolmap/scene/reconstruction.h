@@ -427,11 +427,11 @@ void BindReconstruction(py::module& m) {
       .def("__repr__",
            [](const Reconstruction& self) {
              std::stringstream ss;
-             ss << "<Reconstruction 'num_reg_images=" << self.NumRegImages()
+             ss << "Reconstruction(num_reg_images=" << self.NumRegImages()
                 << ", num_cameras=" << self.NumCameras()
                 << ", num_points3D=" << self.NumPoints3D()
                 << ", num_observations=" << self.ComputeNumObservations()
-                << "'>";
+                << ")";
              return ss.str();
            })
       .def("summary", [](const Reconstruction& self) {

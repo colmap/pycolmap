@@ -98,7 +98,7 @@ void BindIncrementalTriangulator(py::module& m) {
            })
       .def("__repr__", [](const IncrementalTriangulator& self) {
         std::stringstream ss;
-        ss << "<IncrementalTriangulator>";
+        ss << "IncrementalTriangulator()";
         return ss.str();
       });
 }

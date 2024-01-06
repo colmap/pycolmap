@@ -33,8 +33,8 @@ void BindCorrespondenceGraph(py::module& m) {
              return CorrespondenceGraph::Correspondence(self);
            })
       .def("__repr__", [](const CorrespondenceGraph::Correspondence& self) {
-        return "<Correspondence 'image_id=" + std::to_string(self.image_id) +
-               ",point2D_idx=" + std::to_string(self.point2D_idx) + "'>";
+        return "Correspondence(image_id=" + std::to_string(self.image_id) +
+               ", point2D_idx=" + std::to_string(self.point2D_idx) + ")";
       });
 
   py::class_<CorrespondenceGraph, std::shared_ptr<CorrespondenceGraph>>(
@@ -100,8 +100,8 @@ void BindCorrespondenceGraph(py::module& m) {
            })
       .def("__repr__", [](const CorrespondenceGraph& self) {
         std::stringstream ss;
-        ss << "<CorrespondenceGraph 'num_images=" << self.NumImages()
-           << ", num_image_pairs=" << self.NumImagePairs() << "'>";
+        ss << "CorrespondenceGraph(num_images=" << self.NumImages()
+           << ", num_image_pairs=" << self.NumImagePairs() << ")";
         return ss.str();
       });
 }

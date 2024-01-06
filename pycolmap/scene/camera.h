@@ -19,15 +19,17 @@ namespace py = pybind11;
 using CameraMap = std::unordered_map<camera_t, Camera>;
 PYBIND11_MAKE_OPAQUE(CameraMap);
 
-// TODO: cleanup
 std::string PrintCamera(const Camera& camera) {
+  const bool valid_model = ExistsCameraModelWithId(camera.model_id);
+  const std::string params_info = valid_model ? camera.ParamsInfo() : "?";
+  const std::string model_name = valid_model ? camera.ModelName() : "Invalid";
   std::stringstream ss;
-  ss << "<Camera 'camera_id="
+  ss << "Camera(camera_id="
      << (camera.camera_id != kInvalidCameraId ? std::to_string(camera.camera_id)
                                               : "Invalid")
-     << ", model=" << camera.ModelName() << ", width=" << camera.width
-     << ", height=" << camera.height << ", num_params=" << camera.params.size()
-     << "'>";
+     << ", model=" << model_name << ", width=" << camera.width
+     << ", height=" << camera.height << ", params=[" << camera.ParamsToString()
+     << "] (" << params_info << "))";
   return ss.str();
 }
 
@@ -184,20 +186,7 @@ void BindCamera(py::module& m) {
       .def("__copy__", [](const Camera& self) { return Camera(self); })
       .def("__deepcopy__",
            [](const Camera& self, py::dict) { return Camera(self); })
-      .def("__repr__", [](const Camera& self) { return PrintCamera(self); })
-      .def("summary", [](const Camera& self) {
-        std::stringstream ss;
-        ss << "Camera:\n\tcamera_id="
-           << (self.camera_id != kInvalidCameraId
-                   ? std::to_string(self.camera_id)
-                   : "Invalid")
-           << "\n\tmodel = " << self.ModelName() << "\n\twidth = " << self.width
-           << "\n\theight = " << self.height
-           << "\n\tnum_params = " << self.params.size()
-           << "\n\tparams_info = " << self.ParamsInfo()
-           << "\n\tparams = " << self.ParamsToString();
-        return ss.str();
-      });
+      .def("__repr__", &PrintCamera);
   PyCamera.def(py::init([PyCamera](py::dict dict) {
                  auto self = py::object(PyCamera());
                  for (auto& it : dict) {

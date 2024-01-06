@@ -21,14 +21,14 @@ PYBIND11_MAKE_OPAQUE(ImageMap);
 
 std::string PrintImage(const Image& image) {
   std::stringstream ss;
-  ss << "<Image 'image_id="
+  ss << "Image(image_id="
      << (image.ImageId() != kInvalidImageId ? std::to_string(image.ImageId())
                                             : "Invalid")
      << ", camera_id="
      << (image.HasCamera() ? std::to_string(image.CameraId()) : "Invalid")
      << ", name=\"" << image.Name() << "\""
      << ", triangulated=" << image.NumPoints3D() << "/" << image.NumPoints2D()
-     << "'>";
+     << ")";
   return ss.str();
 }
 
@@ -286,19 +286,5 @@ void BindImage(py::module& m) {
       .def("__copy__", [](const Image& self) { return Image(self); })
       .def("__deepcopy__",
            [](const Image& self, py::dict) { return Image(self); })
-      .def("__repr__", [](const Image& self) { return PrintImage(self); })
-      .def("summary", [](const Image& self) {
-        std::stringstream ss;
-        ss << "Image:\n\timage_id = "
-           << (self.ImageId() != kInvalidImageId
-                   ? std::to_string(self.ImageId())
-                   : "Invalid")
-           << "\n\tcamera_id = "
-           << (self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
-           << "\n\tname = " << self.Name()
-           << "\n\ttriangulated = " << self.NumPoints3D() << "/"
-           << self.NumPoints2D() << "\n\tcam_from_world = ["
-           << self.CamFromWorld().ToMatrix() << "]";
-        return ss.str();
-      });
+      .def("__repr__", &PrintImage);
 }
