@@ -209,7 +209,10 @@ template <typename T, typename... options>
 inline void MakeDataclass(py::class_<T, options...> cls) {
   AddDefaultsToDocstrings(cls);
   cls.def("mergedict", &UpdateFromDict);
-  cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
+  if (!py::hasattr(cls, "summary")) {
+    cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
+  }
+  cls.attr("__repr__") = cls.attr("summary");
   cls.def("todict", &ConvertToDict<T>);
   cls.def(py::init([cls](py::dict dict) {
     auto self = py::object(cls());

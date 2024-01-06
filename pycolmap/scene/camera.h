@@ -77,8 +77,8 @@ void BindCamera(py::module& m) {
       .def_property(
           "model_name",
           &Camera::ModelName,
-          [](Camera& self, std::string model_name) {
-            self.model_id = CameraModelNameToId(model_name);
+          [](Camera& self, CameraModelId model_id) {  // implicit conversion
+            self.model_id = model_id;
           },
           "Camera model name (connected to model_id).")
       .def_readwrite("width", &Camera::width, "Width of camera sensor.")
@@ -203,8 +203,8 @@ void BindCamera(py::module& m) {
       .def("__repr__", &PrintCamera);
   PyCamera.def(py::init([PyCamera](py::dict dict) {
                  auto self = py::object(PyCamera());
-                 for (auto& it : dict) {
-                   auto key_str = it.first.cast<std::string>();
+                 for (const auto& it : dict) {
+                   const auto key_str = it.first.cast<std::string>();
                    if ((key_str == "model") || (key_str == "model_name")) {
                      self.attr("model_id") = it.second;  // Implicit conversion.
                    } else {
@@ -218,6 +218,5 @@ void BindCamera(py::module& m) {
     py::dict dict = kwargs.cast<py::dict>();
     return PyCamera(dict).cast<Camera>();
   }));
-
   py::implicitly_convertible<py::dict, Camera>();
 }
