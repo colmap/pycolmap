@@ -3,7 +3,7 @@ set -e -x
 uname -a
 CURRDIR=$(pwd)
 
-yum install -y gcc gcc-c++ glibc cmake3 ninja-build curl zip unzip tar
+yum install -y gcc gcc-c++ cmake3 ninja-build curl zip unzip tar
 
 git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
@@ -32,9 +32,10 @@ cd ${VCPKG_INSTALLATION_ROOT}
 ./vcpkg integrate install
 
 cd ${CURRDIR}
-git clone https://github.com/colmap/colmap.git
+git clone  --branch sarlinpe/link-dl https://github.com/sarlinpe/colmap.git
+#git clone https://github.com/colmap/colmap.git
 cd colmap
-git checkout ${COLMAP_COMMIT_ID}
+#git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DCUDA_ENABLED=OFF \
