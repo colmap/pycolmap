@@ -21,6 +21,7 @@ cd ${VCPKG_INSTALLATION_ROOT}
     ceres[lapack,suitesparse] \
     eigen3 \
     flann \
+    jasper[core] \
     freeimage \
     metis \
     gflags \
