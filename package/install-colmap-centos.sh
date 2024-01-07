@@ -3,7 +3,7 @@ set -e -x
 uname -a
 CURRDIR=$(pwd)
 
-yum install -y gcc gcc-c++ cmake3 ninja-build curl zip unzip tar
+yum install -y gcc gcc-c++ glibc cmake3 ninja-build curl zip unzip tar
 
 git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
@@ -28,6 +28,7 @@ cd ${VCPKG_INSTALLATION_ROOT}
     glog \
     gtest \
     sqlite3
+# We force the core option of jasper to disable the unwanted opengl option.
 ./vcpkg integrate install
 
 cd ${CURRDIR}
