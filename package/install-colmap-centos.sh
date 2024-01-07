@@ -4,7 +4,7 @@ uname -a
 CURRDIR=$(pwd)
 echo "${CURRDIR}"
 
-yum install -y gcc gcc-c++ cmake3 ninja-build
+yum install -y gcc gcc-c++ cmake3 ninja-build curl zip unzip tar
 cmake --version
 
 cd ${CURRDIR}
