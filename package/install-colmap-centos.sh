@@ -46,6 +46,6 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DCMAKE_EXE_LINKER_FLAGS_INIT="-ldl"
 ninja install
 
-ccache --show-stats --verbose
+ccache --show-stats
 ccache --evict-older-than 1d
-ccache --show-stats --verbose
+ccache --show-stats
