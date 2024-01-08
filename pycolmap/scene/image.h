@@ -50,7 +50,7 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
 }
 
 void BindImage(py::module& m) {
-  py::bind_map<ImageMap>(m, "MapImagesById")
+  py::bind_map<ImageMap>(m, "MapImageIdImage")
       .def("__repr__", [](const ImageMap& self) {
         std::stringstream ss;
         ss << "{";
