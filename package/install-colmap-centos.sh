@@ -47,5 +47,3 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
 ninja install
 
 ccache --show-stats
-ccache --evict-older-than 1d
-ccache --show-stats
