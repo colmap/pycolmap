@@ -5,10 +5,16 @@ CURRDIR=$(pwd)
 
 yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
 
-FILE="ccache-4.9-linux-x86_64"
-curl -sSLO https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
-tar -xf ${FILE}.tar.xz
-export PATH="$(pwd)/${FILE}:${PATH}"
+# ccache shipped by CentOS is too old so we download and cache it.
+COMPILER_TOOLS_DIR="${COMPILER_CACHE_DIR}/bin"
+mkdir -p ${COMPILER_TOOLS_DIR}
+if [ ! -f "${COMPILER_TOOLS_DIR}/ccache" ]; then
+    FILE="ccache-4.9-linux-x86_64"
+    curl -sSLO https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
+    tar -xf ${FILE}.tar.xz
+    cp ${FILE}/ccache ${COMPILER_TOOLS_DIR}
+fi
+export PATH="${COMPILER_TOOLS_DIR}:${PATH}"
 ccache --version
 ccache --help
 
