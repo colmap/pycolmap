@@ -9,6 +9,8 @@ FILE="ccache-4.9-linux-x86_64"
 curl -sSLO https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
 tar -xf ${FILE}.tar.xz
 export PATH="$(pwd)/${FILE}:${PATH}"
+ccache --version
+ccache --help
 
 git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
