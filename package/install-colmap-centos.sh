@@ -6,7 +6,7 @@ CURRDIR=$(pwd)
 yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
 
 FILE="ccache-4.9-linux-x86_64"
-wget -nv https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
+curl -sSLO https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
 tar -xf ${FILE}.tar.xz
 export PATH="$(pwd)/${FILE}:${PATH}"
 
