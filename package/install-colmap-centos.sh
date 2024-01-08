@@ -32,10 +32,9 @@ cd ${VCPKG_INSTALLATION_ROOT}
 ./vcpkg integrate install
 
 cd ${CURRDIR}
-git clone  --branch sarlinpe/link-dl https://github.com/sarlinpe/colmap.git
-#git clone https://github.com/colmap/colmap.git
+git clone https://github.com/colmap/colmap.git
 cd colmap
-#git checkout ${COLMAP_COMMIT_ID}
+git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
 CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DCUDA_ENABLED=OFF \
@@ -43,5 +42,6 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DGUI_ENABLED=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
-    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
+    -DCMAKE_EXE_LINKER_FLAGS_INIT="-ldl"
 ninja install
