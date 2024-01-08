@@ -3,7 +3,7 @@ set -e -x
 uname -a
 CURRDIR=$(pwd)
 
-yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
+yum install -y gcc gcc-c++ ninja-build curl zip unzip tar ccache
 
 git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
@@ -45,3 +45,7 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
     -DCMAKE_EXE_LINKER_FLAGS_INIT="-ldl"
 ninja install
+
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose
