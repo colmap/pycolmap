@@ -3,7 +3,12 @@ set -e -x
 uname -a
 CURRDIR=$(pwd)
 
-yum install -y gcc gcc-c++ ninja-build curl zip unzip tar ccache
+yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
+
+FILE="ccache-4.9-linux-x86_64"
+wget -nv https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
+tar -xf ${FILE}.tar.xz
+export PATH="$(pwd)/${FILE}:${PATH}"
 
 git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
@@ -46,4 +51,6 @@ CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
     -DCMAKE_EXE_LINKER_FLAGS_INIT="-ldl"
 ninja install
 
-ccache --show-stats
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose
