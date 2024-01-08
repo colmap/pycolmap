@@ -83,6 +83,37 @@ jobs:
           $VCPKG_CACHE_DIR = "${env:COMPILER_CACHE_DIR}/vcpkg"
           $VCPKG_BINARY_SOURCES = "clear;files,${VCPKG_CACHE_DIR},readwrite"
           echo "VCPKG_BINARY_SOURCES=${VCPKG_BINARY_SOURCES}" >> "${env:GITHUB_ENV}"
+      - name: Set env (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          VCPKG_TARGET_TRIPLET="x64-linux-release"
+          echo "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}" >> "$GITHUB_ENV"
+
+          VCPKG_INSTALLATION_ROOT="${{ github.workspace }}/vcpkg"
+          CMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          echo "VCPKG_INSTALLATION_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
+          echo "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" >> "$GITHUB_ENV"
+
+          # Fix: cibuildhweel cannot interpolate env variables.
+          CONFIG_SETTINGS="cmake.define.CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+          CONFIG_SETTINGS="${CONFIG_SETTINGS} cmake.define.VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+          echo "CIBW_CONFIG_SETTINGS_LINUX=${CONFIG_SETTINGS}" >> "$GITHUB_ENV"
+
+          # Remap caching paths to the container
+          CONTAINER_COMPILER_CACHE_DIR="/compiler-cache"
+          CIBW_CONTAINER_ENGINE="docker; create_args: -v ${COMPILER_CACHE_DIR}:${CONTAINER_COMPILER_CACHE_DIR}"
+          echo "CIBW_CONTAINER_ENGINE=${CIBW_CONTAINER_ENGINE}" >> "$GITHUB_ENV"
+          echo "COMPILER_CACHE_DIR=${CONTAINER_COMPILER_CACHE_DIR}" >> "$GITHUB_ENV"
+          echo "CCACHE_DIR=${CONTAINER_COMPILER_CACHE_DIR}/ccache" >> "$GITHUB_ENV"
+          echo "CCACHE_BASEDIR=/project" >> "$GITHUB_ENV"
+
+          # vcpkg binary caching
+          VCPKG_CACHE_DIR="${CONTAINER_COMPILER_CACHE_DIR}/vcpkg"
+          VCPKG_BINARY_SOURCES="clear;files,${VCPKG_CACHE_DIR},readwrite"
+          echo "VCPKG_BINARY_SOURCES=${VCPKG_BINARY_SOURCES}" >> "$GITHUB_ENV"
+
+          CIBW_ENVIRONMENT_PASS_LINUX="VCPKG_TARGET_TRIPLET VCPKG_INSTALLATION_ROOT CMAKE_TOOLCHAIN_FILE VCPKG_BINARY_SOURCES COMPILER_CACHE_DIR CCACHE_DIR CCACHE_BASEDIR"
+          echo "CIBW_ENVIRONMENT_PASS_LINUX=${CIBW_ENVIRONMENT_PASS_LINUX}" >> "$GITHUB_ENV"
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:

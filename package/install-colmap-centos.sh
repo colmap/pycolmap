@@ -1,86 +1,64 @@
 #!/bin/bash
 set -e -x
 uname -a
-
 CURRDIR=$(pwd)
-echo "${CURRDIR}"
 
-# ------ Install dependencies from the default repositories ------
-cd ${CURRDIR}
-yum install -y \
-    wget \
-    git \
-    gcc gcc-c++ make \
-    freeimage-devel \
-    metis-devel \
-    glew-devel \
-    suitesparse-devel \
-    atlas-devel \
-    lapack-devel \
-    blas-devel \
+yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
+
+# ccache shipped by CentOS is too old so we download and cache it.
+COMPILER_TOOLS_DIR="${COMPILER_CACHE_DIR}/bin"
+mkdir -p ${COMPILER_TOOLS_DIR}
+if [ ! -f "${COMPILER_TOOLS_DIR}/ccache" ]; then
+    FILE="ccache-4.9-linux-x86_64"
+    curl -sSLO https://github.com/ccache/ccache/releases/download/v4.9/${FILE}.tar.xz
+    tar -xf ${FILE}.tar.xz
+    cp ${FILE}/ccache ${COMPILER_TOOLS_DIR}
+fi
+export PATH="${COMPILER_TOOLS_DIR}:${PATH}"
+ccache --version
+ccache --help
+
+git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+cd ${VCPKG_INSTALLATION_ROOT}
+./bootstrap-vcpkg.sh
+./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
+    boost-algorithm \
+    boost-filesystem \
+    boost-graph \
+    boost-heap \
+    boost-program-options \
+    boost-property-map \
+    boost-property-tree \
+    boost-regex \
+    boost-system \
+    ceres[lapack,suitesparse] \
+    eigen3 \
     flann \
-    flann-devel \
-    lz4 \
-    lz4-devel
+    jasper[core] \
+    freeimage \
+    metis \
+    gflags \
+    glog \
+    gtest \
+    sqlite3
+# We force the core option of jasper to disable the unwanted opengl option.
+./vcpkg integrate install
 
-# ------ Install boost ------
-cd ${CURRDIR}
-export BOOST_FILENAME="boost-1.84.0"
-wget -nv https://github.com/boostorg/boost/releases/download/${BOOST_FILENAME}/${BOOST_FILENAME}.tar.gz
-tar xzf ${BOOST_FILENAME}.tar.gz
-cd ${BOOST_FILENAME}
-./bootstrap.sh --with-libraries=filesystem,system,program_options,graph,test --without-icu
-./b2 -j$(nproc) cxxflags="-fPIC" variant=release link=shared --disable-icu install
-
-# ------ Install gflags ------
-cd ${CURRDIR}
-git clone --branch v2.2.2 --depth 1 https://github.com/gflags/gflags.git
-cd gflags
-mkdir build && cd build
-cmake .. -DBUILD_SHARED_LIBS=ON
-make -j$(nproc) install
-
-# ------ Install glog ------
-cd ${CURRDIR}
-git clone --branch v0.6.0 --depth 1 https://github.com/google/glog.git
-cd glog
-mkdir build && cd build
-cmake ..
-make -j$(nproc) install
-
-# ------ Install Eigen ------
-cd ${CURRDIR}
-EIGEN_VERSION="3.3.9"
-export EIGEN_DIR="${CURRDIR}/eigen"
-wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
-tar -xvzf eigen-${EIGEN_VERSION}.tar.gz
-mv eigen-${EIGEN_VERSION} ${EIGEN_DIR}
-cd ${EIGEN_DIR}
-mkdir build && cd build
-cmake ..
-
-# ------ Install CERES solver ------
-cd ${CURRDIR}
-git clone https://ceres-solver.googlesource.com/ceres-solver
-cd ceres-solver
-git checkout $(git describe --tags) # Checkout the latest release
-mkdir build && cd build
-cmake .. -DBUILD_TESTING=OFF \
-         -DBUILD_EXAMPLES=OFF \
-         -DEigen3_DIR="${EIGEN_DIR}/cmake/"
-make -j$(nproc) install
-
-# ------ Build COLMAP ------
 cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout ${COLMAP_COMMIT_ID}
 mkdir build && cd build
-CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -DCMAKE_BUILD_TYPE=Release \
-         -DBoost_USE_STATIC_LIBS=OFF \
-         -DBOOST_ROOT=/usr/local \
-         -DCUDA_ENABLED=OFF \
-         -DCGAL_ENABLED=OFF \
-         -DGUI_ENABLED=OFF \
-         -DEIGEN3_INCLUDE_DIRS=$EIGEN_DIR
-make -j$(nproc) install
+CXXFLAGS="-fPIC" CFLAGS="-fPIC" cmake .. -GNinja \
+    -DCUDA_ENABLED=OFF \
+    -DCGAL_ENABLED=OFF \
+    -DGUI_ENABLED=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
+    -DCMAKE_EXE_LINKER_FLAGS_INIT="-ldl"
+ninja install
+
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose
