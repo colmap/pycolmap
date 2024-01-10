@@ -81,7 +81,7 @@ ops.max_num_features = 512
 pycolmap.extract_features(database_path, image_dir, sift_options=ops)
 ```
 
-To list available options and their default parameters, use
+To list available options and their default parameters:
 
 ```python
 help(pycolmap.SiftExtractionOptions)
@@ -129,7 +129,6 @@ print(rec2_from_rec1.scale, rec2_from_rec1.rotation, rec2_from_rec1.translation)
 reconstruction.write_text("path/to/new/reconstruction/dir/")  # text format
 reconstruction.export_PLY("rec.ply")  # PLY format
 ```
-
 
 ## Estimators
 
