@@ -3,6 +3,7 @@
 #include "colmap/geometry/sim3.h"
 
 #include "pycolmap/geometry/homography_matrix.h"
+#include "pycolmap/helpers.h"
 
 #include <sstream>
 
@@ -31,7 +32,7 @@ void BindGeometry(py::module& m) {
       .def("inverse", &Eigen::Quaterniond::inverse)
       .def("__repr__", [](const Eigen::Quaterniond& self) {
         std::stringstream ss;
-        ss << "Rotation3d(quat_xyzw=[" << self.coeffs().transpose() << "])";
+        ss << "Rotation3d(quat_xyzw=[" << self.coeffs().format(vec_fmt) << "])";
         return ss.str();
       });
   py::implicitly_convertible<py::array, Eigen::Quaterniond>();
@@ -49,8 +50,8 @@ void BindGeometry(py::module& m) {
       .def("__repr__", [](const Rigid3d& self) {
         std::stringstream ss;
         ss << "Rigid3d("
-           << "quat_xyzw=[" << self.rotation.coeffs().transpose() << "], "
-           << "t=[" << self.translation.transpose() << "])";
+           << "quat_xyzw=[" << self.rotation.coeffs().format(vec_fmt) << "], "
+           << "t=[" << self.translation.format(vec_fmt) << "])";
         return ss.str();
       });
 
@@ -71,8 +72,8 @@ void BindGeometry(py::module& m) {
         std::stringstream ss;
         ss << "Sim3d("
            << "scale=" << self.scale << ", "
-           << "quat_xyzw=[" << self.rotation.coeffs().transpose() << "], "
-           << "t=[" << self.translation.transpose() << "])";
+           << "quat_xyzw=[" << self.rotation.coeffs().format(vec_fmt) << "], "
+           << "t=[" << self.translation.format(vec_fmt) << "])";
         return ss.str();
       });
 }

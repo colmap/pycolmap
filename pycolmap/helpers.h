@@ -12,6 +12,7 @@
 #include <regex>
 #include <string>
 
+#include <Eigen/Core>
 #include <glog/logging.h>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
@@ -23,6 +24,11 @@
 using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
+
+const Eigen::IOFormat vec_fmt(Eigen::StreamPrecision,
+                              Eigen::DontAlignCols,
+                              ", ",
+                              ", ");
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {

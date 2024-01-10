@@ -5,6 +5,7 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 
 #include <Eigen/StdVector>
@@ -23,8 +24,8 @@ PYBIND11_MAKE_OPAQUE(Point2DVector);
 
 std::string PrintPoint2D(const Point2D& p2D) {
   std::stringstream ss;
-  ss << "<Point2D 'xy=[" << p2D.xy.transpose() << "], point3D_id="
-     << (p2D.HasPoint3D() ? std::to_string(p2D.point3D_id) : "Invalid") << "'>";
+  ss << "Point2D(xy=[" << p2D.xy.format(vec_fmt) << "], point3D_id="
+     << (p2D.HasPoint3D() ? std::to_string(p2D.point3D_id) : "Invalid") << ")";
   return ss.str();
 }
 
