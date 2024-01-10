@@ -45,8 +45,8 @@ void BindPoint2D(py::module& m) {
         return repr;
       });
 
-  py::class_<Point2D, std::shared_ptr<Point2D>>(m, "Point2D")
-      .def(py::init<>())
+  py::class_<Point2D, std::shared_ptr<Point2D>> PyPoint2D(m, "Point2D");
+  PyPoint2D.def(py::init<>())
       .def(py::init<const Eigen::Vector2d&, size_t>(),
            "xy"_a,
            "point3D_id"_a = kInvalidPoint3DId)
@@ -57,4 +57,5 @@ void BindPoint2D(py::module& m) {
       .def("__deepcopy__",
            [](const Point2D& self, py::dict) { return Point2D(self); })
       .def("__repr__", &PrintPoint2D);
+  MakeDataclass(PyPoint2D);
 }
