@@ -40,6 +40,9 @@ void BindGeometry(py::module& m) {
   py::class_<Rigid3d>(m, "Rigid3d")
       .def(py::init<>())
       .def(py::init<const Eigen::Quaterniond&, const Eigen::Vector3d&>())
+      .def(py::init([](const Eigen::Matrix3x4d& matrix) {
+        return Rigid3d(Eigen::Quaterniond(matrix.leftCols<3>()), matrix.col(3));
+      }))
       .def_readwrite("rotation", &Rigid3d::rotation)
       .def_readwrite("translation", &Rigid3d::translation)
       .def_property_readonly("matrix", &Rigid3d::ToMatrix)
@@ -54,12 +57,13 @@ void BindGeometry(py::module& m) {
            << "t=[" << self.translation.format(vec_fmt) << "])";
         return ss.str();
       });
+  py::implicitly_convertible<py::array, Rigid3d>();
 
   py::class_<Sim3d>(m, "Sim3d")
       .def(py::init<>())
       .def(
           py::init<double, const Eigen::Quaterniond&, const Eigen::Vector3d&>())
-      .def_static("from_matrix", &Sim3d::FromMatrix)
+      .def(py::init(&Sim3d::FromMatrix))
       .def_readwrite("scale", &Sim3d::scale)
       .def_readwrite("rotation", &Sim3d::rotation)
       .def_readwrite("translation", &Sim3d::translation)
@@ -76,4 +80,5 @@ void BindGeometry(py::module& m) {
            << "t=[" << self.translation.format(vec_fmt) << "])";
         return ss.str();
       });
+  py::implicitly_convertible<py::array, Sim3d>();
 }
