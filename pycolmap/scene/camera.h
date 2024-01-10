@@ -105,10 +105,11 @@ void BindCamera(py::module& m) {
       .def("calibration_matrix",
            &Camera::CalibrationMatrix,
            "Compute calibration matrix from params.")
-      .def("params_info",
-           &Camera::ParamsInfo,
-           "Get human-readable information about the parameter vector "
-           "ordering.")
+      .def_property_readonly(
+          "params_info",
+          &Camera::ParamsInfo,
+          "Get human-readable information about the parameter vector "
+          "ordering.")
       .def_property(
           "params",
           [](Camera& self) {
