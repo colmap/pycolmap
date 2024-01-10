@@ -17,9 +17,9 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-using vector_Point2D =
+using Point2DVector =
     std::vector<struct Point2D, Eigen::aligned_allocator<Point2D>>;
-PYBIND11_MAKE_OPAQUE(vector_Point2D);
+PYBIND11_MAKE_OPAQUE(Point2DVector);
 
 std::string PrintPoint2D(const Point2D& p2D) {
   std::stringstream ss;
@@ -29,8 +29,8 @@ std::string PrintPoint2D(const Point2D& p2D) {
 }
 
 void BindPoint2D(py::module& m) {
-  py::bind_vector<vector_Point2D>(m, "ListPoint2D")
-      .def("__repr__", [](const vector_Point2D& self) {
+  py::bind_vector<Point2DVector>(m, "ListPoint2D")
+      .def("__repr__", [](const Point2DVector& self) {
         std::string repr = "[";
         bool is_first = true;
         for (auto& p2D : self) {
