@@ -5,7 +5,10 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
+
+#include <sstream>
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -66,8 +69,8 @@ void BindImage(py::module& m) {
         return ss.str();
       });
 
-  py::class_<Image, std::shared_ptr<Image>>(m, "Image")
-      .def(py::init<>())
+  py::class_<Image, std::shared_ptr<Image>> PyImage(m, "Image");
+  PyImage.def(py::init<>())
       .def(py::init(&MakeImage<Point2D>),
            "name"_a = "",
            "points2D"_a = std::vector<Point2D>(),
@@ -288,4 +291,5 @@ void BindImage(py::module& m) {
       .def("__deepcopy__",
            [](const Image& self, py::dict) { return Image(self); })
       .def("__repr__", &PrintImage);
+  MakeDataclass(PyImage);
 }

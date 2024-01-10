@@ -189,7 +189,13 @@ inline std::string CreateSummary(const T& self, bool write_type) {
         ss << ": " << type_str;
         after_subsummary = true;
       }
-      ss << " = " << py::str(member).template cast<std::string>();
+      std::string value = py::str(member);
+      if (value.length() > 80 && py::hasattr(member, "__len__")) {
+        const int length = member.attr("__len__")().template cast<int>();
+        value = StringPrintf(
+            "%c ... %d elements ... %c", value.front(), length, value.back());
+      }
+      ss << " = " << value;
       after_subsummary = false;
     }
   }
