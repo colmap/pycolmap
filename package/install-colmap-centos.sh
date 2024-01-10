@@ -18,7 +18,7 @@ export PATH="${COMPILER_TOOLS_DIR}:${PATH}"
 ccache --version
 ccache --help
 
-git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
@@ -34,14 +34,12 @@ cd ${VCPKG_INSTALLATION_ROOT}
     ceres[lapack,suitesparse] \
     eigen3 \
     flann \
-    jasper[core] \
     freeimage \
     metis \
     gflags \
     glog \
     gtest \
     sqlite3
-# We force the core option of jasper to disable the unwanted opengl option.
 ./vcpkg integrate install
 
 cd ${CURRDIR}
