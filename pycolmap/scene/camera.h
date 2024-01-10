@@ -5,7 +5,10 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
+
+#include <sstream>
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -19,15 +22,17 @@ namespace py = pybind11;
 using CameraMap = std::unordered_map<camera_t, Camera>;
 PYBIND11_MAKE_OPAQUE(CameraMap);
 
-// TODO: cleanup
 std::string PrintCamera(const Camera& camera) {
+  const bool valid_model = ExistsCameraModelWithId(camera.model_id);
+  const std::string params_info = valid_model ? camera.ParamsInfo() : "?";
+  const std::string model_name = valid_model ? camera.ModelName() : "Invalid";
   std::stringstream ss;
-  ss << "<Camera 'camera_id="
+  ss << "Camera(camera_id="
      << (camera.camera_id != kInvalidCameraId ? std::to_string(camera.camera_id)
                                               : "Invalid")
-     << ", model=" << camera.ModelName() << ", width=" << camera.width
-     << ", height=" << camera.height << ", num_params=" << camera.params.size()
-     << "'>";
+     << ", model=" << model_name << ", width=" << camera.width
+     << ", height=" << camera.height << ", params=[" << camera.ParamsToString()
+     << "] (" << params_info << "))";
   return ss.str();
 }
 
@@ -44,7 +49,21 @@ void BindCamera(py::module& m) {
   AddStringToEnumConstructor(PyCameraModelId);
   py::implicitly_convertible<int, CameraModelId>();
 
-  py::bind_map<CameraMap>(m, "MapCameraIdCamera");
+  py::bind_map<CameraMap>(m, "MapCameraIdToCamera")
+      .def("__repr__", [](const CameraMap& self) {
+        std::stringstream ss;
+        ss << "{";
+        bool is_first = true;
+        for (const auto& pair : self) {
+          if (!is_first) {
+            ss << ",\n ";
+          }
+          is_first = false;
+          ss << pair.first << ": " << PrintCamera(pair.second);
+        }
+        ss << "}";
+        return ss.str();
+      });
 
   py::class_<Camera, std::shared_ptr<Camera>> PyCamera(m, "Camera");
   PyCamera.def(py::init<>())
@@ -57,14 +76,7 @@ void BindCamera(py::module& m) {
                   "height"_a)
       .def_readwrite(
           "camera_id", &Camera::camera_id, "Unique identifier of the camera.")
-      .def_readwrite("model_id", &Camera::model_id, "Camera model ID.")
-      .def_property(
-          "model_name",
-          &Camera::ModelName,
-          [](Camera& self, std::string model_name) {
-            self.model_id = CameraModelNameToId(model_name);
-          },
-          "Camera model name (connected to model_id).")
+      .def_readwrite("model", &Camera::model_id, "Camera model.")
       .def_readwrite("width", &Camera::width, "Width of camera sensor.")
       .def_readwrite("height", &Camera::height, "Height of camera sensor.")
       .def("mean_focal_length", &Camera::MeanFocalLength)
@@ -93,10 +105,11 @@ void BindCamera(py::module& m) {
       .def("calibration_matrix",
            &Camera::CalibrationMatrix,
            "Compute calibration matrix from params.")
-      .def("params_info",
-           &Camera::ParamsInfo,
-           "Get human-readable information about the parameter vector "
-           "ordering.")
+      .def_property_readonly(
+          "params_info",
+          &Camera::ParamsInfo,
+          "Get human-readable information about the parameter vector "
+          "ordering.")
       .def_property(
           "params",
           [](Camera& self) {
@@ -184,37 +197,6 @@ void BindCamera(py::module& m) {
       .def("__copy__", [](const Camera& self) { return Camera(self); })
       .def("__deepcopy__",
            [](const Camera& self, py::dict) { return Camera(self); })
-      .def("__repr__", [](const Camera& self) { return PrintCamera(self); })
-      .def("summary", [](const Camera& self) {
-        std::stringstream ss;
-        ss << "Camera:\n\tcamera_id="
-           << (self.camera_id != kInvalidCameraId
-                   ? std::to_string(self.camera_id)
-                   : "Invalid")
-           << "\n\tmodel = " << self.ModelName() << "\n\twidth = " << self.width
-           << "\n\theight = " << self.height
-           << "\n\tnum_params = " << self.params.size()
-           << "\n\tparams_info = " << self.ParamsInfo()
-           << "\n\tparams = " << self.ParamsToString();
-        return ss.str();
-      });
-  PyCamera.def(py::init([PyCamera](py::dict dict) {
-                 auto self = py::object(PyCamera());
-                 for (auto& it : dict) {
-                   auto key_str = it.first.cast<std::string>();
-                   if ((key_str == "model") || (key_str == "model_name")) {
-                     self.attr("model_id") = it.second;  // Implicit conversion.
-                   } else {
-                     self.attr(it.first) = it.second;
-                   }
-                 }
-                 return self.cast<Camera>();
-               }),
-               "dict"_a);
-  PyCamera.def(py::init([PyCamera](py::kwargs kwargs) {
-    py::dict dict = kwargs.cast<py::dict>();
-    return PyCamera(dict).cast<Camera>();
-  }));
-
-  py::implicitly_convertible<py::dict, Camera>();
+      .def("__repr__", &PrintCamera);
+  MakeDataclass(PyCamera);
 }

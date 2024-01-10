@@ -12,6 +12,7 @@
 #include <regex>
 #include <string>
 
+#include <Eigen/Core>
 #include <glog/logging.h>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
@@ -23,6 +24,11 @@
 using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
+
+const Eigen::IOFormat vec_fmt(Eigen::StreamPrecision,
+                              Eigen::DontAlignCols,
+                              ", ",
+                              ", ");
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
@@ -139,45 +145,58 @@ inline py::dict ConvertToDict(const T& self) {
   return dict;
 }
 
+bool AttributeIsFunction(const std::string& name, const py::object& attribute) {
+  return (name.find("__") == 0 || name.rfind("__") != std::string::npos ||
+          py::hasattr(attribute, "__func__") ||
+          py::hasattr(attribute, "__call__"));
+}
+
 template <typename T, typename... options>
 inline std::string CreateSummary(const T& self, bool write_type) {
   std::stringstream ss;
   auto pyself = py::cast(self);
-  std::string prefix = "    ";
+  const std::string prefix = "    ";
   bool after_subsummary = false;
   ss << pyself.attr("__class__").attr("__name__").template cast<std::string>()
-     << ":\n";
+     << ":";
   for (auto& handle : pyself.attr("__dir__")()) {
     std::string attribute = py::str(handle);
-    auto member = pyself.attr(attribute.c_str());
-
-    if (attribute.find("__") != 0 &&
-        attribute.rfind("__") == std::string::npos &&
-        !py::hasattr(member, "__func__")) {
-      if (py::hasattr(member, "summary")) {
-        std::string summ = member.attr("summary")
-                               .attr("__call__")(write_type)
-                               .template cast<std::string>();
-        summ = std::regex_replace(summ, std::regex("\n"), "\n" + prefix);
-        if (!after_subsummary) {
-          ss << prefix;
-        }
-        ss << attribute << ": " << summ;
+    py::object member;
+    try {
+      member = pyself.attr(attribute.c_str());
+    } catch (const std::exception& e) {
+      // Some properties are not valid for some uninitialized objects.
+      continue;
+    }
+    if (AttributeIsFunction(attribute, member)) {
+      continue;
+    }
+    ss << "\n";
+    if (!after_subsummary) {
+      ss << prefix;
+    }
+    ss << attribute;
+    if (py::hasattr(member, "summary")) {
+      std::string summ = member.attr("summary")
+                             .attr("__call__")(write_type)
+                             .template cast<std::string>();
+      summ = std::regex_replace(summ, std::regex("\n"), "\n" + prefix);
+      ss << ": " << summ;
+    } else {
+      if (write_type) {
+        const std::string type_str =
+            py::str(py::type::of(member).attr("__name__"));
+        ss << ": " << type_str;
         after_subsummary = true;
-      } else {
-        if (!after_subsummary) {
-          ss << prefix;
-        }
-        ss << attribute;
-        if (write_type) {
-          ss << ": "
-             << py::type::of(member)
-                    .attr("__name__")
-                    .template cast<std::string>();
-        }
-        ss << " = " << py::str(member).template cast<std::string>() << "\n";
-        after_subsummary = false;
       }
+      std::string value = py::str(member);
+      if (value.length() > 80 && py::hasattr(member, "__len__")) {
+        const int length = member.attr("__len__")().template cast<int>();
+        value = StringPrintf(
+            "%c ... %d elements ... %c", value.front(), length, value.back());
+      }
+      ss << " = " << value;
+      after_subsummary = false;
     }
   }
   return ss.str();
@@ -188,13 +207,17 @@ void AddDefaultsToDocstrings(py::class_<T, options...> cls) {
   auto obj = cls();
   for (auto& handle : obj.attr("__dir__")()) {
     const std::string attribute = py::str(handle);
-    const auto member = obj.attr(attribute.c_str());
-    if (attribute.find("__") == 0 ||
-        attribute.rfind("__") != std::string::npos ||
-        py::hasattr(member, "__func__")) {
+    py::object member;
+    try {
+      member = obj.attr(attribute.c_str());
+    } catch (const std::exception& e) {
+      // Some properties are not valid for some uninitialized objects.
       continue;
     }
     auto prop = cls.attr(attribute.c_str());
+    if (AttributeIsFunction(attribute, member)) {
+      continue;
+    }
     const auto type_name = py::type::of(member).attr("__name__");
     const std::string doc =
         StringPrintf("%s (%s, default: %s)",
@@ -209,7 +232,9 @@ template <typename T, typename... options>
 inline void MakeDataclass(py::class_<T, options...> cls) {
   AddDefaultsToDocstrings(cls);
   cls.def("mergedict", &UpdateFromDict);
-  cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
+  if (!py::hasattr(cls, "summary")) {
+    cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
+  }
   cls.def("todict", &ConvertToDict<T>);
   cls.def(py::init([cls](py::dict dict) {
     auto self = py::object(cls());

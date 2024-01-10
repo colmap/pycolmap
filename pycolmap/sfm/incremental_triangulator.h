@@ -71,6 +71,9 @@ void BindIncrementalTriangulator(py::module& m) {
                      "degenerate intrinsics.");
   MakeDataclass(PyOpts);
 
+  // TODO: Add bindings for GetModifiedPoints3D.
+  // TODO: Add bindings for Find, Create, Continue, Merge, Complete,
+  // HasCameraBogusParams once they become public.
   py::class_<IncrementalTriangulator, std::shared_ptr<IncrementalTriangulator>>(
       m, "IncrementalTriangulator")
       .def(py::init<std::shared_ptr<CorrespondenceGraph>,
@@ -85,9 +88,6 @@ void BindIncrementalTriangulator(py::module& m) {
            &IncrementalTriangulator::ClearModifiedPoints3D)
       .def("merge_tracks", &IncrementalTriangulator::MergeTracks)
       .def("complete_tracks", &IncrementalTriangulator::CompleteTracks)
-      // Missing bindings: GetModifiedPoints3D
-      // Private bindings: Find, Create, Continue, Merge, Complete,
-      // HasCameraBogusParams
       .def("__copy__",
            [](const IncrementalTriangulator& self) {
              return IncrementalTriangulator(self);
@@ -97,8 +97,7 @@ void BindIncrementalTriangulator(py::module& m) {
              return IncrementalTriangulator(self);
            })
       .def("__repr__", [](const IncrementalTriangulator& self) {
-        std::stringstream ss;
-        ss << "<IncrementalTriangulator>";
-        return ss.str();
+        // TODO: Print reconstruction and correspondence_graph once public.
+        return "IncrementalTriangulator()";
       });
 }

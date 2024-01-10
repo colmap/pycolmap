@@ -5,6 +5,7 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 
 #include <Eigen/StdVector>
@@ -17,20 +18,20 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-using vector_Point2D =
+using Point2DVector =
     std::vector<struct Point2D, Eigen::aligned_allocator<Point2D>>;
-PYBIND11_MAKE_OPAQUE(vector_Point2D);
+PYBIND11_MAKE_OPAQUE(Point2DVector);
 
 std::string PrintPoint2D(const Point2D& p2D) {
   std::stringstream ss;
-  ss << "<Point2D 'xy=[" << p2D.xy.transpose() << "], point3D_id="
-     << (p2D.HasPoint3D() ? std::to_string(p2D.point3D_id) : "Invalid") << "'>";
+  ss << "Point2D(xy=[" << p2D.xy.format(vec_fmt) << "], point3D_id="
+     << (p2D.HasPoint3D() ? std::to_string(p2D.point3D_id) : "Invalid") << ")";
   return ss.str();
 }
 
 void BindPoint2D(py::module& m) {
-  py::bind_vector<vector_Point2D>(m, "ListPoint2D")
-      .def("__repr__", [](const vector_Point2D& self) {
+  py::bind_vector<Point2DVector>(m, "ListPoint2D")
+      .def("__repr__", [](const Point2DVector& self) {
         std::string repr = "[";
         bool is_first = true;
         for (auto& p2D : self) {
@@ -44,8 +45,8 @@ void BindPoint2D(py::module& m) {
         return repr;
       });
 
-  py::class_<Point2D, std::shared_ptr<Point2D>>(m, "Point2D")
-      .def(py::init<>())
+  py::class_<Point2D, std::shared_ptr<Point2D>> PyPoint2D(m, "Point2D");
+  PyPoint2D.def(py::init<>())
       .def(py::init<const Eigen::Vector2d&, size_t>(),
            "xy"_a,
            "point3D_id"_a = kInvalidPoint3DId)
@@ -56,4 +57,5 @@ void BindPoint2D(py::module& m) {
       .def("__deepcopy__",
            [](const Point2D& self, py::dict) { return Point2D(self); })
       .def("__repr__", &PrintPoint2D);
+  MakeDataclass(PyPoint2D);
 }

@@ -5,7 +5,10 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
+
+#include <sstream>
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -21,14 +24,14 @@ PYBIND11_MAKE_OPAQUE(ImageMap);
 
 std::string PrintImage(const Image& image) {
   std::stringstream ss;
-  ss << "<Image 'image_id="
+  ss << "Image(image_id="
      << (image.ImageId() != kInvalidImageId ? std::to_string(image.ImageId())
                                             : "Invalid")
      << ", camera_id="
      << (image.HasCamera() ? std::to_string(image.CameraId()) : "Invalid")
      << ", name=\"" << image.Name() << "\""
      << ", triangulated=" << image.NumPoints3D() << "/" << image.NumPoints2D()
-     << "'>";
+     << ")";
   return ss.str();
 }
 
@@ -50,23 +53,24 @@ std::shared_ptr<Image> MakeImage(const std::string& name,
 }
 
 void BindImage(py::module& m) {
-  py::bind_map<ImageMap>(m, "MapImageIdImage")
+  py::bind_map<ImageMap>(m, "MapImageIdToImage")
       .def("__repr__", [](const ImageMap& self) {
-        std::string repr = "{";
+        std::stringstream ss;
+        ss << "{";
         bool is_first = true;
-        for (auto& pair : self) {
+        for (const auto& pair : self) {
           if (!is_first) {
-            repr += ", ";
+            ss << ",\n ";
           }
           is_first = false;
-          repr += std::to_string(pair.first) + ": " + PrintImage(pair.second);
+          ss << pair.first << ": " << PrintImage(pair.second);
         }
-        repr += "}";
-        return repr;
+        ss << "}";
+        return ss.str();
       });
 
-  py::class_<Image, std::shared_ptr<Image>>(m, "Image")
-      .def(py::init<>())
+  py::class_<Image, std::shared_ptr<Image>> PyImage(m, "Image");
+  PyImage.def(py::init<>())
       .def(py::init(&MakeImage<Point2D>),
            "name"_a = "",
            "points2D"_a = std::vector<Point2D>(),
@@ -177,13 +181,14 @@ void BindImage(py::module& m) {
                     &Image::IsRegistered,
                     &Image::SetRegistered,
                     "Whether image is registered in the reconstruction.")
-      .def("num_points2D",
-           &Image::NumPoints2D,
-           "Get the number of image points (keypoints).")
-      .def("num_points3D",
-           &Image::NumPoints3D,
-           "Get the number of triangulations, i.e. the number of points that\n"
-           "are part of a 3D point track.")
+      .def_property_readonly("num_points2D",
+                             &Image::NumPoints2D,
+                             "Get the number of image points (keypoints).")
+      .def_property_readonly(
+          "num_points3D",
+          &Image::NumPoints3D,
+          "Get the number of triangulations, i.e. the number of points that\n"
+          "are part of a 3D point track.")
       .def_property(
           "num_observations",
           &Image::NumObservations,
@@ -286,19 +291,6 @@ void BindImage(py::module& m) {
       .def("__copy__", [](const Image& self) { return Image(self); })
       .def("__deepcopy__",
            [](const Image& self, py::dict) { return Image(self); })
-      .def("__repr__", [](const Image& self) { return PrintImage(self); })
-      .def("summary", [](const Image& self) {
-        std::stringstream ss;
-        ss << "Image:\n\timage_id = "
-           << (self.ImageId() != kInvalidImageId
-                   ? std::to_string(self.ImageId())
-                   : "Invalid")
-           << "\n\tcamera_id = "
-           << (self.HasCamera() ? std::to_string(self.CameraId()) : "Invalid")
-           << "\n\tname = " << self.Name()
-           << "\n\ttriangulated = " << self.NumPoints3D() << "/"
-           << self.NumPoints2D() << "\n\tcam_from_world = ["
-           << self.CamFromWorld().ToMatrix() << "]";
-        return ss.str();
-      });
+      .def("__repr__", &PrintImage);
+  MakeDataclass(PyImage);
 }

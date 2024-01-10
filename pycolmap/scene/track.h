@@ -6,6 +6,8 @@
 
 #include "pycolmap/log_exceptions.h"
 
+#include <memory>
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -27,14 +29,14 @@ void BindTrack(py::module& m) {
           "__deepcopy__",
           [](const TrackElement& self, py::dict) { return TrackElement(self); })
       .def("__repr__", [](const TrackElement& self) {
-        return "<TrackElement 'image_id=" + std::to_string(self.image_id) +
-               ",point2D_idx=" + std::to_string(self.point2D_idx) + "'>";
+        return "TrackElement(image_id=" + std::to_string(self.image_id) +
+               ", point2D_idx=" + std::to_string(self.point2D_idx) + ")";
       });
 
   py::class_<Track, std::shared_ptr<Track>>(m, "Track")
       .def(py::init<>())
       .def(py::init([](const std::vector<TrackElement>& elements) {
-        std::unique_ptr<Track> track = std::unique_ptr<Track>(new Track());
+        auto track = std::make_shared<Track>();
         track->AddElements(elements);
         return track;
       }))
@@ -68,6 +70,6 @@ void BindTrack(py::module& m) {
       .def("__deepcopy__",
            [](const Track& self, py::dict) { return Track(self); })
       .def("__repr__", [](const Track& self) {
-        return "<Track 'length=" + std::to_string(self.Length()) + "'>";
+        return "Track(length=" + std::to_string(self.Length()) + ")";
       });
 }

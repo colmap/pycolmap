@@ -61,8 +61,7 @@ void BindReconstruction(py::module& m) {
       .def(py::init([](const py::object input_path) {
              std::string path = py::str(input_path).cast<std::string>();
              THROW_CHECK_RECONSTRUCTION_EXISTS(path);
-             auto reconstruction =
-                 std::unique_ptr<Reconstruction>(new Reconstruction());
+             auto reconstruction = std::make_shared<Reconstruction>();
              reconstruction->Read(path);
              return reconstruction;
            }),
@@ -427,11 +426,11 @@ void BindReconstruction(py::module& m) {
       .def("__repr__",
            [](const Reconstruction& self) {
              std::stringstream ss;
-             ss << "<Reconstruction 'num_reg_images=" << self.NumRegImages()
+             ss << "Reconstruction(num_reg_images=" << self.NumRegImages()
                 << ", num_cameras=" << self.NumCameras()
                 << ", num_points3D=" << self.NumPoints3D()
                 << ", num_observations=" << self.ComputeNumObservations()
-                << "'>";
+                << ")";
              return ss.str();
            })
       .def("summary", [](const Reconstruction& self) {
