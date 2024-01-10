@@ -15,10 +15,7 @@ brew remove node@18
 brew update
 brew install git cmake ninja llvm ccache
 
-cd ${CURRDIR}
-#git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
-git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
-
+git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \

@@ -18,7 +18,7 @@ export PATH="${COMPILER_TOOLS_DIR}:${PATH}"
 ccache --version
 ccache --help
 
-git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
