@@ -42,29 +42,29 @@ FeatureMatches FeatureMatchesFromMatrix(const PyFeatureMatches& matrix) {
 }
 
 void BindTwoViewGeometryEstimator(py::module& m) {
-  auto PyTwoViewGeometryOptions =
-      py::class_<TwoViewGeometryOptions>(m, "TwoViewGeometryOptions")
-          .def(py::init<>())
-          .def_readwrite("min_num_inliers",
-                         &TwoViewGeometryOptions::min_num_inliers)
-          .def_readwrite("min_E_F_inlier_ratio",
-                         &TwoViewGeometryOptions::min_E_F_inlier_ratio)
-          .def_readwrite("max_H_inlier_ratio",
-                         &TwoViewGeometryOptions::max_H_inlier_ratio)
-          .def_readwrite("watermark_min_inlier_ratio",
-                         &TwoViewGeometryOptions::watermark_min_inlier_ratio)
-          .def_readwrite("watermark_border_size",
-                         &TwoViewGeometryOptions::watermark_border_size)
-          .def_readwrite("detect_watermark",
-                         &TwoViewGeometryOptions::detect_watermark)
-          .def_readwrite("multiple_ignore_watermark",
-                         &TwoViewGeometryOptions::multiple_ignore_watermark)
-          .def_readwrite("force_H_use", &TwoViewGeometryOptions::force_H_use)
-          .def_readwrite("compute_relative_pose",
-                         &TwoViewGeometryOptions::compute_relative_pose)
-          .def_readwrite("multiple_models",
-                         &TwoViewGeometryOptions::multiple_models)
-          .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
+  py::class_<TwoViewGeometryOptions> PyTwoViewGeometryOptions(
+      m, "TwoViewGeometryOptions");
+  PyTwoViewGeometryOptions.def(py::init<>())
+      .def_readwrite("min_num_inliers",
+                     &TwoViewGeometryOptions::min_num_inliers)
+      .def_readwrite("min_E_F_inlier_ratio",
+                     &TwoViewGeometryOptions::min_E_F_inlier_ratio)
+      .def_readwrite("max_H_inlier_ratio",
+                     &TwoViewGeometryOptions::max_H_inlier_ratio)
+      .def_readwrite("watermark_min_inlier_ratio",
+                     &TwoViewGeometryOptions::watermark_min_inlier_ratio)
+      .def_readwrite("watermark_border_size",
+                     &TwoViewGeometryOptions::watermark_border_size)
+      .def_readwrite("detect_watermark",
+                     &TwoViewGeometryOptions::detect_watermark)
+      .def_readwrite("multiple_ignore_watermark",
+                     &TwoViewGeometryOptions::multiple_ignore_watermark)
+      .def_readwrite("force_H_use", &TwoViewGeometryOptions::force_H_use)
+      .def_readwrite("compute_relative_pose",
+                     &TwoViewGeometryOptions::compute_relative_pose)
+      .def_readwrite("multiple_models",
+                     &TwoViewGeometryOptions::multiple_models)
+      .def_readwrite("ransac", &TwoViewGeometryOptions::ransac_options);
   MakeDataclass(PyTwoViewGeometryOptions);
   auto tvg_options = PyTwoViewGeometryOptions().cast<TwoViewGeometryOptions>();
 
@@ -80,21 +80,20 @@ void BindTwoViewGeometryEstimator(py::module& m) {
       .value("WATERMARK", TwoViewGeometry::WATERMARK)
       .value("MULTIPLE", TwoViewGeometry::MULTIPLE);
 
-  auto PyTwoViewGeometry =
-      py::class_<TwoViewGeometry>(m, "TwoViewGeometry")
-          .def(py::init<>())
-          .def_readonly("config", &TwoViewGeometry::config)
-          .def_readonly("E", &TwoViewGeometry::E)
-          .def_readonly("F", &TwoViewGeometry::F)
-          .def_readonly("H", &TwoViewGeometry::H)
-          .def_readonly("cam2_from_cam1", &TwoViewGeometry::cam2_from_cam1)
-          .def_property_readonly(
-              "inlier_matches",
-              [](const TwoViewGeometry& self) {
-                return FeatureMatchesToMatrix(self.inlier_matches);
-              })
-          .def_readonly("tri_angle", &TwoViewGeometry::tri_angle)
-          .def("invert", &TwoViewGeometry::Invert);
+  py::class_<TwoViewGeometry> PyTwoViewGeometry(m, "TwoViewGeometry");
+  PyTwoViewGeometry.def(py::init<>())
+      .def_readonly("config", &TwoViewGeometry::config)
+      .def_readonly("E", &TwoViewGeometry::E)
+      .def_readonly("F", &TwoViewGeometry::F)
+      .def_readonly("H", &TwoViewGeometry::H)
+      .def_readonly("cam2_from_cam1", &TwoViewGeometry::cam2_from_cam1)
+      .def_property_readonly(
+          "inlier_matches",
+          [](const TwoViewGeometry& self) {
+            return FeatureMatchesToMatrix(self.inlier_matches);
+          })
+      .def_readonly("tri_angle", &TwoViewGeometry::tri_angle)
+      .def("invert", &TwoViewGeometry::Invert);
   MakeDataclass(PyTwoViewGeometry);
 
   m.def(
