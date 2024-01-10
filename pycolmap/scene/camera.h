@@ -5,7 +5,10 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
+
+#include <sstream>
 
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
@@ -73,14 +76,7 @@ void BindCamera(py::module& m) {
                   "height"_a)
       .def_readwrite(
           "camera_id", &Camera::camera_id, "Unique identifier of the camera.")
-      .def_readwrite("model_id", &Camera::model_id, "Camera model ID.")
-      .def_property(
-          "model_name",
-          &Camera::ModelName,
-          [](Camera& self, CameraModelId model_id) {  // implicit conversion
-            self.model_id = model_id;
-          },
-          "Camera model name (connected to model_id).")
+      .def_readwrite("model", &Camera::model_id, "Camera model.")
       .def_readwrite("width", &Camera::width, "Width of camera sensor.")
       .def_readwrite("height", &Camera::height, "Height of camera sensor.")
       .def("mean_focal_length", &Camera::MeanFocalLength)
@@ -201,22 +197,5 @@ void BindCamera(py::module& m) {
       .def("__deepcopy__",
            [](const Camera& self, py::dict) { return Camera(self); })
       .def("__repr__", &PrintCamera);
-  PyCamera.def(py::init([PyCamera](py::dict dict) {
-                 auto self = py::object(PyCamera());
-                 for (const auto& it : dict) {
-                   const auto key_str = it.first.cast<std::string>();
-                   if ((key_str == "model") || (key_str == "model_name")) {
-                     self.attr("model_id") = it.second;  // Implicit conversion.
-                   } else {
-                     self.attr(it.first) = it.second;
-                   }
-                 }
-                 return self.cast<Camera>();
-               }),
-               "dict"_a);
-  PyCamera.def(py::init([PyCamera](py::kwargs kwargs) {
-    py::dict dict = kwargs.cast<py::dict>();
-    return PyCamera(dict).cast<Camera>();
-  }));
-  py::implicitly_convertible<py::dict, Camera>();
+  MakeDataclass(PyCamera);
 }
