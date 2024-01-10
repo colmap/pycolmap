@@ -15,6 +15,9 @@ brew remove node@18
 brew update
 brew install git cmake ninja llvm ccache
 
+# When building lapack-reference, vcpkg/cmake looks for gfortran.
+ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
+
 git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
