@@ -15,6 +15,8 @@
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 
+#include <memory>
+
 #include <glog/logging.h>
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>

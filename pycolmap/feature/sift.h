@@ -4,6 +4,8 @@
 #include "pycolmap/helpers.h"
 #include "pycolmap/utils.h"
 
+#include <memory>
+
 #include <Eigen/Core>
 #include <FreeImage.h>
 #include <pybind11/numpy.h>
