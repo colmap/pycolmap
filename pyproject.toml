@@ -30,12 +30,11 @@ wheel.expand-macos-universal-tags = true
 [tool.cibuildwheel]
 build = "cp3{8,9,10,11}-{macosx,manylinux,win}*"
 archs = ["auto64"]
-environment = { COLMAP_COMMIT_ID="c206c7a333c8b2ef818135bdfe9d31a28bd2eb2b" }
+environment = { COLMAP_COMMIT_ID="3.9" }
 test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
 [tool.cibuildwheel.linux]
 before-all = "{project}/package/install-colmap-centos.sh"
-config-settings = "cmake.define.EIGEN3_INCLUDE_DIRS=eigen"
 
 [tool.cibuildwheel.macos]
 before-all = "{project}/package/install-colmap-macos.sh"

@@ -13,7 +13,7 @@ brew remove swiftlint
 brew remove node@18
 
 brew update
-brew install git cmake ninja llvm
+brew install git cmake ninja llvm ccache
 
 cd ${CURRDIR}
 #git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
@@ -51,8 +51,14 @@ export ARCHFLAGS="-arch ${CIBW_ARCHS_MACOS}"
 cmake .. -GNinja -DGUI_ENABLED=OFF \
     -DCUDA_ENABLED=OFF \
     -DCGAL_ENABLED=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCCACHE_ENABLED=ON \
     -DCMAKE_TOOLCHAIN_FILE="${CMAKE_TOOLCHAIN_FILE}" \
     -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET} \
     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES} \
     `if [[ ${CIBW_ARCHS_MACOS} == "arm64" ]]; then echo "-DSIMD_ENABLED=OFF"; fi`
 ninja install
+
+ccache --show-stats --verbose
+ccache --evict-older-than 1d
+ccache --show-stats --verbose
