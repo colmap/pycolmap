@@ -18,7 +18,7 @@ brew install git cmake ninja llvm ccache
 # When building lapack-reference, vcpkg/cmake looks for gfortran.
 ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 
-git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone -b force_bla_vendor https://github.com/Neumann-A/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
