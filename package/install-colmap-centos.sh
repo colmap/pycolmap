@@ -34,12 +34,14 @@ cd ${VCPKG_INSTALLATION_ROOT}
     ceres[lapack,suitesparse] \
     eigen3 \
     flann \
+    jasper[core] \
     freeimage \
     metis \
     gflags \
     glog \
     gtest \
     sqlite3
+# We force the core option of jasper to disable the unwanted opengl option.
 ./vcpkg integrate install
 
 cd ${CURRDIR}
