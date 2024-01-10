@@ -4,7 +4,7 @@ This repository exposes to Python most [COLMAP](https://colmap.github.io/) recon
 
 ## Installation
 
-Wheels for Python 8/9/10 on Linux, macOS 10/11/12, and Windows can be install using pip:
+Wheels for Python 8/9/10 on Linux, macOS 10/11/12 (both Intel and Apple Silicon), and Windows can be install using pip:
 ```bash
 pip install pycolmap
 ```
