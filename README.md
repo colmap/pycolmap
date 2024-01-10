@@ -2,45 +2,43 @@
 
 This repository exposes to Python most [COLMAP](https://colmap.github.io/) reconstruction objects, such as Cameras and Points3D, as well as estimators for absolute and relative poses.
 
-## Getting started
+## Installation
 
-Wheels for Python 8/9/10 on Linux, macOS 11/12, and Windows can be install using pip:
+Wheels for Python 8/9/10 on Linux, macOS 10/11/12, and Windows can be install using pip:
 ```bash
 pip install pycolmap
 ```
 
-The wheels are automatically built and pushed to [pypi](https://pypi.org/project/pycolmap/) at each release. They are currently not built with CUDA support, which requires building from source (see below).
+The wheels are automatically built and pushed to [PyPI](https://pypi.org/project/pycolmap/) at each release. They are currently not built with CUDA support, which requires building from source.
 
-### Building from source
+<details>
+<summary>[Building PyCOLMAP from source - click to expand]</summary>
 
-Alternatively, PyCOLMAP can be built from source. Here is how to build the most recent stable version (v0.4.0):
+1. Install COLMAP from source following [the official guide](https://colmap.github.io/install.html). Use COLMAP 3.8/3.9 for PyCOLMAP 0.4.0/0.5.0.
 
-1. Install COLMAP 3.8 as a library following [the official guide](https://colmap.github.io/install.html). _Make sure to use the tag 3.8._
-
-2. Clone and build the PyCOLMAP repository and its submodules:
+4. Clone the PyCOLMAP repository:
 ```bash
-git clone -b v0.4.0 --recursive https://github.com/colmap/pycolmap.git
+git clone -b 0.5.0 https://github.com/colmap/pycolmap.git
 cd pycolmap
-pip install .
 ```
 
-> [!IMPORTANT]
-> The master branch is in active development and its API is unstable. It is currently only compatible with the COLMAP commit [colmap/colmap@`0d9ab40`](https://github.com/colmap/colmap/commit/0d9ab40f6037b5ede71f3af3b8d1f5091f68855d). Using an earlier commit might not work.
-
-To build PyCOLMAP on Windows, install COLMAP via VCPKG following [the official guide](https://colmap.github.io/install.html#id3) and run in powershell:
+3. Build:
+  - On Linux and macOS:
+```bash
+python -m pip install .
+```
+  - On Windows, after installing COLMAP [via VCPKG](https://colmap.github.io/install.html), run in powershell:
 ```powershell
-git clone https://github.com/colmap/pycolmap.git
-cd pycolmap
 py -m pip install . `
     --cmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
     --cmake.define.VCPKG_TARGET_TRIPLET="x64-windows"
 ```
 
-##
+</details>
 
 ## Reconstruction pipeline
 
-PyCOLMAP provides bindings for multiple steps of the standard reconstruction pipeline. They are defined in `pipeline/` and include:
+PyCOLMAP provides bindings for multiple steps of the standard reconstruction pipeline:
 
 - extracting and matching SIFT features
 - importing an image folder into a COLMAP database
@@ -83,20 +81,11 @@ ops.max_num_features = 512
 pycolmap.extract_features(database_path, image_dir, sift_options=ops)
 ```
 
-To list available options, use
+To list available options and their default parameters, use
 
 ```python
 help(pycolmap.SiftExtractionOptions)
 ```
-
-The default parameters can be looked up with
-
-```python
-print(pycolmap.SiftExtractionOptions().summary())
-# or
-print(pycolmap.SiftExtractionOptions().todict())
-```
-
 
 For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
 
@@ -106,7 +95,7 @@ We can load and manipulate an existing COLMAP 3D reconstruction:
 
 ```python
 import pycolmap
-reconstruction = pycolmap.Reconstruction("path/to/my/reconstruction/")
+reconstruction = pycolmap.Reconstruction("path/to/reconstruction/dir")
 print(reconstruction.summary())
 
 for image_id, image in reconstruction.images.items():
@@ -118,49 +107,27 @@ for point3D_id, point3D in reconstruction.points3D.items():
 for camera_id, camera in reconstruction.cameras.items():
     print(camera_id, camera)
 
-reconstruction.write("path/to/new/reconstruction/")
+reconstruction.write("path/to/reconstruction/dir/")
 ```
 
 The object API mirrors the COLMAP C++ library. The bindings support many other operations, for example:
 
 - projecting a 3D point into an image with arbitrary camera model:
-
 ```python
 uv = camera.img_from_cam(image.cam_from_world * point3D.xyz)
 ```
 
 - aligning two 3D reconstructions by their camera poses:
-
 ```python
 rec2_from_rec1 = pycolmap.align_reconstructions_via_reprojections(reconstruction1, reconstrution2)
 reconstruction1.transform(rec2_from_rec1)
 print(rec2_from_rec1.scale, rec2_from_rec1.rotation, rec2_from_rec1.translation)
 ```
 
-
-`pycolmap` also allows exporting models to TXT/NVM//CAM/Bundler/VRML/PLY (also supports `pathlib.Path` inputs).
-`skip_distortion == True` enables exporting more camera models, with the caveat of
-averaging the focal length parameters.
-
+- exporting reconstructions to text, PLY, or other formats:
 ```python
-# Exports reconstruction to COLMAP text format.
-reconstruction.write_text("path/to/new/reconstruction/")
-
-# Exports in NVM format http://ccwu.me/vsfm/doc.html#nvm.
-reconstruction.export_NVM("rec.nvm", skip_distortion=False)
-
-# Creates a <img_name>.cam file for each image with pose/intrinsics information.
-reconstruction.export_CAM("image_dir/", skip_distortion=False)
-
-# Exports in Bundler format https://www.cs.cornell.edu/~snavely/bundler/.
-reconstruction.export_bundler("rec.bundler.out", "rec.list.txt", skip_distortion=False)
-
-# exports 3D points to PLY format.
-reconstruction.export_PLY("rec.ply")
-
-# Exports in VRML format https://en.wikipedia.org/wiki/VRML.
-reconstruction.export_VRML("rec.images.wrl", "rec.points3D.wrl",
-                           image_scale=1.0, image_rgb=[1.0, 0.0, 0.0])
+reconstruction.write_text("path/to/new/reconstruction/dir/")  # text format
+reconstruction.export_PLY("rec.ply")  # PLY format
 ```
 
 
@@ -168,7 +135,7 @@ reconstruction.export_VRML("rec.images.wrl", "rec.points3D.wrl",
 
 We provide robust RANSAC-based estimators for absolute camera pose (single-camera and multi-camera-rig), essential matrix, fundamental matrix, homography, and two-view relative pose for calibrated cameras.
 
-All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/optim/ransac.h`](https://github.com/colmap/colmap/blob/main/src/colmap/optim/ransac.h#L45-L74) and their default values are:
+All RANSAC and estimation parameters are exposed as objects that behave similarly as Python dataclasses. The RANSAC options are described in [`colmap/optim/ransac.h`](https://github.com/colmap/colmap/blob/main/src/colmap/optim/ransac.h#L43-L72) and their default values are:
 
 ```python
 ransac_options = pycolmap.RANSACOptions(
@@ -195,7 +162,7 @@ answer = pycolmap.absolute_pose_estimation(points2D, points3D, camera)
 # Returns: dictionary of estimation outputs or None if failure
 ```
 
-2D and 3D points are passed as Numpy arrays or lists. The options are defined in [`estimators/absolute_pose.cc`](./estimators/absolute_pose.cc#L104-L152) and can be passed as regular (nested) Python dictionaries:
+2D and 3D points are passed as Numpy arrays or lists. The options are defined in [`estimators/absolute_pose.cc`](./pycolmap/estimators/absolute_pose.h#L100-L122) and can be passed as regular (nested) Python dictionaries:
 
 ```python
 pycolmap.absolute_pose_estimation(
@@ -302,7 +269,7 @@ Alternatively, we can also pass a camera dictionary:
 
 ```python
 camera_dict = {
-    'model': COLMAP_CAMERA_MODEL_NAME,
+    'model': COLMAP_CAMERA_MODEL_NAME_OR_ID,
     'width': IMAGE_WIDTH,
     'height': IMAGE_HEIGHT,
     'params': EXTRA_CAMERA_PARAMETERS_LIST
