@@ -6,6 +6,8 @@
 
 #include "pycolmap/log_exceptions.h"
 
+#include <memory>
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -34,7 +36,7 @@ void BindTrack(py::module& m) {
   py::class_<Track, std::shared_ptr<Track>>(m, "Track")
       .def(py::init<>())
       .def(py::init([](const std::vector<TrackElement>& elements) {
-        std::unique_ptr<Track> track = std::unique_ptr<Track>(new Track());
+        auto track = std::make_shared<Track>();
         track->AddElements(elements);
         return track;
       }))

@@ -61,8 +61,7 @@ void BindReconstruction(py::module& m) {
       .def(py::init([](const py::object input_path) {
              std::string path = py::str(input_path).cast<std::string>();
              THROW_CHECK_RECONSTRUCTION_EXISTS(path);
-             auto reconstruction =
-                 std::unique_ptr<Reconstruction>(new Reconstruction());
+             auto reconstruction = std::make_shared<Reconstruction>();
              reconstruction->Read(path);
              return reconstruction;
            }),
