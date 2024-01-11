@@ -8,6 +8,7 @@
 
 #include "pycolmap/log_exceptions.h"
 
+#include <exception>
 #include <memory>
 #include <regex>
 #include <sstream>
@@ -54,25 +55,31 @@ inline void AddStringToEnumConstructor(py::enum_<T>& enm) {
   py::implicitly_convertible<std::string, T>();
 }
 
-inline void UpdateFromDict(py::object& self, py::dict& dict) {
-  for (auto& it : dict) {
+inline void UpdateFromDict(py::object& self, const py::dict& dict) {
+  for (const auto& it : dict) {
+    if (!py::isinstance<py::str>(it.first)) {
+      const std::string msg = "Dictionary key is not a string: " +
+                              py::str(it.first).template cast<std::string>();
+      THROW_EXCEPTION(std::invalid_argument, msg.c_str());
+    }
+    const py::str name = py::reinterpret_borrow<py::str>(it.first);
+    const py::handle& value = it.second;
+    auto attr = self.attr(name);
     try {
-      if (py::hasattr(self.attr(it.first), "mergedict")) {
-        self.attr(it.first).attr("mergedict").attr("__call__")(it.second);
+      if (py::hasattr(attr, "mergedict") && py::isinstance<py::dict>(value)) {
+        attr.attr("mergedict").attr("__call__")(value);
       } else {
-        self.attr(it.first) = it.second;
+        self.attr(name) = value;
       }
     } catch (const py::error_already_set& ex) {
       if (ex.matches(PyExc_TypeError)) {
         // If fail we try bases of the class
-        py::list bases = self.attr(it.first)
-                             .attr("__class__")
-                             .attr("__bases__")
-                             .cast<py::list>();
+        const py::list bases =
+            attr.attr("__class__").attr("__bases__").cast<py::list>();
         bool success_on_base = false;
         for (auto& base : bases) {
           try {
-            self.attr(it.first) = base(it.second);
+            self.attr(name) = base(value);
             success_on_base = true;
             break;
           } catch (const py::error_already_set&) {
@@ -86,22 +93,19 @@ inline void UpdateFromDict(py::object& self, py::dict& dict) {
         ss << self.attr("__class__")
                   .attr("__name__")
                   .template cast<std::string>()
-           << "." << py::str(it.first).template cast<std::string>()
-           << ": Could not convert "
-           << py::type::of(it.second.cast<py::object>())
+           << "." << name.template cast<std::string>() << ": Could not convert "
+           << py::type::of(value.cast<py::object>())
                   .attr("__name__")
                   .template cast<std::string>()
-           << ": " << py::str(it.second).template cast<std::string>() << " to '"
-           << py::type::of(self.attr(it.first))
-                  .attr("__name__")
-                  .template cast<std::string>()
+           << ": " << py::str(value).template cast<std::string>() << " to '"
+           << py::type::of(attr).attr("__name__").template cast<std::string>()
            << "'.";
         // We write the err message to give info even if exceptions
         // is catched outside, e.g. in function overload resolve
         LOG(ERROR) << "Internal TypeError: " << ss.str();
         throw(py::type_error(std::string("Failed to merge dict into class: ") +
                              "Could not assign " +
-                             py::str(it.first).template cast<std::string>()));
+                             name.template cast<std::string>()));
       } else if (ex.matches(PyExc_AttributeError) &&
                  py::str(ex.value()).cast<std::string>() ==
                      std::string("can't set attribute")) {
@@ -109,8 +113,7 @@ inline void UpdateFromDict(py::object& self, py::dict& dict) {
         ss << self.attr("__class__")
                   .attr("__name__")
                   .template cast<std::string>()
-           << "." << py::str(it.first).template cast<std::string>()
-           << " defined readonly.";
+           << "." << name.template cast<std::string>() << " defined readonly.";
         throw py::attribute_error(ss.str());
       } else if (ex.matches(PyExc_AttributeError)) {
         LOG(ERROR) << "Internal AttributeError: "
