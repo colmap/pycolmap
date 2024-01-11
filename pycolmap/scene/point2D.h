@@ -58,7 +58,7 @@ void BindPoint2D(py::module& m) {
       .def("has_point3D", &Point2D::HasPoint3D)
       .def("__copy__", [](const Point2D& self) { return Point2D(self); })
       .def("__deepcopy__",
-           [](const Point2D& self, py::dict) { return Point2D(self); })
+           [](const Point2D& self, const py::dict&) { return Point2D(self); })
       .def("__repr__", &PrintPoint2D);
   MakeDataclass(PyPoint2D);
 }

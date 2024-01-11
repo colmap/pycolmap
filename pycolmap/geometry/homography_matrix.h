@@ -13,11 +13,11 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 py::dict PyPoseFromHomographyMatrix(
-    const Eigen::Matrix3d H,
-    const Eigen::Matrix3d K1,
-    const Eigen::Matrix3d K2,
-    const std::vector<Eigen::Vector2d> points1,
-    const std::vector<Eigen::Vector2d> points2) {
+    const Eigen::Matrix3d& H,
+    const Eigen::Matrix3d& K1,
+    const Eigen::Matrix3d& K2,
+    const std::vector<Eigen::Vector2d>& points1,
+    const std::vector<Eigen::Vector2d>& points2) {
   THROW_CHECK_EQ(points1.size(), points1.size());
   py::gil_scoped_release release;
 

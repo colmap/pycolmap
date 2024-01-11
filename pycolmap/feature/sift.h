@@ -31,14 +31,14 @@ static std::map<int, std::unique_ptr<std::mutex>> sift_gpu_mutexes;
 class Sift {
  public:
   Sift(SiftExtractionOptions options, Device device)
-      : options_(options), use_gpu_(IsGPU(device)) {
+      : options_(std::move(options)), use_gpu_(IsGPU(device)) {
     VerifyGPUParams(use_gpu_);
     options_.use_gpu = use_gpu_;
     extractor_ = CreateSiftFeatureExtractor(options_);
     THROW_CHECK(extractor_ != nullptr);
   }
 
-  sift_output_t Extract(Eigen::Ref<const pyimage_t<uint8_t>> image) {
+  sift_output_t Extract(const Eigen::Ref<const pyimage_t<uint8_t>>& image) {
     THROW_CHECK_LE(image.rows(), options_.max_image_size);
     THROW_CHECK_LE(image.cols(), options_.max_image_size);
 
@@ -79,7 +79,7 @@ class Sift {
     return std::make_tuple(keypoints, descriptors);
   }
 
-  sift_output_t Extract(Eigen::Ref<const pyimage_t<float>> image) {
+  sift_output_t Extract(const Eigen::Ref<const pyimage_t<float>>& image) {
     const pyimage_t<uint8_t> image_f = (image * 255.0f).cast<uint8_t>();
     return Extract(image_f);
   }
@@ -106,13 +106,13 @@ void BindSift(py::module& m) {
            "options"_a = sift_options,
            "device"_a = Device::AUTO)
       .def("extract",
-           py::overload_cast<Eigen::Ref<const pyimage_t<uint8_t>>>(
+           py::overload_cast<const Eigen::Ref<const pyimage_t<uint8_t>>&>(
                &Sift::Extract),
            "image"_a.noconvert())
-      .def(
-          "extract",
-          py::overload_cast<Eigen::Ref<const pyimage_t<float>>>(&Sift::Extract),
-          "image"_a.noconvert())
+      .def("extract",
+           py::overload_cast<const Eigen::Ref<const pyimage_t<float>>&>(
+               &Sift::Extract),
+           "image"_a.noconvert())
       .def_property_readonly("options", &Sift::Options)
       .def_property_readonly("device", &Sift::GetDevice);
 }

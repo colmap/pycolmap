@@ -29,7 +29,9 @@ inline const char* __ColmapGetConstFileBaseName(const char* file) {
 }
 
 template <typename T>
-inline T TemplateException(const char* file, const int line, std::string txt) {
+inline T TemplateException(const char* file,
+                           const int line,
+                           const std::string& txt) {
   std::stringstream ss;
   ss << "[" << __ColmapGetConstFileBaseName(file) << ":" << line << "] " << txt;
   return T(ss.str());
@@ -65,7 +67,7 @@ inline void __ThrowCheckImplMsg(const char* file,
                                 const int line,
                                 const bool result,
                                 const char* expr_str,
-                                std::string msg) {
+                                const std::string& msg) {
   if (!result) {
     std::stringstream ss;
     ss << expr_str << " : " << msg;
@@ -100,14 +102,14 @@ void __ThrowCheckOpImpl(const char* file,
   throw TemplateException<exception>(__FILE__, __LINE__, ToString(msg));
 
 #define THROW_CUSTOM_CHECK_MSG(condition, exception, msg) \
-  if (!condition)                                         \
+  if (!(condition))                                       \
     throw TemplateException<exception>(                   \
         __FILE__,                                         \
         __LINE__,                                         \
         __GetCheckString(#condition) + std::string(" ") + ToString(msg));
 
 #define THROW_CUSTOM_CHECK(condition, exception) \
-  if (!condition)                                \
+  if (!(condition))                              \
     throw TemplateException<exception>(          \
         __FILE__, __LINE__, __GetCheckString(#condition));
 
@@ -129,19 +131,19 @@ void __ThrowCheckOpImpl(const char* file,
 
 #define THROW_CHECK_FILE_EXISTS(path) \
   THROW_CHECK_MSG(ExistsFile(path),   \
-                  std::string("File ") + path + " does not exist.");
+                  std::string("File ") + (path) + " does not exist.");
 
 #define THROW_CHECK_DIR_EXISTS(path) \
   THROW_CHECK_MSG(ExistsDir(path),   \
-                  std::string("Directory ") + path + " does not exist.");
+                  std::string("Directory ") + (path) + " does not exist.");
 
 #define THROW_CHECK_FILE_OPEN(path)                   \
   THROW_CHECK_MSG(                                    \
       std::ofstream(path, std::ios::trunc).is_open(), \
-      std::string(": Could not open ") + path +       \
+      std::string(": Could not open ") + (path) +     \
           ". Is the path a directory or does the parent dir not exist?");
 
 #define THROW_CHECK_HAS_FILE_EXTENSION(path, ext) \
   THROW_CHECK_MSG(HasFileExtension(path, ext),    \
-                  std::string("Path ") + path +   \
-                      " does not match file extension " + ext + ".");
+                  std::string("Path ") + (path) + \
+                      " does not match file extension " + (ext) + ".");

@@ -196,7 +196,7 @@ void BindCamera(py::module& m) {
            "and the principal point.")
       .def("__copy__", [](const Camera& self) { return Camera(self); })
       .def("__deepcopy__",
-           [](const Camera& self, py::dict) { return Camera(self); })
+           [](const Camera& self, const py::dict&) { return Camera(self); })
       .def("__repr__", &PrintCamera);
   MakeDataclass(PyCamera);
 }

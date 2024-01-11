@@ -21,10 +21,10 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 std::shared_ptr<Reconstruction> TriangulatePoints(
-    const std::shared_ptr<Reconstruction> reconstruction,
-    const py::object database_path_,
-    const py::object image_path_,
-    const py::object output_path_,
+    const std::shared_ptr<Reconstruction>& reconstruction,
+    const py::object& database_path_,
+    const py::object& image_path_,
+    const py::object& output_path_,
     const bool clear_points,
     const IncrementalMapperOptions& options,
     const bool refine_intrinsics) {
@@ -47,11 +47,11 @@ std::shared_ptr<Reconstruction> TriangulatePoints(
 }
 
 std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
-    const py::object database_path_,
-    const py::object image_path_,
-    const py::object output_path_,
+    const py::object& database_path_,
+    const py::object& image_path_,
+    const py::object& output_path_,
     const IncrementalMapperOptions& options,
-    const py::object input_path_) {
+    const py::object& input_path_) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
   std::string image_path = py::str(image_path_).cast<std::string>();
@@ -89,7 +89,7 @@ std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
   return reconstructions;
 }
 
-void BundleAdjustment(std::shared_ptr<Reconstruction> reconstruction,
+void BundleAdjustment(const std::shared_ptr<Reconstruction>& reconstruction,
                       const BundleAdjustmentOptions& options) {
   py::gil_scoped_release release;
   OptionManager option_manager;

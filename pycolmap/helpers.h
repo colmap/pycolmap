@@ -182,6 +182,7 @@ inline std::string CreateSummary(const T& self, bool write_type) {
       std::string summ = attribute.attr("summary")
                              .attr("__call__")(write_type)
                              .template cast<std::string>();
+      // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
       summ = std::regex_replace(summ, std::regex("\n"), "\n" + prefix);
       ss << ": " << summ;
     } else {
@@ -238,12 +239,12 @@ inline void MakeDataclass(py::class_<T, options...> cls) {
     cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   }
   cls.def("todict", &ConvertToDict<T>);
-  cls.def(py::init([cls](py::dict dict) {
+  cls.def(py::init([cls](const py::dict& dict) {
     auto self = py::object(cls());
     self.attr("mergedict").attr("__call__")(dict);
     return self.cast<T>();
   }));
-  cls.def(py::init([cls](py::kwargs kwargs) {
+  cls.def(py::init([cls](const py::kwargs& kwargs) {
     py::dict dict = kwargs.cast<py::dict>();
     auto self = py::object(cls(dict));
     return self.cast<T>();
@@ -276,7 +277,7 @@ for (...) {
 struct PyInterrupt {
   using clock = std::chrono::steady_clock;
   using sec = std::chrono::duration<double>;
-  PyInterrupt(double gap = -1.0);
+  explicit PyInterrupt(double gap = -1.0);
 
   inline bool Raised();
 
