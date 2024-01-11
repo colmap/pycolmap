@@ -8,8 +8,9 @@
 
 #include "pycolmap/log_exceptions.h"
 
-#include <iostream>
+#include <memory>
 #include <regex>
+#include <sstream>
 #include <string>
 
 #include <Eigen/Core>
