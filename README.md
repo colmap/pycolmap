@@ -1,6 +1,6 @@
 # Python bindings for COLMAP
 
-This repository exposes to Python most [COLMAP](https://colmap.github.io/) reconstruction objects, such as Cameras and Points3D, as well as estimators for absolute and relative poses.
+This repository exposes to Python most capabilities of [COLMAP](https://colmap.github.io/) for Structure-from-Motion and Multiview-stereo, such as reconstruction pipelines & objects and geometric estimators.
 
 ## Installation
 
