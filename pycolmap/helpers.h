@@ -34,17 +34,16 @@ const Eigen::IOFormat vec_fmt(Eigen::StreamPrecision,
 
 template <typename T>
 inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
-  auto values = enm.attr("__members__").template cast<py::dict>();
-  auto strVal = py::str(value);
-  if (values.contains(strVal)) {
-    return T(values[strVal].template cast<T>());
+  const auto values = enm.attr("__members__").template cast<py::dict>();
+  const auto str_val = py::str(value);
+  if (values.contains(str_val)) {
+    return T(values[str_val].template cast<T>());
   }
-  std::string msg =
+  const std::string msg =
       "Invalid string value " + value + " for enum " +
       std::string(enm.attr("__name__").template cast<std::string>());
   THROW_EXCEPTION(std::out_of_range, msg.c_str());
-  T t;
-  return t;
+  return T();
 }
 
 template <typename T>
@@ -64,7 +63,7 @@ inline void UpdateFromDict(py::object& self, const py::dict& dict) {
     }
     const py::str name = py::reinterpret_borrow<py::str>(it.first);
     const py::handle& value = it.second;
-    auto attr = self.attr(name);
+    const auto attr = self.attr(name);
     try {
       if (py::hasattr(attr, "mergedict") && py::isinstance<py::dict>(value)) {
         attr.attr("mergedict").attr("__call__")(value);
@@ -128,31 +127,30 @@ inline void UpdateFromDict(py::object& self, const py::dict& dict) {
   }
 }
 
-template <typename T, typename... options>
-inline py::dict ConvertToDict(const T& self) {
-  auto pyself = py::cast(self);
-  py::dict dict;
-  for (auto& handle : pyself.attr("__dir__")()) {
-    std::string attribute = py::str(handle);
-    auto member = pyself.attr(attribute.c_str());
-    if (attribute.find("__") != 0 &&
-        attribute.rfind("__") == std::string::npos &&
-        !py::hasattr(member, "__func__")) {
-      if (py::hasattr(member, "todict")) {
-        dict[attribute.c_str()] =
-            member.attr("todict").attr("__call__")().template cast<py::dict>();
-      } else {
-        dict[attribute.c_str()] = member;
-      }
-    }
-  }
-  return dict;
-}
-
 bool AttributeIsFunction(const std::string& name, const py::object& attribute) {
   return (name.find("__") == 0 || name.rfind("__") != std::string::npos ||
           py::hasattr(attribute, "__func__") ||
           py::hasattr(attribute, "__call__"));
+}
+
+template <typename T, typename... options>
+inline py::dict ConvertToDict(const T& self) {
+  const auto pyself = py::cast(self);
+  py::dict dict;
+  for (const auto& handle : pyself.attr("__dir__")()) {
+    const py::str name = py::reinterpret_borrow<py::str>(handle);
+    const auto attribute = pyself.attr(name);
+    if (AttributeIsFunction(name, attribute)) {
+      continue;
+    }
+    if (py::hasattr(attribute, "todict")) {
+      dict[name] =
+          attribute.attr("todict").attr("__call__")().template cast<py::dict>();
+    } else {
+      dict[name] = attribute;
+    }
+  }
+  return dict;
 }
 
 template <typename T, typename... options>
@@ -164,24 +162,24 @@ inline std::string CreateSummary(const T& self, bool write_type) {
   ss << pyself.attr("__class__").attr("__name__").template cast<std::string>()
      << ":";
   for (auto& handle : pyself.attr("__dir__")()) {
-    std::string attribute = py::str(handle);
-    py::object member;
+    const py::str name = py::reinterpret_borrow<py::str>(handle);
+    py::object attribute;
     try {
-      member = pyself.attr(attribute.c_str());
+      attribute = pyself.attr(name);
     } catch (const std::exception& e) {
       // Some properties are not valid for some uninitialized objects.
       continue;
     }
-    if (AttributeIsFunction(attribute, member)) {
+    if (AttributeIsFunction(name, attribute)) {
       continue;
     }
     ss << "\n";
     if (!after_subsummary) {
       ss << prefix;
     }
-    ss << attribute;
-    if (py::hasattr(member, "summary")) {
-      std::string summ = member.attr("summary")
+    ss << attribute.template cast<std::string>();
+    if (py::hasattr(attribute, "summary")) {
+      std::string summ = attribute.attr("summary")
                              .attr("__call__")(write_type)
                              .template cast<std::string>();
       summ = std::regex_replace(summ, std::regex("\n"), "\n" + prefix);
@@ -189,13 +187,13 @@ inline std::string CreateSummary(const T& self, bool write_type) {
     } else {
       if (write_type) {
         const std::string type_str =
-            py::str(py::type::of(member).attr("__name__"));
+            py::str(py::type::of(attribute).attr("__name__"));
         ss << ": " << type_str;
         after_subsummary = true;
       }
-      std::string value = py::str(member);
-      if (value.length() > 80 && py::hasattr(member, "__len__")) {
-        const int length = member.attr("__len__")().template cast<int>();
+      std::string value = py::str(attribute);
+      if (value.length() > 80 && py::hasattr(attribute, "__len__")) {
+        const int length = attribute.attr("__len__")().template cast<int>();
         value = StringPrintf(
             "%c ... %d elements ... %c", value.front(), length, value.back());
       }
