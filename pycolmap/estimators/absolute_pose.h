@@ -97,55 +97,52 @@ py::object PyRefineAbsolutePose(
 
 void BindAbsolutePoseEstimator(py::module& m) {
   auto PyRANSACOptions = m.attr("RANSACOptions");
-  auto PyEstimationOptions =
-      py::class_<AbsolutePoseEstimationOptions>(m,
-                                                "AbsolutePoseEstimationOptions")
-          .def(py::init<>([PyRANSACOptions]() {
-            AbsolutePoseEstimationOptions options;
-            options.estimate_focal_length = false;
-            // init through Python to obtain the new defaults defined in
-            // __init__
-            options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
-            options.ransac_options.max_error = 12.0;
-            return options;
-          }))
-          .def_readwrite("estimate_focal_length",
-                         &AbsolutePoseEstimationOptions::estimate_focal_length)
-          .def_readwrite(
-              "num_focal_length_samples",
-              &AbsolutePoseEstimationOptions::num_focal_length_samples)
-          .def_readwrite("min_focal_length_ratio",
-                         &AbsolutePoseEstimationOptions::min_focal_length_ratio)
-          .def_readwrite("max_focal_length_ratio",
-                         &AbsolutePoseEstimationOptions::max_focal_length_ratio)
-          .def_readwrite("ransac",
-                         &AbsolutePoseEstimationOptions::ransac_options);
+  py::class_<AbsolutePoseEstimationOptions> PyEstimationOptions(
+      m, "AbsolutePoseEstimationOptions");
+  PyEstimationOptions
+      .def(py::init<>([PyRANSACOptions]() {
+        AbsolutePoseEstimationOptions options;
+        options.estimate_focal_length = false;
+        // init through Python to obtain the new defaults defined in __init__
+        options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
+        options.ransac_options.max_error = 12.0;
+        return options;
+      }))
+      .def_readwrite("estimate_focal_length",
+                     &AbsolutePoseEstimationOptions::estimate_focal_length)
+      .def_readwrite("num_focal_length_samples",
+                     &AbsolutePoseEstimationOptions::num_focal_length_samples)
+      .def_readwrite("min_focal_length_ratio",
+                     &AbsolutePoseEstimationOptions::min_focal_length_ratio)
+      .def_readwrite("max_focal_length_ratio",
+                     &AbsolutePoseEstimationOptions::max_focal_length_ratio)
+      .def_readwrite("ransac", &AbsolutePoseEstimationOptions::ransac_options);
   MakeDataclass(PyEstimationOptions);
   auto est_options =
       PyEstimationOptions().cast<AbsolutePoseEstimationOptions>();
 
-  auto PyRefinementOptions =
-      py::class_<AbsolutePoseRefinementOptions>(m,
-                                                "AbsolutePoseRefinementOptions")
-          .def(py::init<>([]() {
-            AbsolutePoseRefinementOptions options;
-            options.refine_focal_length = false;
-            options.refine_extra_params = false;
-            options.print_summary = false;
-            return options;
-          }))
-          .def_readwrite("gradient_tolerance",
-                         &AbsolutePoseRefinementOptions::gradient_tolerance)
-          .def_readwrite("max_num_iterations",
-                         &AbsolutePoseRefinementOptions::max_num_iterations)
-          .def_readwrite("loss_function_scale",
-                         &AbsolutePoseRefinementOptions::loss_function_scale)
-          .def_readwrite("refine_focal_length",
-                         &AbsolutePoseRefinementOptions::refine_focal_length)
-          .def_readwrite("refine_extra_params",
-                         &AbsolutePoseRefinementOptions::refine_extra_params)
-          .def_readwrite("print_summary",
-                         &AbsolutePoseRefinementOptions::print_summary);
+  py::class_<AbsolutePoseRefinementOptions> PyRefinementOptions(
+      m, "AbsolutePoseRefinementOptions");
+  PyRefinementOptions
+      .def(py::init<>([]() {
+        AbsolutePoseRefinementOptions options;
+        options.refine_focal_length = false;
+        options.refine_extra_params = false;
+        options.print_summary = false;
+        return options;
+      }))
+      .def_readwrite("gradient_tolerance",
+                     &AbsolutePoseRefinementOptions::gradient_tolerance)
+      .def_readwrite("max_num_iterations",
+                     &AbsolutePoseRefinementOptions::max_num_iterations)
+      .def_readwrite("loss_function_scale",
+                     &AbsolutePoseRefinementOptions::loss_function_scale)
+      .def_readwrite("refine_focal_length",
+                     &AbsolutePoseRefinementOptions::refine_focal_length)
+      .def_readwrite("refine_extra_params",
+                     &AbsolutePoseRefinementOptions::refine_extra_params)
+      .def_readwrite("print_summary",
+                     &AbsolutePoseRefinementOptions::print_summary);
   MakeDataclass(PyRefinementOptions);
   auto ref_options =
       PyRefinementOptions().cast<AbsolutePoseRefinementOptions>();

@@ -47,20 +47,18 @@ void BindTriangulationEstimator(py::module& m) {
   py::class_<TriangulationEstimator::PointData>(m, "PointData")
       .def(py::init<const Eigen::Vector2d&, const Eigen::Vector2d&>());
 
-  auto PyTriangulationOptions =
-      py::class_<EstimateTriangulationOptions>(m,
-                                               "EstimateTriangulationOptions")
-          .def(py::init<>([PyRANSACOptions]() {
-            EstimateTriangulationOptions options;
-            // init through Python to obtain the new defaults defined in
-            // __init__
-            options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
-            return options;
-          }))
-          .def_readwrite("min_tri_angle",
-                         &EstimateTriangulationOptions::min_tri_angle)
-          .def_readwrite("ransac",
-                         &EstimateTriangulationOptions::ransac_options);
+  py::class_<EstimateTriangulationOptions> PyTriangulationOptions(
+      m, "EstimateTriangulationOptions");
+  PyTriangulationOptions
+      .def(py::init<>([PyRANSACOptions]() {
+        EstimateTriangulationOptions options;
+        // init through Python to obtain the new defaults defined in  __init__
+        options.ransac_options = PyRANSACOptions().cast<RANSACOptions>();
+        return options;
+      }))
+      .def_readwrite("min_tri_angle",
+                     &EstimateTriangulationOptions::min_tri_angle)
+      .def_readwrite("ransac", &EstimateTriangulationOptions::ransac_options);
   MakeDataclass(PyTriangulationOptions);
   auto triangulation_options =
       PyTriangulationOptions().cast<EstimateTriangulationOptions>();
