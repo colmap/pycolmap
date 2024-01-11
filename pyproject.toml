@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pycolmap"
-version = "0.5.0"
+version = "0.6.0"
 description="COLMAP bindings"
 readme = "README.md"
 authors = [
