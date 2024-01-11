@@ -103,7 +103,7 @@ jobs:
           CONTAINER_COMPILER_CACHE_DIR="/compiler-cache"
           CIBW_CONTAINER_ENGINE="docker; create_args: -v ${COMPILER_CACHE_DIR}:${CONTAINER_COMPILER_CACHE_DIR}"
           echo "CIBW_CONTAINER_ENGINE=${CIBW_CONTAINER_ENGINE}" >> "$GITHUB_ENV"
-          echo "COMPILER_CACHE_DIR=${CONTAINER_COMPILER_CACHE_DIR}" >> "$GITHUB_ENV"
+          echo "CONTAINER_COMPILER_CACHE_DIR=${CONTAINER_COMPILER_CACHE_DIR}" >> "$GITHUB_ENV"
           echo "CCACHE_DIR=${CONTAINER_COMPILER_CACHE_DIR}/ccache" >> "$GITHUB_ENV"
           echo "CCACHE_BASEDIR=/project" >> "$GITHUB_ENV"
 
@@ -118,12 +118,6 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.config.arch }}
-      - name: Set env (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          ls ${{ github.workspace }}/compiler-cache
-          ls ${{ github.workspace }}/compiler-cache/vcpkg
-          echo "${COMPILER_CACHE_DIR}"
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
