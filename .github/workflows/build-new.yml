@@ -118,6 +118,12 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.config.arch }}
+      - name: Set env (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          ls ${{ github.workspace }}/compiler-cache
+          ls ${{ github.workspace }}/compiler-cache/vcpkg
+          echo "${COMPILER_CACHE_DIR}"
       - name: Archive wheels
         uses: actions/upload-artifact@v3
         with:
