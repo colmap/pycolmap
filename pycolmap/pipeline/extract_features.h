@@ -33,7 +33,7 @@ void ExtractFeatures(const py::object& database_path_,
                      const std::string& camera_model,
                      ImageReaderOptions reader_options,
                      SiftExtractionOptions sift_options,
-                     const Device& device) {
+                     const Device device) {
   std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_MSG(!ExistsFile(database_path),
                   database_path + " already exists.");
