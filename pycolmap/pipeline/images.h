@@ -70,8 +70,8 @@ void ImportImages(const py::object& database_path_,
   }
 }
 
-Camera infer_camera_from_image(const py::object& image_path_,
-                               const ImageReaderOptions& options) {
+Camera InferCameraFromImage(const py::object& image_path_,
+                            const ImageReaderOptions& options) {
   std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(image_path);
 
@@ -255,7 +255,7 @@ void BindImages(py::module& m) {
         "Import images into a database");
 
   m.def("infer_camera_from_image",
-        &infer_camera_from_image,
+        &InferCameraFromImage,
         "image_path"_a,
         "options"_a = reader_options,
         "Guess the camera parameters from the EXIF metadata");
