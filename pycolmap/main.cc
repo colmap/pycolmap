@@ -6,6 +6,7 @@
 #include "pycolmap/helpers.h"
 #include "pycolmap/optim/bindings.h"
 #include "pycolmap/pipeline/bindings.h"
+#include "pycolmap/pybind11_extension.h"
 #include "pycolmap/scene/bindings.h"
 #include "pycolmap/sfm/bindings.h"
 #include "pycolmap/utils.h"

@@ -22,17 +22,14 @@ namespace py = pybind11;
 
 std::shared_ptr<Reconstruction> TriangulatePoints(
     const std::shared_ptr<Reconstruction>& reconstruction,
-    const py::object& database_path_,
-    const py::object& image_path_,
-    const py::object& output_path_,
+    const std::string& database_path,
+    const std::string& image_path,
+    const std::string& output_path,
     const bool clear_points,
     const IncrementalMapperOptions& options,
     const bool refine_intrinsics) {
-  std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(image_path);
-  std::string output_path = py::str(output_path_).cast<std::string>();
   CreateDirIfNotExists(output_path);
 
   py::gil_scoped_release release;
@@ -47,17 +44,13 @@ std::shared_ptr<Reconstruction> TriangulatePoints(
 }
 
 std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
-    const py::object& database_path_,
-    const py::object& image_path_,
-    const py::object& output_path_,
+    const std::string& database_path,
+    const std::string& image_path,
+    const std::string& output_path,
     const IncrementalMapperOptions& options,
-    const py::object& input_path_) {
-  std::string database_path = py::str(database_path_).cast<std::string>();
+    const std::string& input_path) {
   THROW_CHECK_FILE_EXISTS(database_path);
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(image_path);
-  std::string input_path = py::str(input_path_).cast<std::string>();
-  std::string output_path = py::str(output_path_).cast<std::string>();
   CreateDirIfNotExists(output_path);
 
   py::gil_scoped_release release;

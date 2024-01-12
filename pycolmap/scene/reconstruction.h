@@ -59,8 +59,7 @@ void BindReconstruction(py::module& m) {
   py::class_<Reconstruction, std::shared_ptr<Reconstruction>>(m,
                                                               "Reconstruction")
       .def(py::init<>())
-      .def(py::init([](const py::object& input_path) {
-             std::string path = py::str(input_path).cast<std::string>();
+      .def(py::init([](const std::string& path) {
              THROW_CHECK_RECONSTRUCTION_EXISTS(path);
              auto reconstruction = std::make_shared<Reconstruction>();
              reconstruction->Read(path);
@@ -69,8 +68,7 @@ void BindReconstruction(py::module& m) {
            "sfm_dir"_a)
       .def(
           "read",
-          [](Reconstruction& self, const py::object& input_path) {
-            std::string path = py::str(input_path).cast<std::string>();
+          [](Reconstruction& self, const std::string& path) {
             THROW_CHECK_RECONSTRUCTION_EXISTS(path);
             self.Read(path);
           },
@@ -78,8 +76,7 @@ void BindReconstruction(py::module& m) {
           "Read reconstruction in COLMAP format. Prefer binary.")
       .def(
           "write",
-          [](const Reconstruction& self, const py::object& output_path) {
-            std::string path = py::str(output_path).cast<std::string>();
+          [](const Reconstruction& self, const std::string& path) {
             THROW_CHECK_DIR_EXISTS(path);
             self.Write(path);
           },
@@ -264,9 +261,8 @@ void BindReconstruction(py::module& m) {
       .def(
           "export_NVM",
           [](const Reconstruction& self,
-             const py::object& nvm_path,
+             const std::string& path,
              const bool skip_distortion) {
-            std::string path = py::str(nvm_path).cast<std::string>();
             THROW_CHECK_HAS_FILE_EXTENSION(path, ".nvm");
             THROW_CHECK_FILE_OPEN(path);
             self.ExportNVM(path, skip_distortion);
@@ -283,9 +279,8 @@ void BindReconstruction(py::module& m) {
       .def(
           "export_CAM",
           [](const Reconstruction& self,
-             const py::object& cam_dir,
+             const std::string& dir,
              const bool skip_distortion) {
-            std::string dir = py::str(cam_dir).cast<std::string>();
             THROW_CHECK_DIR_EXISTS(dir);
             self.ExportCam(dir, skip_distortion);
           },
@@ -315,12 +310,9 @@ void BindReconstruction(py::module& m) {
       .def(
           "export_bundler",
           [](const Reconstruction& self,
-             const py::object& bundler_path,
-             const py::object& bundler_list_path,
+             const std::string& path,
+             const std::string& list_path,
              const bool skip_distortion) {
-            std::string path = py::str(bundler_path).cast<std::string>();
-            std::string list_path =
-                py::str(bundler_list_path).cast<std::string>();
             THROW_CHECK_HAS_FILE_EXTENSION(path, ".out");
             THROW_CHECK_HAS_FILE_EXTENSION(list_path, ".txt");
             THROW_CHECK_FILE_OPEN(path);
@@ -342,8 +334,7 @@ void BindReconstruction(py::module& m) {
           "and distortion.")
       .def(
           "export_PLY",
-          [](const Reconstruction& self, const py::object& ply_path) {
-            std::string path = py::str(ply_path).cast<std::string>();
+          [](const Reconstruction& self, const std::string& path) {
             THROW_CHECK_HAS_FILE_EXTENSION(path, ".ply");
             THROW_CHECK_FILE_OPEN(path);
             self.ExportPLY(path);
@@ -353,17 +344,15 @@ void BindReconstruction(py::module& m) {
       .def(
           "export_VRML",
           [](const Reconstruction& self,
-             const py::object& images_path,
-             const py::object& points3D_path,
+             const std::string& images_path,
+             const std::string& points3D_path,
              const double image_scale,
              const Eigen::Vector3d& image_rgb) {
-            std::string img_path = py::str(images_path).cast<std::string>();
-            std::string p3D_path = py::str(points3D_path).cast<std::string>();
-            THROW_CHECK_FILE_OPEN(img_path);
-            THROW_CHECK_FILE_OPEN(p3D_path);
-            THROW_CHECK_HAS_FILE_EXTENSION(img_path, ".wrl");
-            THROW_CHECK_HAS_FILE_EXTENSION(p3D_path, ".wrl");
-            self.ExportVRML(img_path, p3D_path, image_scale, image_rgb);
+            THROW_CHECK_FILE_OPEN(images_path);
+            THROW_CHECK_FILE_OPEN(points3D_path);
+            THROW_CHECK_HAS_FILE_EXTENSION(images_path, ".wrl");
+            THROW_CHECK_HAS_FILE_EXTENSION(points3D_path, ".wrl");
+            self.ExportVRML(images_path, points3D_path, image_scale, image_rgb);
           },
           "images_path"_a,
           "points3D_path"_a,

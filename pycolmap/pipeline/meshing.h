@@ -119,14 +119,11 @@ void BindMeshing(py::module& m) {
 
   m.def(
       "poisson_meshing",
-      [](const py::object& input_path_,
-         const py::object& output_path_,
+      [](const std::string& input_path,
+         const std::string& output_path,
          const PoissonMOpts& options) -> void {
-        std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_HAS_FILE_EXTENSION(input_path, ".ply")
         THROW_CHECK_FILE_EXISTS(input_path);
-
-        std::string output_path = py::str(output_path_).cast<std::string>();
         THROW_CHECK_HAS_FILE_EXTENSION(output_path, ".ply")
         THROW_CHECK_FILE_OPEN(output_path);
         PoissonMeshing(options, input_path, output_path);
@@ -139,13 +136,10 @@ void BindMeshing(py::module& m) {
 #ifdef COLMAP_CGAL_ENABLED
   m.def(
       "sparse_delaunay_meshing",
-      [](const py::object& input_path_,
-         const py::object& output_path_,
+      [](const std::string& input_path,
+         const std::string& output_path,
          const DMOpts& options) -> void {
-        std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_DIR_EXISTS(input_path);
-
-        std::string output_path = py::str(output_path_).cast<std::string>();
         THROW_CHECK_HAS_FILE_EXTENSION(output_path, ".ply")
         THROW_CHECK_FILE_OPEN(output_path);
         mvs::SparseDelaunayMeshing(options, input_path, output_path);
@@ -157,13 +151,10 @@ void BindMeshing(py::module& m) {
 
   m.def(
       "dense_delaunay_meshing",
-      [](const py::object& input_path_,
-         const py::object& output_path_,
+      [](const std::string& input_path,
+         const std::string& output_path,
          const DMOpts& options) -> void {
-        std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_DIR_EXISTS(input_path);
-
-        std::string output_path = py::str(output_path_).cast<std::string>();
         THROW_CHECK_HAS_FILE_EXTENSION(output_path, ".bin")
         THROW_CHECK_FILE_OPEN(output_path);
         mvs::DenseDelaunayMeshing(options, input_path, output_path);

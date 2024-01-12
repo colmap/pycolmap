@@ -7,6 +7,7 @@
 
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
+#include "pycolmap/pybind11_extension.h"
 
 #include <memory>
 #include <sstream>

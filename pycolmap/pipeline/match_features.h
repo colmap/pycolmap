@@ -30,12 +30,11 @@ template <typename Opts,
                                                  const SiftMatchingOptions&,
                                                  const TwoViewGeometryOptions&,
                                                  const std::string&)>
-void MatchFeatures(const py::object& database_path_,
+void MatchFeatures(const std::string& database_path,
                    SiftMatchingOptions sift_options,
                    const Opts& matching_options,
                    const TwoViewGeometryOptions& verification_options,
                    const Device device) {
-  const std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
   try {
     py::cast(matching_options).attr("check").attr("__call__")();
@@ -55,12 +54,10 @@ void MatchFeatures(const py::object& database_path_,
   PyWait(matcher.get());
 }
 
-void verify_matches(const py::object& database_path_,
-                    const py::object& pairs_path_,
+void verify_matches(const std::string& database_path,
+                    const std::string& pairs_path,
                     const TwoViewGeometryOptions& verification_options) {
-  const std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
-  std::string pairs_path = py::str(pairs_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(pairs_path);
   py::gil_scoped_release release;  // verification is multi-threaded
 
