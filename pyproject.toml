@@ -32,7 +32,7 @@ build = "cp3{8,9,10,11}-{macosx,manylinux,win}*"
 archs = ["auto64"]
 test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
-[tool.cibuildwheel]
+[tool.cibuildwheel.environment]
 COLMAP_COMMIT_ID = "3.9.1"
 VCPKG_COMMIT_ID = "a45fe2ce6039339ee7a076ebd3dcee0fa6cc1287"
 
