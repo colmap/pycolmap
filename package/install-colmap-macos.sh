@@ -15,11 +15,12 @@ brew remove node@18
 brew update
 brew install git cmake ninja llvm ccache
 
-cd ${CURRDIR}
-#git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
-git clone --branch sarlinpe/lapack-osx https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+# When building lapack-reference, vcpkg/cmake looks for gfortran.
+ln -s $(which gfortran-13) "$(dirname $(which gfortran-13))/gfortran"
 
+git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
+git checkout ${VCPKG_COMMIT_ID}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
     boost-algorithm \
