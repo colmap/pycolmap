@@ -6,7 +6,7 @@ CURRDIR=$(pwd)
 yum install -y gcc gcc-c++ ninja-build curl zip unzip tar
 
 # ccache shipped by CentOS is too old so we download and cache it.
-COMPILER_TOOLS_DIR="${COMPILER_CACHE_DIR}/bin"
+COMPILER_TOOLS_DIR="${CONTAINER_COMPILER_CACHE_DIR}/bin"
 mkdir -p ${COMPILER_TOOLS_DIR}
 if [ ! -f "${COMPILER_TOOLS_DIR}/ccache" ]; then
     FILE="ccache-4.9-linux-x86_64"
@@ -18,8 +18,9 @@ export PATH="${COMPILER_TOOLS_DIR}:${PATH}"
 ccache --version
 ccache --help
 
-git clone --branch sarlinpe/libraw-jaspter-nodefaults https://github.com/sarlinpe/vcpkg ${VCPKG_INSTALLATION_ROOT}
+git clone https://github.com/microsoft/vcpkg ${VCPKG_INSTALLATION_ROOT}
 cd ${VCPKG_INSTALLATION_ROOT}
+git checkout ${VCPKG_COMMIT_ID}
 ./bootstrap-vcpkg.sh
 ./vcpkg install --recurse --clean-after-build --triplet=${VCPKG_TARGET_TRIPLET} \
     boost-algorithm \
