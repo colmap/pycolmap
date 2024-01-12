@@ -25,9 +25,10 @@ void BindTrack(py::module& m) {
       .def_readwrite("point2D_idx", &TrackElement::point2D_idx)
       .def("__copy__",
            [](const TrackElement& self) { return TrackElement(self); })
-      .def(
-          "__deepcopy__",
-          [](const TrackElement& self, py::dict) { return TrackElement(self); })
+      .def("__deepcopy__",
+           [](const TrackElement& self, const py::dict&) {
+             return TrackElement(self);
+           })
       .def("__repr__", [](const TrackElement& self) {
         return "TrackElement(image_id=" + std::to_string(self.image_id) +
                ", point2D_idx=" + std::to_string(self.point2D_idx) + ")";
@@ -68,7 +69,7 @@ void BindTrack(py::module& m) {
            "Remove TrackElement with (image_id,point2D_idx).")
       .def("__copy__", [](const Track& self) { return Track(self); })
       .def("__deepcopy__",
-           [](const Track& self, py::dict) { return Track(self); })
+           [](const Track& self, const py::dict&) { return Track(self); })
       .def("__repr__", [](const Track& self) {
         return "Track(length=" + std::to_string(self.Length()) + ")";
       });

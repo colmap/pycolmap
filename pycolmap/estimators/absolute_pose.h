@@ -18,11 +18,11 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 py::object PyEstimateAndRefineAbsolutePose(
-    const std::vector<Eigen::Vector2d> points2D,
-    const std::vector<Eigen::Vector3d> points3D,
+    const std::vector<Eigen::Vector2d>& points2D,
+    const std::vector<Eigen::Vector3d>& points3D,
     Camera& camera,
-    const AbsolutePoseEstimationOptions estimation_options,
-    const AbsolutePoseRefinementOptions refinement_options,
+    const AbsolutePoseEstimationOptions& estimation_options,
+    const AbsolutePoseRefinementOptions& refinement_options,
     const bool return_covariance) {
   SetPRNGSeed(0);
   THROW_CHECK_EQ(points2D.size(), points3D.size());

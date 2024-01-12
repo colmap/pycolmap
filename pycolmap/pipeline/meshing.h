@@ -119,9 +119,9 @@ void BindMeshing(py::module& m) {
 
   m.def(
       "poisson_meshing",
-      [](py::object input_path_,
-         py::object output_path_,
-         PoissonMOpts options) -> void {
+      [](const py::object& input_path_,
+         const py::object& output_path_,
+         const PoissonMOpts& options) -> void {
         std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_HAS_FILE_EXTENSION(input_path, ".ply")
         THROW_CHECK_FILE_EXISTS(input_path);
@@ -139,9 +139,9 @@ void BindMeshing(py::module& m) {
 #ifdef COLMAP_CGAL_ENABLED
   m.def(
       "sparse_delaunay_meshing",
-      [](py::object input_path_,
-         py::object output_path_,
-         DMOpts options) -> void {
+      [](const py::object& input_path_,
+         const py::object& output_path_,
+         const DMOpts& options) -> void {
         std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_DIR_EXISTS(input_path);
 
@@ -157,9 +157,9 @@ void BindMeshing(py::module& m) {
 
   m.def(
       "dense_delaunay_meshing",
-      [](py::object input_path_,
-         py::object output_path_,
-         DMOpts options) -> void {
+      [](const py::object& input_path_,
+         const py::object& output_path_,
+         const DMOpts& options) -> void {
         std::string input_path = py::str(input_path_).cast<std::string>();
         THROW_CHECK_DIR_EXISTS(input_path);
 

@@ -28,11 +28,11 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 #ifdef COLMAP_CUDA_ENABLED
-void PatchMatchStereo(py::object workspace_path_,
+void PatchMatchStereo(const py::object& workspace_path_,
                       std::string workspace_format,
-                      std::string pmvs_option_name,
-                      mvs::PatchMatchOptions options,
-                      std::string config_path) {
+                      const std::string& pmvs_option_name,
+                      const mvs::PatchMatchOptions& options,
+                      const std::string& config_path) {
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 
@@ -51,12 +51,12 @@ void PatchMatchStereo(py::object workspace_path_,
 }
 #endif  // COLMAP_CUDA_ENABLED
 
-Reconstruction StereoFusion(py::object output_path_,
-                            py::object workspace_path_,
+Reconstruction StereoFusion(const py::object& output_path_,
+                            const py::object& workspace_path_,
                             std::string workspace_format,
-                            std::string pmvs_option_name,
+                            const std::string& pmvs_option_name,
                             std::string input_type,
-                            mvs::StereoFusionOptions options) {
+                            const mvs::StereoFusionOptions& options) {
   std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
 

@@ -30,7 +30,7 @@ template <typename Opts,
                                                  const SiftMatchingOptions&,
                                                  const TwoViewGeometryOptions&,
                                                  const std::string&)>
-void MatchFeatures(py::object database_path_,
+void MatchFeatures(const py::object& database_path_,
                    SiftMatchingOptions sift_options,
                    const Opts& matching_options,
                    const TwoViewGeometryOptions& verification_options,
@@ -55,8 +55,8 @@ void MatchFeatures(py::object database_path_,
   PyWait(matcher.get());
 }
 
-void verify_matches(const py::object database_path_,
-                    const py::object pairs_path_,
+void verify_matches(const py::object& database_path_,
+                    const py::object& pairs_path_,
                     const TwoViewGeometryOptions& verification_options) {
   const std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);

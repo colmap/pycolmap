@@ -291,7 +291,7 @@ void BindImage(py::module& m) {
           "frame.")
       .def("__copy__", [](const Image& self) { return Image(self); })
       .def("__deepcopy__",
-           [](const Image& self, py::dict) { return Image(self); })
+           [](const Image& self, const py::dict&) { return Image(self); })
       .def("__repr__", &PrintImage);
   MakeDataclass(PyImage);
 }

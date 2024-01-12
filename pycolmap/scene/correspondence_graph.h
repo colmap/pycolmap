@@ -31,10 +31,11 @@ void BindCorrespondenceGraph(py::module& m) {
            [](const CorrespondenceGraph::Correspondence& self) {
              return CorrespondenceGraph::Correspondence(self);
            })
-      .def("__deepcopy__",
-           [](const CorrespondenceGraph::Correspondence& self, py::dict) {
-             return CorrespondenceGraph::Correspondence(self);
-           })
+      .def(
+          "__deepcopy__",
+          [](const CorrespondenceGraph::Correspondence& self, const py::dict&) {
+            return CorrespondenceGraph::Correspondence(self);
+          })
       .def("__repr__", [](const CorrespondenceGraph::Correspondence& self) {
         return "Correspondence(image_id=" + std::to_string(self.image_id) +
                ", point2D_idx=" + std::to_string(self.point2D_idx) + ")";
@@ -98,7 +99,7 @@ void BindCorrespondenceGraph(py::module& m) {
              return CorrespondenceGraph(self);
            })
       .def("__deepcopy__",
-           [](const CorrespondenceGraph& self, py::dict) {
+           [](const CorrespondenceGraph& self, const py::dict&) {
              return CorrespondenceGraph(self);
            })
       .def("__repr__", [](const CorrespondenceGraph& self) {

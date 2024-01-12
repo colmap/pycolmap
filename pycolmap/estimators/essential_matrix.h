@@ -19,11 +19,11 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 py::object PyEstimateAndDecomposeEssentialMatrix(
-    const std::vector<Eigen::Vector2d> points2D1,
-    const std::vector<Eigen::Vector2d> points2D2,
+    const std::vector<Eigen::Vector2d>& points2D1,
+    const std::vector<Eigen::Vector2d>& points2D2,
     Camera& camera1,
     Camera& camera2,
-    const RANSACOptions options) {
+    const RANSACOptions& options) {
   SetPRNGSeed(0);
   THROW_CHECK_EQ(points2D1.size(), points2D2.size());
   py::object failure = py::none();
