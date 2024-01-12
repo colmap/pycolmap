@@ -70,19 +70,6 @@ void ImportImages(const py::object& database_path_,
   }
 }
 
-void ImportImages(const py::object& database_path_,
-                  const py::object& image_path_,
-                  const CameraMode camera_mode,
-                  const std::string& camera_model,
-                  const std::vector<std::string>& image_list) {
-  ImageReaderOptions options;
-  if (!camera_model.empty()) {
-    options.camera_model = camera_model;
-  }
-  return ImportImages(
-      database_path_, image_path_, camera_mode, image_list, options);
-}
-
 Camera infer_camera_from_image(const py::object& image_path_,
                                const ImageReaderOptions& options) {
   std::string image_path = py::str(image_path_).cast<std::string>();
@@ -259,29 +246,12 @@ void BindImages(py::module& m) {
   auto undistort_options = PyUndistortCameraOptions().cast<UDOpts>();
 
   m.def("import_images",
-        static_cast<void (*)(const py::object&,
-                             const py::object&,
-                             const CameraMode,
-                             const std::vector<std::string>&,
-                             const ImageReaderOptions&)>(&ImportImages),
+        &ImportImages,
         "database_path"_a,
         "image_path"_a,
         "camera_mode"_a = CameraMode::AUTO,
         "image_list"_a = std::vector<std::string>(),
         "options"_a = reader_options,
-        "Import images into a database");
-
-  m.def("import_images",
-        static_cast<void (*)(const py::object&,
-                             const py::object&,
-                             const CameraMode,
-                             const std::string&,
-                             const std::vector<std::string>&)>(&ImportImages),
-        "database_path"_a,
-        "image_path"_a,
-        "camera_mode"_a = CameraMode::AUTO,
-        "camera_model"_a = std::string(),
-        "image_list"_a = std::vector<std::string>(),
         "Import images into a database");
 
   m.def("infer_camera_from_image",
