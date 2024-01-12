@@ -26,20 +26,18 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void ExtractFeatures(const py::object& database_path_,
-                     const py::object& image_path_,
+void ExtractFeatures(const std::string& database_path,
+                     const std::string& image_path,
                      const std::vector<std::string>& image_list,
                      const CameraMode camera_mode,
                      const std::string& camera_model,
                      ImageReaderOptions reader_options,
                      SiftExtractionOptions sift_options,
                      const Device device) {
-  std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_MSG(!ExistsFile(database_path),
                   database_path + " already exists.");
   THROW_CHECK_HAS_FILE_EXTENSION(database_path, ".db");
   THROW_CHECK_FILE_OPEN(database_path);
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(image_path);
   sift_options.use_gpu = IsGPU(device);
   VerifyGPUParams(sift_options.use_gpu);

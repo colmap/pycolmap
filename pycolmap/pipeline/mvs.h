@@ -28,14 +28,12 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 #ifdef COLMAP_CUDA_ENABLED
-void PatchMatchStereo(const py::object& workspace_path_,
+void PatchMatchStereo(const std::string& workspace_path,
                       std::string workspace_format,
                       const std::string& pmvs_option_name,
                       const mvs::PatchMatchOptions& options,
                       const std::string& config_path) {
-  std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
-
   StringToLower(&workspace_format);
   THROW_CUSTOM_CHECK_MSG(
       (workspace_format == "colmap" || workspace_format == "pmvs"),
@@ -51,17 +49,13 @@ void PatchMatchStereo(const py::object& workspace_path_,
 }
 #endif  // COLMAP_CUDA_ENABLED
 
-Reconstruction StereoFusion(const py::object& output_path_,
-                            const py::object& workspace_path_,
+Reconstruction StereoFusion(const std::string& output_path,
+                            const std::string& workspace_path,
                             std::string workspace_format,
                             const std::string& pmvs_option_name,
                             std::string input_type,
                             const mvs::StereoFusionOptions& options) {
-  std::string workspace_path = py::str(workspace_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(workspace_path);
-
-  std::string output_path = py::str(output_path_).cast<std::string>();
-
   StringToLower(&workspace_format);
   THROW_CUSTOM_CHECK_MSG(
       (workspace_format == "colmap" || workspace_format == "pmvs"),

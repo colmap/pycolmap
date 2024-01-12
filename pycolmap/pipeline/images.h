@@ -27,14 +27,12 @@ using namespace colmap;
 using namespace pybind11::literals;
 namespace py = pybind11;
 
-void ImportImages(const py::object& database_path_,
-                  const py::object& image_path_,
+void ImportImages(const std::string& database_path,
+                  const std::string& image_path,
                   const CameraMode camera_mode,
                   const std::vector<std::string>& image_list,
                   const ImageReaderOptions& options_) {
-  std::string database_path = py::str(database_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(database_path);
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(image_path);
 
   ImageReaderOptions options(options_);
@@ -70,9 +68,8 @@ void ImportImages(const py::object& database_path_,
   }
 }
 
-Camera InferCameraFromImage(const py::object& image_path_,
+Camera InferCameraFromImage(const std::string& image_path,
                             const ImageReaderOptions& options) {
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_FILE_EXISTS(image_path);
 
   Bitmap bitmap;
@@ -102,18 +99,15 @@ Camera InferCameraFromImage(const py::object& image_path_,
   return camera;
 }
 
-void UndistortImages(const py::object& output_path_,
-                     const py::object& input_path_,
-                     const py::object& image_path_,
+void UndistortImages(const std::string& output_path,
+                     const std::string& input_path,
+                     const std::string& image_path,
                      const std::vector<std::string>& image_list,
                      const std::string& output_type,
                      const CopyType copy_type,
                      const int num_patch_match_src_images,
                      const UndistortCameraOptions& undistort_camera_options) {
-  std::string output_path = py::str(output_path_).cast<std::string>();
-  std::string input_path = py::str(input_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(input_path);
-  std::string image_path = py::str(image_path_).cast<std::string>();
   THROW_CHECK_DIR_EXISTS(image_path);
 
   CreateDirIfNotExists(output_path);
