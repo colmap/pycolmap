@@ -1,3 +1,5 @@
+#include "colmap/util/version.h"
+
 #include "pycolmap/estimators/bindings.h"
 #include "pycolmap/feature/sift.h"
 #include "pycolmap/geometry/bindings.h"
@@ -14,6 +16,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+using namespace colmap;
 
 struct Logging {
   enum class Level {
@@ -32,6 +35,8 @@ PYBIND11_MODULE(pycolmap, m) {
   m.attr("__version__") = py::str("dev");
 #endif
   m.attr("has_cuda") = IsGPU(Device::AUTO);
+  m.attr("COLMAP_version") = py::str(GetVersionInfo());
+  m.attr("COLMAP_build") = py::str(GetBuildInfo());
 
   auto PyLogging =
       py::class_<Logging>(m, "logging")

@@ -8,6 +8,7 @@
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 
+#include <memory>
 #include <sstream>
 
 #include <pybind11/eigen.h>
@@ -37,15 +38,14 @@ std::string PrintCamera(const Camera& camera) {
 }
 
 void BindCamera(py::module& m) {
-  auto PyCameraModelId = py::enum_<CameraModelId>(m, "CameraModelId")
-                             .value("INVALID", CameraModelId::kInvalid);
+  py::enum_<CameraModelId> PyCameraModelId(m, "CameraModelId");
+  PyCameraModelId.value("INVALID", CameraModelId::kInvalid);
 #define CAMERA_MODEL_CASE(CameraModel) \
   PyCameraModelId.value(CameraModel::model_name.c_str(), CameraModel::model_id);
 
   CAMERA_MODEL_CASES
 
 #undef CAMERA_MODEL_CASE
-  PyCameraModelId.export_values();
   AddStringToEnumConstructor(PyCameraModelId);
   py::implicitly_convertible<int, CameraModelId>();
 
