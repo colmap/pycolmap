@@ -30,20 +30,17 @@ struct Logging {
 };  // dummy class
 
 void BindLogging(py::module& m) {
-  auto PyLogging =
-      py::class_<Logging>(m, "logging")
-          .def_readwrite_static("minloglevel", &FLAGS_minloglevel)
-          .def_readwrite_static("stderrthreshold", &FLAGS_stderrthreshold)
-          .def_readwrite_static("log_dir", &FLAGS_log_dir)
-          .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
-          .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr)
-          .def_static("info", [](const std::string& msg) { LOG(INFO) << msg; })
-          .def_static("warning",
-                      [](const std::string& msg) { LOG(WARNING) << msg; })
-          .def_static("error",
-                      [](const std::string& msg) { LOG(ERROR) << msg; })
-          .def_static("fatal",
-                      [](const std::string& msg) { LOG(FATAL) << msg; });
+  py::class_<Logging> PyLogging(m, "logging");
+  PyLogging.def_readwrite_static("minloglevel", &FLAGS_minloglevel)
+      .def_readwrite_static("stderrthreshold", &FLAGS_stderrthreshold)
+      .def_readwrite_static("log_dir", &FLAGS_log_dir)
+      .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
+      .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr)
+      .def_static("info", [](const std::string& msg) { LOG(INFO) << msg; })
+      .def_static("warning",
+                  [](const std::string& msg) { LOG(WARNING) << msg; })
+      .def_static("error", [](const std::string& msg) { LOG(ERROR) << msg; })
+      .def_static("fatal", [](const std::string& msg) { LOG(FATAL) << msg; });
   py::enum_<Logging::LogSeverity>(PyLogging, "Level")
       .value("INFO", Logging::LogSeverity::GLOG_INFO)
       .value("WARNING", Logging::LogSeverity::GLOG_WARNING)
