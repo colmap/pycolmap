@@ -28,7 +28,7 @@ struct type_caster<span<Type>> : list_caster<span<Type>, Type> {};
 template <>
 struct type_caster<std::string> {
  public:
-  PYBIND11_TYPE_CASTER(std::string, const_name("os.PathLike"));
+  PYBIND11_TYPE_CASTER(std::string, const_name(PYBIND11_STRING_NAME));
 
   bool load(handle src, bool) {
     PyObject* buf = PyOS_FSPath(src.ptr());
