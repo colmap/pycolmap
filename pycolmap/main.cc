@@ -29,6 +29,14 @@ struct Logging {
   };
 };  // dummy class
 
+std::pair<std::string, int> GetPythonCallFrame() {
+  const auto frame = py::module_::import("sys").attr("_getframe")(0);
+  const std::string file = py::str(frame.attr("f_code").attr("co_filename"));
+  const std::string function = py::str(frame.attr("f_code").attr("co_name"));
+  const int line = py::int_(frame.attr("f_lineno"));
+  return std::make_pair(file + ":" + function, line);
+}
+
 void BindLogging(py::module& m) {
   py::class_<Logging> PyLogging(m, "logging");
   PyLogging.def_readwrite_static("minloglevel", &FLAGS_minloglevel)
@@ -42,11 +50,34 @@ void BindLogging(py::module& m) {
             google::SetLogDestination(
                 static_cast<google::LogSeverity>(severity), path.c_str());
           })
-      .def_static("info", [](const std::string& msg) { LOG(INFO) << msg; })
+      .def_static(
+          "info",
+          [](const std::string& msg) {
+            auto frame = GetPythonCallFrame();
+            google::LogMessage(frame.first.c_str(), frame.second).stream()
+                << msg;
+          })
       .def_static("warning",
-                  [](const std::string& msg) { LOG(WARNING) << msg; })
-      .def_static("error", [](const std::string& msg) { LOG(ERROR) << msg; })
-      .def_static("fatal", [](const std::string& msg) { LOG(FATAL) << msg; });
+                  [](const std::string& msg) {
+                    auto frame = GetPythonCallFrame();
+                    google::LogMessage(
+                        frame.first.c_str(), frame.second, google::GLOG_WARNING)
+                            .stream()
+                        << msg;
+                  })
+      .def_static("error",
+                  [](const std::string& msg) {
+                    auto frame = GetPythonCallFrame();
+                    google::LogMessage(
+                        frame.first.c_str(), frame.second, google::GLOG_ERROR)
+                            .stream()
+                        << msg;
+                  })
+      .def_static("fatal", [](const std::string& msg) {
+        auto frame = GetPythonCallFrame();
+        google::LogMessageFatal(frame.first.c_str(), frame.second).stream()
+            << msg;
+      });
   py::enum_<Logging::LogSeverity>(PyLogging, "Level")
       .value("INFO", Logging::LogSeverity::GLOG_INFO)
       .value("WARNING", Logging::LogSeverity::GLOG_WARNING)
