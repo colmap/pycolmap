@@ -28,17 +28,7 @@ struct Logging {
   };
 };  // dummy class
 
-PYBIND11_MODULE(pycolmap, m) {
-  m.doc() = "COLMAP plugin";
-#ifdef VERSION_INFO
-  m.attr("__version__") = py::str(VERSION_INFO);
-#else
-  m.attr("__version__") = py::str("dev");
-#endif
-  m.attr("has_cuda") = IsGPU(Device::AUTO);
-  m.attr("COLMAP_version") = py::str(GetVersionInfo());
-  m.attr("COLMAP_build") = py::str(GetBuildInfo());
-
+void BindLogging(py::module& m) {
   auto PyLogging =
       py::class_<Logging>(m, "logging")
           .def_readwrite_static("minloglevel", &FLAGS_minloglevel)
@@ -62,6 +52,18 @@ PYBIND11_MODULE(pycolmap, m) {
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
   FLAGS_logtostderr = true;
+}
+
+PYBIND11_MODULE(pycolmap, m) {
+  m.doc() = "COLMAP plugin";
+#ifdef VERSION_INFO
+  m.attr("__version__") = py::str(VERSION_INFO);
+#else
+  m.attr("__version__") = py::str("dev");
+#endif
+  m.attr("has_cuda") = IsGPU(Device::AUTO);
+  m.attr("COLMAP_version") = py::str(GetVersionInfo());
+  m.attr("COLMAP_build") = py::str(GetBuildInfo());
 
   auto PyDevice = py::enum_<Device>(m, "Device")
                       .value("auto", Device::AUTO)
@@ -69,6 +71,7 @@ PYBIND11_MODULE(pycolmap, m) {
                       .value("cuda", Device::CUDA);
   AddStringToEnumConstructor(PyDevice);
 
+  BindLogging(m);
   BindGeometry(m);
   BindOptim(m);
   BindScene(m);
