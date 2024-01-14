@@ -36,6 +36,12 @@ void BindLogging(py::module& m) {
       .def_readwrite_static("log_dir", &FLAGS_log_dir)
       .def_readwrite_static("logtostderr", &FLAGS_logtostderr)
       .def_readwrite_static("alsologtostderr", &FLAGS_alsologtostderr)
+      .def_static(
+          "set_log_destination",
+          [](const Logging::LogSeverity severity, const std::string& path) {
+            google::SetLogDestination(
+                static_cast<google::LogSeverity>(severity), path.c_str());
+          })
       .def_static("info", [](const std::string& msg) { LOG(INFO) << msg; })
       .def_static("warning",
                   [](const std::string& msg) { LOG(WARNING) << msg; })
@@ -49,7 +55,7 @@ void BindLogging(py::module& m) {
       .export_values();
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
-  FLAGS_logtostderr = true;
+  FLAGS_alsologtostderr = true;
 }
 
 PYBIND11_MODULE(pycolmap, m) {
