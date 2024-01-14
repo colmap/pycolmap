@@ -20,11 +20,12 @@ namespace py = pybind11;
 using namespace colmap;
 
 struct Logging {
-  enum class Level {
-    INFO_ = google::GLOG_INFO,
-    WARNING_ = google::GLOG_WARNING,
-    ERROR_ = google::GLOG_ERROR,
-    FATAL_ = google::GLOG_FATAL,
+  // TODO: Replace with google::LogSeverity in glog >= v0.7.0
+  enum class LogSeverity {
+    GLOG_INFO = google::GLOG_INFO,
+    GLOG_WARNING = google::GLOG_WARNING,
+    GLOG_ERROR = google::GLOG_ERROR,
+    GLOG_FATAL = google::GLOG_FATAL,
   };
 };  // dummy class
 
@@ -43,11 +44,11 @@ void BindLogging(py::module& m) {
                       [](const std::string& msg) { LOG(ERROR) << msg; })
           .def_static("fatal",
                       [](const std::string& msg) { LOG(FATAL) << msg; });
-  py::enum_<Logging::Level>(PyLogging, "Level")
-      .value("INFO", Logging::Level::INFO_)
-      .value("WARNING", Logging::Level::WARNING_)
-      .value("ERROR", Logging::Level::ERROR_)
-      .value("FATAL", Logging::Level::FATAL_)
+  py::enum_<Logging::LogSeverity>(PyLogging, "Level")
+      .value("INFO", Logging::LogSeverity::GLOG_INFO)
+      .value("WARNING", Logging::LogSeverity::GLOG_WARNING)
+      .value("ERROR", Logging::LogSeverity::GLOG_ERROR)
+      .value("FATAL", Logging::LogSeverity::GLOG_FATAL)
       .export_values();
   google::InitGoogleLogging("");
   google::InstallFailureSignalHandler();
