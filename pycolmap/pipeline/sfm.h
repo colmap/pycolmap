@@ -354,10 +354,11 @@ void BindSfM(py::module& m) {
         "input_path"_a = py::str(""),
         "initial_image_pair_callback"_a = py::none(),
         "next_image_callback"_a = py::none(),
-        "Triangulate 3D points from known poses");
+        "Recover 3D points and unknown camera poses");
 
   m.def("bundle_adjustment",
         &BundleAdjustment,
         "reconstruction"_a,
-        "options"_a = ba_options);
+        "options"_a = ba_options,
+        "Jointly refine 3D points and camera poses");
 }
