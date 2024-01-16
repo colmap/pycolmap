@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include <pybind11/functional.h>
 #include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -48,7 +49,9 @@ std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
     const std::string& image_path,
     const std::string& output_path,
     const IncrementalMapperOptions& options,
-    const std::string& input_path) {
+    const std::string& input_path,
+    const std::function<void()>& initial_image_pair_callback,
+    const std::function<void()>& next_image_callback) {
   THROW_CHECK_FILE_EXISTS(database_path);
   THROW_CHECK_DIR_EXISTS(image_path);
   CreateDirIfNotExists(output_path);
@@ -69,7 +72,15 @@ std::map<size_t, std::shared_ptr<Reconstruction>> IncrementalMapping(
                        if (py_interrupt.Raised()) {
                          throw py::error_already_set();
                        }
+                       if (next_image_callback) {
+                         next_image_callback();
+                       }
                      });
+  if (initial_image_pair_callback) {
+    mapper.AddCallback(
+        IncrementalMapperController::INITIAL_IMAGE_PAIR_REG_CALLBACK,
+        initial_image_pair_callback);
+  }
 
   mapper.Start();
   mapper.Wait();
@@ -341,10 +352,13 @@ void BindSfM(py::module& m) {
         "output_path"_a,
         "options"_a = mapper_options,
         "input_path"_a = py::str(""),
-        "Triangulate 3D points from known poses");
+        "initial_image_pair_callback"_a = py::none(),
+        "next_image_callback"_a = py::none(),
+        "Recover 3D points and unknown camera poses");
 
   m.def("bundle_adjustment",
         &BundleAdjustment,
         "reconstruction"_a,
-        "options"_a = ba_options);
+        "options"_a = ba_options,
+        "Jointly refine 3D points and camera poses");
 }
