@@ -175,7 +175,7 @@ inline std::string CreateSummary(const T& self, bool write_type) {
     if (!after_subsummary) {
       ss << prefix;
     }
-    ss << attribute.template cast<std::string>();
+    ss << name.template cast<std::string>();
     if (py::hasattr(attribute, "summary")) {
       std::string summ = attribute.attr("summary")
                              .attr("__call__")(write_type)
