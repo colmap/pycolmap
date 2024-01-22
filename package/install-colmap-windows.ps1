@@ -27,6 +27,12 @@ If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
 }
 
 cd ${CURRDIR}
+git clone https://github.com/microsoft/vcpkg ${env:VCPKG_INSTALLATION_ROOT}
+cd ${env:VCPKG_INSTALLATION_ROOT}
+git checkout "${env:VCPKG_COMMIT_ID}"
+./bootstrap-vcpkg.bat
+
+cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout "${env:COLMAP_COMMIT_ID}"
