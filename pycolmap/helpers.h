@@ -31,7 +31,7 @@ const Eigen::IOFormat vec_fmt(Eigen::StreamPrecision,
                               ", ");
 
 template <typename T>
-inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
+T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
   const auto values = enm.attr("__members__").template cast<py::dict>();
   const auto str_val = py::str(value);
   if (values.contains(str_val)) {
@@ -45,14 +45,14 @@ inline T pyStringToEnum(const py::enum_<T>& enm, const std::string& value) {
 }
 
 template <typename T>
-inline void AddStringToEnumConstructor(py::enum_<T>& enm) {
+void AddStringToEnumConstructor(py::enum_<T>& enm) {
   enm.def(py::init([enm](const std::string& value) {
     return pyStringToEnum(enm, py::str(value));  // str constructor
   }));
   py::implicitly_convertible<std::string, T>();
 }
 
-inline void UpdateFromDict(py::object& self, const py::dict& dict) {
+void UpdateFromDict(py::object& self, const py::dict& dict) {
   for (const auto& it : dict) {
     if (!py::isinstance<py::str>(it.first)) {
       const std::string msg = "Dictionary key is not a string: " +
@@ -132,7 +132,7 @@ bool AttributeIsFunction(const std::string& name, const py::object& attribute) {
 }
 
 template <typename T, typename... options>
-inline py::dict ConvertToDict(const T& self) {
+py::dict ConvertToDict(const T& self) {
   const auto pyself = py::cast(self);
   py::dict dict;
   for (const auto& handle : pyself.attr("__dir__")()) {
@@ -152,7 +152,7 @@ inline py::dict ConvertToDict(const T& self) {
 }
 
 template <typename T, typename... options>
-inline std::string CreateSummary(const T& self, bool write_type) {
+std::string CreateSummary(const T& self, bool write_type) {
   std::stringstream ss;
   auto pyself = py::cast(self);
   const std::string prefix = "    ";
@@ -230,22 +230,21 @@ void AddDefaultsToDocstrings(py::class_<T, options...> cls) {
 }
 
 template <typename T, typename... options>
-inline void MakeDataclass(py::class_<T, options...> cls) {
+void MakeDataclass(py::class_<T, options...> cls) {
   AddDefaultsToDocstrings(cls);
-  cls.def("mergedict", &UpdateFromDict);
   if (!py::hasattr(cls, "summary")) {
     cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   }
+  cls.def("mergedict", &UpdateFromDict);
   cls.def("todict", &ConvertToDict<T>);
   cls.def(py::init([cls](const py::dict& dict) {
-    auto self = py::object(cls());
+    py::object self = cls();
     self.attr("mergedict").attr("__call__")(dict);
     return self.cast<T>();
   }));
   cls.def(py::init([cls](const py::kwargs& kwargs) {
     py::dict dict = kwargs.cast<py::dict>();
-    auto self = py::object(cls(dict));
-    return self.cast<T>();
+    return cls(dict).template cast<T>();
   }));
   py::implicitly_convertible<py::dict, T>();
   py::implicitly_convertible<py::kwargs, T>();
