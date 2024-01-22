@@ -199,5 +199,11 @@ void BindCamera(py::module& m) {
       .def("__deepcopy__",
            [](const Camera& self, const py::dict&) { return Camera(self); })
       .def("__repr__", &PrintCamera);
-  MakeDataclass(PyCamera);
+  MakeDataclass(PyCamera,
+                {"camera_id",
+                 "model",
+                 "width",
+                 "height",
+                 "params",
+                 "has_prior_focal_length"});
 }

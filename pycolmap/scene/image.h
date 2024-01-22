@@ -182,9 +182,9 @@ void BindImage(py::module& m) {
                     &Image::IsRegistered,
                     &Image::SetRegistered,
                     "Whether image is registered in the reconstruction.")
-      .def_property_readonly("num_points2D",
-                             &Image::NumPoints2D,
-                             "Get the number of image points (keypoints).")
+      .def("num_points2D",
+           &Image::NumPoints2D,
+           "Get the number of image points (keypoints).")
       .def_property_readonly(
           "num_points3D",
           &Image::NumPoints3D,

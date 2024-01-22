@@ -25,9 +25,13 @@ void BindGeometry(py::module& m) {
       .def(py::init<const Eigen::Matrix3d&>(), "rotmat"_a)
       .def(py::self * Eigen::Quaterniond())
       .def(py::self * Eigen::Vector3d())
+      .def_property("quat",
+                    py::overload_cast<>(&Eigen::Quaterniond::coeffs),
+                    [](Eigen::Quaterniond& self, const Eigen::Vector4d& quat) {
+                      self.coeffs() = quat;
+                    })
       .def("normalize", &Eigen::Quaterniond::normalize)
       .def("matrix", &Eigen::Quaterniond::toRotationMatrix)
-      .def("quat", py::overload_cast<>(&Eigen::Quaterniond::coeffs))
       .def("norm", &Eigen::Quaterniond::norm)
       .def("inverse", &Eigen::Quaterniond::inverse)
       .def("__repr__", [](const Eigen::Quaterniond& self) {
@@ -46,7 +50,7 @@ void BindGeometry(py::module& m) {
       }))
       .def_readwrite("rotation", &Rigid3d::rotation)
       .def_readwrite("translation", &Rigid3d::translation)
-      .def_property_readonly("matrix", &Rigid3d::ToMatrix)
+      .def("matrix", &Rigid3d::ToMatrix)
       .def(py::self * Eigen::Vector3d())
       .def(py::self * Rigid3d())
       .def("inverse", static_cast<Rigid3d (*)(const Rigid3d&)>(&Inverse))
@@ -69,7 +73,7 @@ void BindGeometry(py::module& m) {
       .def_readwrite("scale", &Sim3d::scale)
       .def_readwrite("rotation", &Sim3d::rotation)
       .def_readwrite("translation", &Sim3d::translation)
-      .def_property_readonly("matrix", &Sim3d::ToMatrix)
+      .def("matrix", &Sim3d::ToMatrix)
       .def(py::self * Eigen::Vector3d())
       .def(py::self * Sim3d())
       .def("transform_camera_world", &TransformCameraWorld)
