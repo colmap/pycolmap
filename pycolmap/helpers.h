@@ -268,6 +268,16 @@ void MakeDataclass(py::class_<T, options...> cls,
   }));
   py::implicitly_convertible<py::dict, T>();
   py::implicitly_convertible<py::kwargs, T>();
+
+  cls.def(py::pickle(
+      [attributes](const T& self) {
+        return ConvertToDict(self, attributes, /*recursive=*/false);
+      },
+      [cls](const py::dict& dict) {
+        py::object self = cls();
+        self.attr("mergedict").attr("__call__")(dict);
+        return self.cast<T>();
+      }));
 }
 
 // Catch python keyboard interrupts
