@@ -34,9 +34,6 @@ void BindPoint3D(py::module& m) {
       .def_readwrite("color", &Point3D::color)
       .def_readwrite("error", &Point3D::error)
       .def_readwrite("track", &Point3D::track)
-      .def("__copy__", [](const Point3D& self) { return Point3D(self); })
-      .def("__deepcopy__",
-           [](const Point3D& self, const py::dict&) { return Point3D(self); })
       .def("__repr__", [](const Point3D& self) {
         std::stringstream ss;
         ss << "Point3D(xyz=[" << self.xyz.format(vec_fmt) << "], color=["
