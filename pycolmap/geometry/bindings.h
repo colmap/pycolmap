@@ -19,8 +19,8 @@ using namespace pybind11::literals;
 void BindGeometry(py::module& m) {
   BindHomographyGeometry(m);
 
-  py::class_<Eigen::Quaterniond>(m, "Rotation3d")
-      .def(py::init([]() { return Eigen::Quaterniond::Identity(); }))
+  py::class_<Eigen::Quaterniond> PyRotation3d(m, "Rotation3d");
+  PyRotation3d.def(py::init([]() { return Eigen::Quaterniond::Identity(); }))
       .def(py::init<const Eigen::Vector4d&>(), "xyzw"_a)
       .def(py::init<const Eigen::Matrix3d&>(), "rotmat"_a)
       .def(py::self * Eigen::Quaterniond())
@@ -36,9 +36,10 @@ void BindGeometry(py::module& m) {
         return ss.str();
       });
   py::implicitly_convertible<py::array, Eigen::Quaterniond>();
+  MakeDataclass(PyRotation3d);
 
-  py::class_<Rigid3d>(m, "Rigid3d")
-      .def(py::init<>())
+  py::class_<Rigid3d> PyRigid3d(m, "Rigid3d");
+  PyRigid3d.def(py::init<>())
       .def(py::init<const Eigen::Quaterniond&, const Eigen::Vector3d&>())
       .def(py::init([](const Eigen::Matrix3x4d& matrix) {
         return Rigid3d(Eigen::Quaterniond(matrix.leftCols<3>()), matrix.col(3));
@@ -58,9 +59,10 @@ void BindGeometry(py::module& m) {
         return ss.str();
       });
   py::implicitly_convertible<py::array, Rigid3d>();
+  MakeDataclass(PyRigid3d);
 
-  py::class_<Sim3d>(m, "Sim3d")
-      .def(py::init<>())
+  py::class_<Sim3d> PySim3d(m, "Sim3d");
+  PySim3d.def(py::init<>())
       .def(
           py::init<double, const Eigen::Quaterniond&, const Eigen::Vector3d&>())
       .def(py::init(&Sim3d::FromMatrix))
@@ -81,4 +83,5 @@ void BindGeometry(py::module& m) {
         return ss.str();
       });
   py::implicitly_convertible<py::array, Sim3d>();
+  MakeDataclass(PySim3d);
 }
