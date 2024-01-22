@@ -1,6 +1,7 @@
 // Authors: John Lambert (johnwlambert), Paul-Edouard Sarlin (skydes)
 
 #include "colmap/estimators/two_view_geometry.h"
+#include "colmap/estimators/utils.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"
@@ -161,4 +162,18 @@ void BindTwoViewGeometryEstimator(py::module& m) {
         "camera2"_a,
         "points2"_a,
         "geometry"_a);
+
+  m.def(
+      "squared_sampson_error",
+      [](const std::vector<Eigen::Vector2d>& points1,
+         const std::vector<Eigen::Vector2d>& points2,
+         const Eigen::Matrix3d& E) {
+        std::vector<double> residuals;
+        ComputeSquaredSampsonError(points1, points2, E, &residuals);
+        return residuals;
+      },
+      "points2D1"_a,
+      "points2D2"_a,
+      "E"_a,
+      "Calculate the squared Sampson error for a given epipolar geometry.");
 }
