@@ -125,27 +125,40 @@ void UpdateFromDict(py::object& self, const py::dict& dict) {
   }
 }
 
-bool AttributeIsFunction(const std::string& name, const py::object& attribute) {
+bool AttributeIsFunction(const std::string& name, const py::object& value) {
   return (name.find("__") == 0 || name.rfind("__") != std::string::npos ||
-          py::hasattr(attribute, "__func__") ||
-          py::hasattr(attribute, "__call__"));
+          py::hasattr(value, "__func__") || py::hasattr(value, "__call__"));
+}
+
+std::vector<std::string> ListObjectAttributes(const py::object& pyself) {
+  std::vector<std::string> attributes;
+  for (const auto& handle : pyself.attr("__dir__")()) {
+    const py::str attribute = py::reinterpret_borrow<py::str>(handle);
+    const auto value = pyself.attr(attribute);
+    if (AttributeIsFunction(attribute, value)) {
+      continue;
+    }
+    attributes.push_back(attribute);
+  }
+  return attributes;
 }
 
 template <typename T, typename... options>
-py::dict ConvertToDict(const T& self) {
-  const auto pyself = py::cast(self);
+py::dict ConvertToDict(const T& self,
+                       std::vector<std::string> attributes,
+                       const bool recursive) {
+  const py::object pyself = py::cast(self);
+  if (attributes.empty()) {
+    attributes = ListObjectAttributes(pyself);
+  }
   py::dict dict;
-  for (const auto& handle : pyself.attr("__dir__")()) {
-    const py::str name = py::reinterpret_borrow<py::str>(handle);
-    const auto attribute = pyself.attr(name);
-    if (AttributeIsFunction(name, attribute)) {
-      continue;
-    }
-    if (py::hasattr(attribute, "todict")) {
-      dict[name] =
-          attribute.attr("todict").attr("__call__")().template cast<py::dict>();
+  for (const auto& attr : attributes) {
+    const auto value = pyself.attr(attr.c_str());
+    if (recursive && py::hasattr(value, "todict")) {
+      dict[attr.c_str()] =
+          value.attr("todict").attr("__call__")().template cast<py::dict>();
     } else {
-      dict[name] = attribute;
+      dict[attr.c_str()] = value;
     }
   }
   return dict;
@@ -230,13 +243,20 @@ void AddDefaultsToDocstrings(py::class_<T, options...> cls) {
 }
 
 template <typename T, typename... options>
-void MakeDataclass(py::class_<T, options...> cls) {
+void MakeDataclass(py::class_<T, options...> cls,
+                   const std::vector<std::string>& attributes = {}) {
   AddDefaultsToDocstrings(cls);
   if (!py::hasattr(cls, "summary")) {
     cls.def("summary", &CreateSummary<T>, "write_type"_a = false);
   }
   cls.def("mergedict", &UpdateFromDict);
-  cls.def("todict", &ConvertToDict<T>);
+  cls.def(
+      "todict",
+      [attributes](const T& self, const bool recursive) {
+        return ConvertToDict(self, attributes, recursive);
+      },
+      "recursive"_a = true);
+
   cls.def(py::init([cls](const py::dict& dict) {
     py::object self = cls();
     self.attr("mergedict").attr("__call__")(dict);
