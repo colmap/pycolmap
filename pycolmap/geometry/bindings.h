@@ -1,3 +1,4 @@
+#include "colmap/geometry/essential_matrix.h"
 #include "colmap/geometry/pose.h"
 #include "colmap/geometry/rigid3.h"
 #include "colmap/geometry/sim3.h"
@@ -51,6 +52,7 @@ void BindGeometry(py::module& m) {
       .def_readwrite("rotation", &Rigid3d::rotation)
       .def_readwrite("translation", &Rigid3d::translation)
       .def("matrix", &Rigid3d::ToMatrix)
+      .def("essential_matrix", &EssentialMatrixFromPose)
       .def(py::self * Eigen::Vector3d())
       .def(py::self * Rigid3d())
       .def("inverse", static_cast<Rigid3d (*)(const Rigid3d&)>(&Inverse))
