@@ -34,7 +34,7 @@ test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
 [tool.cibuildwheel.environment]
 COLMAP_COMMIT_ID = "3.9.1"
-VCPKG_COMMIT_ID = "a45fe2ce6039339ee7a076ebd3dcee0fa6cc1287"
+VCPKG_COMMIT_ID = "fa6e6a6ec3224f1d3697d544edef6272a59cd834"
 
 [tool.cibuildwheel.linux]
 before-all = "{project}/package/install-colmap-centos.sh"
