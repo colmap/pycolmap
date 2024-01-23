@@ -46,6 +46,8 @@ $DEPS.Remove("glew")
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @DEPS
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" integrate install
 
+Get-ChildItem ${env:VCPKG_INSTALLATION_ROOT}/${env:VCPKG_TARGET_TRIPLET}/bin
+
 mkdir build
 cd build
 cmake .. `
@@ -56,7 +58,7 @@ cmake .. `
   -DCGAL_ENABLED="OFF" `
   -DGUI_ENABLED="OFF" `
   -DCMAKE_TOOLCHAIN_FILE="${env:CMAKE_TOOLCHAIN_FILE}" `
-  -DVCPKG_TARGET_TRIPLET="x64-windows"
+  -DVCPKG_TARGET_TRIPLET="${env:VCPKG_TARGET_TRIPLET}"
 & ${NINJA_PATH} install
 
 ccache --show-stats --verbose
