@@ -175,5 +175,6 @@ void BindTwoViewGeometryEstimator(py::module& m) {
       "points2D1"_a,
       "points2D2"_a,
       "E"_a,
-      "Calculate the squared Sampson error for a given epipolar geometry.");
+      "Calculate the squared Sampson error for a given essential or "
+      "fundamental matrix.");
 }
