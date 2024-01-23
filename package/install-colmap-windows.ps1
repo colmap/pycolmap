@@ -27,6 +27,12 @@ If (!(Test-Path -path "${COMPILER_TOOLS_DIR}/ccache.exe" -PathType Leaf)) {
 }
 
 cd ${CURRDIR}
+git clone https://github.com/microsoft/vcpkg ${env:VCPKG_INSTALLATION_ROOT}
+cd ${env:VCPKG_INSTALLATION_ROOT}
+git checkout "${env:VCPKG_COMMIT_ID}"
+./bootstrap-vcpkg.bat
+
+cd ${CURRDIR}
 git clone https://github.com/colmap/colmap.git
 cd colmap
 git checkout "${env:COLMAP_COMMIT_ID}"
@@ -50,7 +56,7 @@ cmake .. `
   -DCGAL_ENABLED="OFF" `
   -DGUI_ENABLED="OFF" `
   -DCMAKE_TOOLCHAIN_FILE="${env:CMAKE_TOOLCHAIN_FILE}" `
-  -DVCPKG_TARGET_TRIPLET="x64-windows"
+  -DVCPKG_TARGET_TRIPLET="${env:VCPKG_TARGET_TRIPLET}"
 & ${NINJA_PATH} install
 
 ccache --show-stats --verbose

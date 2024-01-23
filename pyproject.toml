@@ -34,7 +34,7 @@ test-command = "python -c \"import pycolmap; print(pycolmap.__version__)\""
 
 [tool.cibuildwheel.environment]
 COLMAP_COMMIT_ID = "3.9.1"
-VCPKG_COMMIT_ID = "a45fe2ce6039339ee7a076ebd3dcee0fa6cc1287"
+VCPKG_COMMIT_ID = "fa6e6a6ec3224f1d3697d544edef6272a59cd834"
 
 [tool.cibuildwheel.linux]
 before-all = "{project}/package/install-colmap-centos.sh"
@@ -45,5 +45,3 @@ before-all = "{project}/package/install-colmap-macos.sh"
 [tool.cibuildwheel.windows]
 before-all = "powershell -File {project}/package/install-colmap-windows.ps1"
 before-build = "pip install delvewheel"
-# Env variable are not interpolated in the repair command, unsure why.
-repair-wheel-command = "delvewheel repair -v --add-path C:/vcpkg/installed/x64-windows/bin -w {dest_dir} {wheel}"
