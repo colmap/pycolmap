@@ -176,5 +176,6 @@ void BindTwoViewGeometryEstimator(py::module& m) {
       "points2D2"_a,
       "E"_a,
       "Calculate the squared Sampson error for a given essential or "
-      "fundamental matrix.");
+      "fundamental matrix.",
+      py::call_guard<py::gil_scoped_release>());
 }
