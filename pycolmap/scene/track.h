@@ -4,6 +4,7 @@
 #include "colmap/util/misc.h"
 #include "colmap/util/types.h"
 
+#include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
 
 #include <memory>
@@ -18,24 +19,20 @@ using namespace pybind11::literals;
 namespace py = pybind11;
 
 void BindTrack(py::module& m) {
-  py::class_<TrackElement, std::shared_ptr<TrackElement>>(m, "TrackElement")
-      .def(py::init<>())
+  py::class_<TrackElement, std::shared_ptr<TrackElement>> PyTrackElement(
+      m, "TrackElement");
+  PyTrackElement.def(py::init<>())
       .def(py::init<image_t, point2D_t>())
       .def_readwrite("image_id", &TrackElement::image_id)
       .def_readwrite("point2D_idx", &TrackElement::point2D_idx)
-      .def("__copy__",
-           [](const TrackElement& self) { return TrackElement(self); })
-      .def("__deepcopy__",
-           [](const TrackElement& self, const py::dict&) {
-             return TrackElement(self);
-           })
       .def("__repr__", [](const TrackElement& self) {
         return "TrackElement(image_id=" + std::to_string(self.image_id) +
                ", point2D_idx=" + std::to_string(self.point2D_idx) + ")";
       });
+  MakeDataclass(PyTrackElement);
 
-  py::class_<Track, std::shared_ptr<Track>>(m, "Track")
-      .def(py::init<>())
+  py::class_<Track, std::shared_ptr<Track>> PyTrack(m, "Track");
+  PyTrack.def(py::init<>())
       .def(py::init([](const std::vector<TrackElement>& elements) {
         auto track = std::make_shared<Track>();
         track->AddElements(elements);
@@ -67,10 +64,8 @@ void BindTrack(py::module& m) {
            py::overload_cast<const image_t, const point2D_t>(
                &Track::DeleteElement),
            "Remove TrackElement with (image_id,point2D_idx).")
-      .def("__copy__", [](const Track& self) { return Track(self); })
-      .def("__deepcopy__",
-           [](const Track& self, const py::dict&) { return Track(self); })
       .def("__repr__", [](const Track& self) {
         return "Track(length=" + std::to_string(self.Length()) + ")";
       });
+  MakeDataclass(PyTrack);
 }
