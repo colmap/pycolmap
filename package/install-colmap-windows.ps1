@@ -46,8 +46,6 @@ $DEPS.Remove("glew")
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" install --recurse --clean-after-build @DEPS
 & "${env:VCPKG_INSTALLATION_ROOT}/vcpkg.exe" integrate install
 
-Get-ChildItem ${env:VCPKG_INSTALLATION_ROOT}/${env:VCPKG_TARGET_TRIPLET}/bin
-
 mkdir build
 cd build
 cmake .. `
