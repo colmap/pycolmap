@@ -4,7 +4,7 @@ This repository exposes to Python most capabilities of [COLMAP](https://colmap.g
 
 ## Installation
 
-Wheels for Python 8/9/10 on Linux, macOS 10/11/12 (both Intel and Apple Silicon), and Windows can be install using pip:
+Wheels for Python 8/9/10 on Linux, macOS 10/11/12 (both Intel and Apple Silicon), and Windows can be installed using pip:
 ```bash
 pip install pycolmap
 ```
@@ -14,11 +14,11 @@ The wheels are automatically built and pushed to [PyPI](https://pypi.org/project
 <details>
 <summary>[Building PyCOLMAP from source - click to expand]</summary>
 
-1. Install COLMAP from source following [the official guide](https://colmap.github.io/install.html). Use COLMAP 3.8/3.9 for PyCOLMAP 0.4.0/0.5.0.
+1. Install COLMAP from source following [the official guide](https://colmap.github.io/install.html). Use COLMAP 3.8 or 3.9.1 for PyCOLMAP 0.4.0 or 0.5.0/0.6.0.
 
 4. Clone the PyCOLMAP repository:
 ```bash
-git clone -b 0.5.0 https://github.com/colmap/pycolmap.git
+git clone -b 0.6.0 https://github.com/colmap/pycolmap.git
 cd pycolmap
 ```
 
@@ -87,7 +87,7 @@ To list available options and their default parameters:
 help(pycolmap.SiftExtractionOptions)
 ```
 
-For another example of usage, see [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
+For another example of usage, see [`example.py`](./example.py) or [`hloc/reconstruction.py`](https://github.com/cvg/Hierarchical-Localization/blob/master/hloc/reconstruction.py).
 
 ## Reconstruction object
 
@@ -138,7 +138,7 @@ All RANSAC and estimation parameters are exposed as objects that behave similarl
 
 ```python
 ransac_options = pycolmap.RANSACOptions(
-    max_error=4.0,  # reprojection error in pixels
+    max_error=4.0,  # for example the reprojection error in pixels
     min_inlier_ratio=0.01,
     confidence=0.9999,
     min_num_trials=1000,
@@ -216,7 +216,6 @@ answer = pycolmap.fundamental_matrix_estimation(
 answer = pycolmap.homography_matrix_estimation(
     points1,
     points2,
-    [max_error_px],  # optional RANSAC inlier threshold in pixels
     [options],       # optional dict or pycolmap.RANSACOptions
 )
 ```
