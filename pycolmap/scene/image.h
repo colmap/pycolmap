@@ -241,54 +241,6 @@ void BindImage(py::module& m) {
 
              return valid_points2D;
            })
-      .def(
-          "project",
-          [](const Image& self,
-             const std::vector<Eigen::Vector3d>& world_coords) {
-            std::vector<Eigen::Vector2d> image_points(world_coords.size());
-            for (int idx = 0; idx < world_coords.size(); ++idx) {
-              image_points[idx] =
-                  (self.CamFromWorld() * world_coords[idx]).hnormalized();
-            }
-            return image_points;
-          },
-          "Project list of world points to image (xy).")
-      .def(
-          "project",
-          [](const Image& self, const std::vector<Point3D>& point3Ds) {
-            std::vector<Eigen::Vector2d> world_points(point3Ds.size());
-            for (int idx = 0; idx < point3Ds.size(); ++idx) {
-              world_points[idx] =
-                  (self.CamFromWorld() * point3Ds[idx].xyz).hnormalized();
-            }
-            return world_points;
-          },
-          "Project list of point3Ds to image (xy).")
-      .def(
-          "transform_to_image",
-          [](const Image& self,
-             const std::vector<Eigen::Vector3d>& world_coords) {
-            std::vector<Eigen::Vector3d> image_points(world_coords.size());
-            for (int idx = 0; idx < world_coords.size(); ++idx) {
-              image_points[idx] = (self.CamFromWorld() * world_coords[idx]);
-            }
-            return image_points;
-          },
-          "Project list of points in world coordinate frame to image "
-          "coordinates (xyz).")
-      .def(
-          "transform_to_world",
-          [](const Image& self,
-             const std::vector<Eigen::Vector3d>& image_coords) {
-            std::vector<Eigen::Vector3d> world_points(image_coords.size());
-            for (int idx = 0; idx < image_coords.size(); ++idx) {
-              world_points[idx] =
-                  (Inverse(self.CamFromWorld()) * image_coords[idx]);
-            }
-            return world_points;
-          },
-          "Project list of image points (with depth) to world coordinate "
-          "frame.")
       .def("__repr__", &PrintImage);
   MakeDataclass(PyImage);
 }

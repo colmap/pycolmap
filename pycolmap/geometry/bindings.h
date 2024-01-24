@@ -22,15 +22,27 @@ void BindGeometry(py::module& m) {
 
   py::class_<Eigen::Quaterniond> PyRotation3d(m, "Rotation3d");
   PyRotation3d.def(py::init([]() { return Eigen::Quaterniond::Identity(); }))
-      .def(py::init<const Eigen::Vector4d&>(), "xyzw"_a)
-      .def(py::init<const Eigen::Matrix3d&>(), "rotmat"_a)
+      .def(py::init<const Eigen::Vector4d&>(),
+           "xyzw"_a,
+           "Quaternion in [x,y,z,w] format.")
+      .def(py::init<const Eigen::Matrix3d&>(),
+           "rotmat"_a,
+           "3x3 rotation matrix.")
+      .def_property(
+          "quat",
+          py::overload_cast<>(&Eigen::Quaterniond::coeffs),
+          [](Eigen::Quaterniond& self, const Eigen::Vector4d& quat) {
+            self.coeffs() = quat;
+          },
+          "Quaternion in [x,y,z,w] format.")
       .def(py::self * Eigen::Quaterniond())
       .def(py::self * Eigen::Vector3d())
-      .def_property("quat",
-                    py::overload_cast<>(&Eigen::Quaterniond::coeffs),
-                    [](Eigen::Quaterniond& self, const Eigen::Vector4d& quat) {
-                      self.coeffs() = quat;
-                    })
+      .def("__mul__",
+           [](const Eigen::Quaterniond& self,
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
+               -> Eigen::MatrixX3d {
+             return points * self.toRotationMatrix().transpose();
+           })
       .def("normalize", &Eigen::Quaterniond::normalize)
       .def("matrix", &Eigen::Quaterniond::toRotationMatrix)
       .def("norm", &Eigen::Quaterniond::norm)
@@ -53,8 +65,16 @@ void BindGeometry(py::module& m) {
       .def_readwrite("translation", &Rigid3d::translation)
       .def("matrix", &Rigid3d::ToMatrix)
       .def("essential_matrix", &EssentialMatrixFromPose)
-      .def(py::self * Eigen::Vector3d())
       .def(py::self * Rigid3d())
+      .def(py::self * Eigen::Vector3d())
+      .def("__mul__",
+           [](const Rigid3d& t,
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
+               -> Eigen::MatrixX3d {
+             return (points * t.rotation.toRotationMatrix().transpose())
+                        .rowwise() +
+                    t.translation.transpose();
+           })
       .def("inverse", static_cast<Rigid3d (*)(const Rigid3d&)>(&Inverse))
       .def_static("interpolate", &InterpolateCameraPoses)
       .def("__repr__", [](const Rigid3d& self) {
@@ -76,8 +96,17 @@ void BindGeometry(py::module& m) {
       .def_readwrite("rotation", &Sim3d::rotation)
       .def_readwrite("translation", &Sim3d::translation)
       .def("matrix", &Sim3d::ToMatrix)
-      .def(py::self * Eigen::Vector3d())
       .def(py::self * Sim3d())
+      .def(py::self * Eigen::Vector3d())
+      .def("__mul__",
+           [](const Sim3d& t,
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
+               -> Eigen::MatrixX3d {
+             return (t.scale *
+                     (points * t.rotation.toRotationMatrix().transpose()))
+                        .rowwise() +
+                    t.translation.transpose();
+           })
       .def("transform_camera_world", &TransformCameraWorld)
       .def("inverse", static_cast<Sim3d (*)(const Sim3d&)>(&Inverse))
       .def("__repr__", [](const Sim3d& self) {
