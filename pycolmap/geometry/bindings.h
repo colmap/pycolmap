@@ -39,7 +39,7 @@ void BindGeometry(py::module& m) {
       .def(py::self * Eigen::Vector3d())
       .def("__mul__",
            [](const Eigen::Quaterniond& self,
-              const py::EigenDRef<Eigen::MatrixX3d>& points)
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
                -> Eigen::MatrixX3d {
              return points * self.toRotationMatrix().transpose();
            })
@@ -68,7 +68,8 @@ void BindGeometry(py::module& m) {
       .def(py::self * Rigid3d())
       .def(py::self * Eigen::Vector3d())
       .def("__mul__",
-           [](const Rigid3d& t, const py::EigenDRef<Eigen::MatrixX3d>& points)
+           [](const Rigid3d& t,
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
                -> Eigen::MatrixX3d {
              return (points * t.rotation.toRotationMatrix().transpose())
                         .rowwise() +
@@ -98,7 +99,8 @@ void BindGeometry(py::module& m) {
       .def(py::self * Sim3d())
       .def(py::self * Eigen::Vector3d())
       .def("__mul__",
-           [](const Sim3d& t, const py::EigenDRef<Eigen::MatrixX3d>& points)
+           [](const Sim3d& t,
+              const py::EigenDRef<const Eigen::MatrixX3d>& points)
                -> Eigen::MatrixX3d {
              return (t.scale *
                      (points * t.rotation.toRotationMatrix().transpose()))
