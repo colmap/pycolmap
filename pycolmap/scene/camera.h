@@ -141,7 +141,7 @@ void BindCamera(py::module& m) {
       .def(
           "cam_from_img",
           [](const Camera& self,
-             const py::EigenDRef<Eigen::MatrixX2d>& image_points) {
+             const py::EigenDRef<const Eigen::MatrixX2d>& image_points) {
             std::vector<Eigen::Vector2d> world_points(image_points.rows());
             for (size_t idx = 0; idx < image_points.rows(); ++idx) {
               world_points[idx] = self.CamFromImg(image_points.row(idx));
@@ -168,7 +168,7 @@ void BindCamera(py::module& m) {
       .def(
           "img_from_cam",
           [](const Camera& self,
-             const py::EigenDRef<Eigen::MatrixX2d>& world_points) {
+             const py::EigenDRef<const Eigen::MatrixX2d>& world_points) {
             std::vector<Eigen::Vector2d> image_points(world_points.rows());
             for (size_t idx = 0; idx < world_points.rows(); ++idx) {
               image_points[idx] = self.ImgFromCam(world_points.row(idx));
