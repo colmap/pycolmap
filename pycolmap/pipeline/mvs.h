@@ -1,14 +1,5 @@
-#include "colmap/controllers/feature_extraction.h"
-#include "colmap/controllers/feature_matching.h"
-#include "colmap/controllers/image_reader.h"
-#include "colmap/controllers/incremental_mapper.h"
-#include "colmap/exe/feature.h"
-#include "colmap/exe/sfm.h"
-#include "colmap/feature/sift.h"
 #include "colmap/mvs/fusion.h"
-#include "colmap/mvs/meshing.h"
 #include "colmap/scene/reconstruction.h"
-#include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"
 
 #ifdef COLMAP_CUDA_ENABLED
@@ -249,7 +240,6 @@ void BindMVS(py::module& m) {
           .def_readwrite("bounding_box",
                          &SFOpts::bounding_box,
                          "Bounding box Tuple[min, max]");
-
   MakeDataclass(PyStereoFusionOptions);
   auto stereo_fusion_options = PyStereoFusionOptions().cast<SFOpts>();
 

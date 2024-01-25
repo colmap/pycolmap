@@ -1,10 +1,5 @@
-// Authors: John Lambert (johnwlambert), Paul-Edouard Sarlin (skydes)
-
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/estimators/utils.h"
-#include "colmap/geometry/pose.h"
-#include "colmap/math/random.h"
-#include "colmap/optim/loransac.h"
 #include "colmap/scene/camera.h"
 #include "colmap/scene/two_view_geometry.h"
 

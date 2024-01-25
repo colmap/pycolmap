@@ -1,4 +1,3 @@
-// Author: Philipp Lindenberger (Phil26AT)
 #include "colmap/mvs/meshing.h"
 
 #include "pycolmap/helpers.h"

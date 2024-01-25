@@ -1,5 +1,3 @@
-// Author: Adi Singh (adisingh50)
-
 #include "colmap/geometry/homography_matrix.h"
 
 #include "pycolmap/log_exceptions.h"

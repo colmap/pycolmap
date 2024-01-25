@@ -1,5 +1,3 @@
-// Author: Philipp Lindenberger (Phil26AT)
-
 #pragma once
 
 #include "colmap/util/string.h"

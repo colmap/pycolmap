@@ -1,5 +1,3 @@
-// Author: Philipp Lindenberger (Phil26AT)
-
 #include "colmap/scene/camera.h"
 #include "colmap/sensor/models.h"
 #include "colmap/util/misc.h"

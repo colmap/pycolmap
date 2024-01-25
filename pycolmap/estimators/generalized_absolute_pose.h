@@ -1,12 +1,9 @@
-// Authors: Mihai-Dusmanu (mihaidusmanu), Paul-Edouard Sarlin (skydes)
-
 #include "colmap/estimators/generalized_pose.h"
 #include "colmap/estimators/pose.h"
-#include "colmap/geometry/pose.h"
+#include "colmap/geometry/rigid3.h"
 #include "colmap/math/random.h"
 #include "colmap/optim/ransac.h"
 #include "colmap/scene/camera.h"
-#include "colmap/util/misc.h"
 
 #include "pycolmap/log_exceptions.h"
 #include "pycolmap/utils.h"

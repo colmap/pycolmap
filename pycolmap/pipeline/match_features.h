@@ -1,14 +1,8 @@
-// Author: Philipp Lindenberger (Phil26AT)
-
-#include "colmap/controllers/feature_extraction.h"
 #include "colmap/controllers/feature_matching.h"
-#include "colmap/controllers/image_reader.h"
-#include "colmap/controllers/incremental_mapper.h"
 #include "colmap/estimators/two_view_geometry.h"
 #include "colmap/exe/feature.h"
 #include "colmap/exe/sfm.h"
 #include "colmap/feature/sift.h"
-#include "colmap/util/misc.h"
 
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"
