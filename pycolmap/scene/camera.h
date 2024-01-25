@@ -180,9 +180,8 @@ void BindCamera(py::module& m) {
           "img_from_cam",
           [](const Camera& self,
              const py::EigenDRef<const Eigen::MatrixX3d>& world_points) {
-            return py::cast(self)
-                .attr("img_from_cam")
-                .call(world_points.rowwise().hnormalized());
+            return py::cast(self).attr("img_from_cam")(
+                world_points.rowwise().hnormalized());
           },
           "Project list of points from world / infinity to image plane.")
       .def(
