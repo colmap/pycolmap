@@ -40,6 +40,46 @@ py::object PyEstimateFundamentalMatrix(
                   "inliers"_a = ToPythonMask(report.inlier_mask));
 }
 
+py::object PyEstimateFundamentalMatrixSevenPoint(
+    const std::vector<Eigen::Vector2d>& points1,
+    const std::vector<Eigen::Vector2d>& points2) {
+    
+    // Ensure there are exactly 7 points for the 7-point algorithm
+    THROW_CHECK_EQ(points1.size(), 7);
+    THROW_CHECK_EQ(points2.size(), 7);
+
+    std::vector<Eigen::Matrix3d> models;
+    FundamentalMatrixSevenPointEstimator::Estimate(points1, points2, &models);
+
+    // Convert C++ vectors to Python lists
+    py::list py_models;
+    for (const auto& model : models) {
+        py_models.append(model);
+    }
+
+    return py_models;
+}
+
+py::object PyEstimateFundamentalMatrixEightPoint(
+    const std::vector<Eigen::Vector2d>& points1,
+    const std::vector<Eigen::Vector2d>& points2) {
+    
+    // Ensure there are at least 8 points for the 8-point algorithm
+    THROW_CHECK_GE(points1.size(), 8);
+    THROW_CHECK_GE(points2.size(), 8);      
+
+    std::vector<Eigen::Matrix3d> models;
+    FundamentalMatrixEightPointEstimator::Estimate(points1, points2, &models);
+
+    // Convert C++ vector to Python list
+    py::list py_models;
+    for (const auto& model : models) {
+        py_models.append(model);
+    }
+
+    return py_models;
+}
+
 void BindFundamentalMatrixEstimator(py::module& m) {
   auto est_options = m.attr("RANSACOptions")().cast<RANSACOptions>();
 
@@ -49,4 +89,14 @@ void BindFundamentalMatrixEstimator(py::module& m) {
         "points2D2"_a,
         "estimation_options"_a = est_options,
         "LORANSAC + 7-point algorithm.");
+
+  m.def("fundamental_matrix_minimal_solver_7p", &PyEstimateFundamentalMatrixSevenPoint,
+      "points1"_a, "points2"_a,
+      "Estimate up to 3 possible fundamental matrix solutions using the 7-point algorithm, without RANSAC"
+  );
+
+  m.def("fundamental_matrix_minimal_solver_8p", &PyEstimateFundamentalMatrixEightPoint,
+      "points1"_a, "points2"_a,
+      "Estimate the fundamental matrix solution using the 8-point algorithm, without RANSAC"
+  );
 }
