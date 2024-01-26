@@ -31,7 +31,7 @@ void BindGeometry(py::module& m) {
            "3x3 rotation matrix.")
       .def(py::init([](const Eigen::Vector3d& vec) {
              return Eigen::Quaterniond(
-                 Eigen::AngleAxis(vec.norm(), vec.normalized()));
+                 Eigen::AngleAxis<double>(vec.norm(), vec.normalized()));
            }),
            "axis_angle"_a,
            "Axis-angle 3D vector.")
