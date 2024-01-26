@@ -29,6 +29,12 @@ void BindGeometry(py::module& m) {
       .def(py::init<const Eigen::Matrix3d&>(),
            "rotmat"_a,
            "3x3 rotation matrix.")
+      .def(py::init([](const Eigen::Vector3d& vec) {
+             return Eigen::Quaterniond(
+                 Eigen::AngleAxis(vec.norm(), vec.normalized()));
+           }),
+           "axis_angle"_a,
+           "3D axis-angle representation.")
       .def_property(
           "quat",
           py::overload_cast<>(&Eigen::Quaterniond::coeffs),
@@ -47,6 +53,14 @@ void BindGeometry(py::module& m) {
       .def("normalize", &Eigen::Quaterniond::normalize)
       .def("matrix", &Eigen::Quaterniond::toRotationMatrix)
       .def("norm", &Eigen::Quaterniond::norm)
+      .def("angle",
+           [](const Eigen::Quaterniond& self) {
+             return Eigen::AngleAxis<double>(self).angle();
+           })
+      .def("angle_to",
+           [](const Eigen::Quaterniond& self, const Eigen::Quaterniond& other) {
+             return self.angularDistance(other);
+           })
       .def("inverse", &Eigen::Quaterniond::inverse)
       .def("__repr__", [](const Eigen::Quaterniond& self) {
         std::stringstream ss;
