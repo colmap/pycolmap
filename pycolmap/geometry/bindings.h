@@ -5,6 +5,7 @@
 
 #include "pycolmap/geometry/homography_matrix.h"
 #include "pycolmap/helpers.h"
+#include "pycolmap/pybind11_extension.h"
 
 #include <sstream>
 
@@ -20,7 +21,7 @@ using namespace pybind11::literals;
 void BindGeometry(py::module& m) {
   BindHomographyGeometry(m);
 
-  py::class_<Eigen::Quaterniond> PyRotation3d(m, "Rotation3d");
+  py::class_ext_<Eigen::Quaterniond> PyRotation3d(m, "Rotation3d");
   PyRotation3d.def(py::init([]() { return Eigen::Quaterniond::Identity(); }))
       .def(py::init<const Eigen::Vector4d&>(),
            "xyzw"_a,
@@ -55,7 +56,7 @@ void BindGeometry(py::module& m) {
   py::implicitly_convertible<py::array, Eigen::Quaterniond>();
   MakeDataclass(PyRotation3d);
 
-  py::class_<Rigid3d> PyRigid3d(m, "Rigid3d");
+  py::class_ext_<Rigid3d> PyRigid3d(m, "Rigid3d");
   PyRigid3d.def(py::init<>())
       .def(py::init<const Eigen::Quaterniond&, const Eigen::Vector3d&>())
       .def(py::init([](const Eigen::Matrix3x4d& matrix) {
@@ -87,7 +88,7 @@ void BindGeometry(py::module& m) {
   py::implicitly_convertible<py::array, Rigid3d>();
   MakeDataclass(PyRigid3d);
 
-  py::class_<Sim3d> PySim3d(m, "Sim3d");
+  py::class_ext_<Sim3d> PySim3d(m, "Sim3d");
   PySim3d.def(py::init<>())
       .def(
           py::init<double, const Eigen::Quaterniond&, const Eigen::Vector3d&>())
