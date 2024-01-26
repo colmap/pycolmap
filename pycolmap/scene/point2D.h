@@ -45,7 +45,7 @@ void BindPoint2D(py::module& m) {
         return repr;
       });
 
-  py::class_<Point2D, std::shared_ptr<Point2D>> PyPoint2D(m, "Point2D");
+  py::class_ext_<Point2D, std::shared_ptr<Point2D>> PyPoint2D(m, "Point2D");
   PyPoint2D.def(py::init<>())
       .def(py::init<const Eigen::Vector2d&, size_t>(),
            "xy"_a,

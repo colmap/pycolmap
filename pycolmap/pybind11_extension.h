@@ -96,6 +96,38 @@ struct type_caster<std::vector<Eigen::Matrix<Scalar, Size, 1>>> {
 
 }  // namespace detail
 
+template <typename type_, typename... options>
+class class_ext_ : public class_<type_, options...> {
+ public:
+  using Parent = class_<type_, options...>;
+  using Parent::class_;  // inherit constructors
+  using type = type_;
+
+  template <typename C, typename D, typename... Extra>
+  class_ext_& def_readwrite(const char* name, D C::*pm, const Extra&... extra) {
+    static_assert(
+        std::is_same<C, type>::value || std::is_base_of<C, type>::value,
+        "def_readwrite() requires a class member (or base class member)");
+    cpp_function fget([pm](type&c) -> D& { return c.*pm; }, is_method(*this)),
+        fset([pm](type&c, const D&value) { c.*pm = value; }, is_method(*this));
+    this->def_property(
+        name, fget, fset, return_value_policy::reference_internal, extra...);
+    return *this;
+  }
+
+  template <typename... Args>
+  class_ext_& def(Args&&... args) {
+    Parent::def(std::forward<Args>(args)...);
+    return *this;
+  }
+
+  template <typename... Args>
+  class_ext_& def_property(Args&&... args) {
+    Parent::def_property(std::forward<Args>(args)...);
+    return *this;
+  }
+};
+
 // Fix long-standing bug https://github.com/pybind/pybind11/issues/4529
 // TODO(sarlinpe): remove when https://github.com/pybind/pybind11/pull/4972
 // appears in the next release of pybind11.
