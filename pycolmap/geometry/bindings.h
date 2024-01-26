@@ -34,7 +34,7 @@ void BindGeometry(py::module& m) {
                  Eigen::AngleAxis(vec.norm(), vec.normalized()));
            }),
            "axis_angle"_a,
-           "3D axis-angle representation.")
+           "Axis-angle 3D vector.")
       .def_property(
           "quat",
           py::overload_cast<>(&Eigen::Quaterniond::coeffs),
