@@ -1,5 +1,3 @@
-// Authors: John Lambert (johnwlambert), Paul-Edouard Sarlin (skydes)
-
 #include "colmap/estimators/homography_matrix.h"
 #include "colmap/math/random.h"
 #include "colmap/optim/loransac.h"

@@ -1,15 +1,7 @@
-// Author: Philipp Lindenberger (Phil26AT)
-
 #include "colmap/estimators/alignment.h"
-#include "colmap/estimators/similarity_transform.h"
 #include "colmap/exe/model.h"
 #include "colmap/geometry/sim3.h"
-#include "colmap/optim/loransac.h"
 #include "colmap/scene/reconstruction.h"
-#include "colmap/sensor/models.h"
-#include "colmap/util/misc.h"
-#include "colmap/util/ply.h"
-#include "colmap/util/types.h"
 
 #include "pycolmap/log_exceptions.h"
 

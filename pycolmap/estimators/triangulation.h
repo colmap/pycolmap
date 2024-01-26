@@ -1,4 +1,6 @@
 #include "colmap/estimators/triangulation.h"
+#include "colmap/scene/camera.h"
+#include "colmap/scene/image.h"
 
 #include "pycolmap/helpers.h"
 #include "pycolmap/log_exceptions.h"

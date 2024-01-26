@@ -1,5 +1,3 @@
-// Author: Mihai Dusmanu (mihaidusmanu)
-
 #include "colmap/sfm/incremental_triangulator.h"
 
 #include "pycolmap/helpers.h"
