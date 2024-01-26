@@ -178,6 +178,14 @@ void BindCamera(py::module& m) {
           "Project list of points from world / infinity to image plane.")
       .def(
           "img_from_cam",
+          [](const Camera& self,
+             const py::EigenDRef<const Eigen::MatrixX3d>& world_points) {
+            return py::cast(self).attr("img_from_cam")(
+                world_points.rowwise().hnormalized());
+          },
+          "Project list of points from world / infinity to image plane.")
+      .def(
+          "img_from_cam",
           [](const Camera& self, const std::vector<Point2D>& world_points) {
             std::vector<Eigen::Vector2d> image_points(world_points.size());
             for (size_t idx = 0; idx < world_points.size(); ++idx) {
