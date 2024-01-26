@@ -114,8 +114,7 @@ The object API mirrors the COLMAP C++ library. The bindings support many other o
 
 - projecting a 3D point into an image with arbitrary camera model:
 ```python
-p = image.cam_from_world * point3D.xyz
-uv = camera.img_from_cam(p[:2] / p[-1])
+uv = camera.img_from_cam(image.cam_from_world * point3D.xyz)
 ```
 
 - aligning two 3D reconstructions by their camera poses:
