@@ -1,3 +1,9 @@
+<p align="center">
+  <b>
+    ⚠️ <a href="https://github.com/colmap/colmap/tree/main/pycolmap">The development of PyCOLMAP has moved to the the COLMAP repository.</a> ⚠️<br>PyCOLMAP remains available on <a href="https://pypi.org/project/pycolmap/">PyPi</a>. This repository will be archived soon.
+  </b>
+</p>
+
 # Python bindings for COLMAP
 
 This repository exposes to Python most capabilities of [COLMAP](https://colmap.github.io/) for Structure-from-Motion and Multiview-stereo, such as reconstruction pipelines & objects and geometric estimators.
@@ -306,4 +312,4 @@ keypoints, descriptors = sift.extract(img)
 - [ ] Add more detailed examples
 - [ ] Add unit tests for reconstruction bindings
 
-Created and maintained by [Mihai Dusmanu](https://github.com/mihaidusmanu/), [Philipp Lindenberger](https://github.com/Phil26AT), [John Lambert](https://github.com/johnwlambert), [Paul-Edouard Sarlin](https://github.com/Skydes), and other contributors.
+Created and maintained by [Mihai Dusmanu](https://github.com/mihaidusmanu/), [Philipp Lindenberger](https://github.com/Phil26AT), [John Lambert](https://github.com/johnwlambert), [Paul-Edouard Sarlin](https://psarlin.com/), and other contributors.
